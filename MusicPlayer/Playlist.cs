@@ -29,6 +29,7 @@
 
         public Playlist(string scene)
         {
+            
             var clips = Resources.LoadAll<AudioClip>("Music/" + scene);
 
             foreach (var clip in clips)

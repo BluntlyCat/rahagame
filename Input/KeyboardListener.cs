@@ -1,8 +1,11 @@
 ﻿namespace HSA.RehaGame.Input
 {
+    using UI;
     using Logging;
-    using Scenes;
+    using Scene;
     using UnityEngine;
+    using Kinect;
+    using UnityEngine.SceneManagement;
 
     public class KeyboardListener : MonoBehaviour
     {
@@ -25,7 +28,7 @@
             {
                 logger.Debug("KEY PRESS");
 
-                if (Application.loadedLevelName == "MainMenu")
+                if (SceneManager.GetActiveScene().name == "MainMenu")
                 {
                     LoadScene.ReturnToWindows();
                 }

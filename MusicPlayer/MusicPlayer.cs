@@ -4,6 +4,7 @@
     using UnityEngine;
     using System.Linq;
     using Logging;
+    using Settings;
 
     public class MusicPlayer
     {
@@ -16,7 +17,6 @@
         public MusicPlayer(AudioSource audioSource)
         {
             logger.AddLogAppender<ConsoleAppender>();
-            logger.AddLogAppender<FileAppender>();
 
             this.player = audioSource;
             this.currentScene = this.playlists.First().Key;
@@ -29,9 +29,12 @@
 
         public void Play()
         {
-            this.player.Stop();
-            this.player.clip = this.playlists[currentScene].current.clip;
-            this.player.Play();
+            if (RGSettings.music)
+            {
+                this.player.Stop();
+                this.player.clip = this.playlists[currentScene].current.clip;
+                this.player.Play();
+            }
         }
 
         public void Pause()

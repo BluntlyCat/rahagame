@@ -1,10 +1,12 @@
-﻿namespace HSA.RehaGame.Scenes
+﻿namespace HSA.RehaGame.Scene
 {
     using UnityEngine;
     using Logging;
     using System.Linq;
     using MusicPlayer;
     using System.Collections.Generic;
+    using Scene;
+    using UnityEngine.SceneManagement;
 
     public class LoadScene : MonoBehaviour
     {
@@ -20,20 +22,19 @@
         void Start()
         {
             logger.AddLogAppender<ConsoleAppender>();
-            logger.AddLogAppender<FileAppender>();
 
             hud = GameObject.FindGameObjectWithTag("HUD");
 
             musicPlayer = new MusicPlayer(this.GetComponent<AudioSource>());
-
-            musicPlayer.playlist = Application.loadedLevelName;
+            
+            musicPlayer.playlist = SceneManager.GetActiveScene().name;
             musicPlayer.Play();
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (musicPlayer.isPlaying == false && Pause.IsPause == false)
+            if (musicPlayer != null && musicPlayer.isPlaying == false && Pause.Paused == false)
                 musicPlayer.Next();
         }
 
@@ -42,14 +43,19 @@
             logger.Info("Load scene", scene);
 
             if(addPrevious)
-                previousScenes.Add(Application.loadedLevelName);
+                previousScenes.Add(SceneManager.GetActiveScene().name);
 
-            Application.LoadLevel(scene);
+            SceneManager.LoadScene(scene);
         }
 
         public static void LoadExercise(string name)
         {
             LoadNewScene(name);
+        }
+
+        public static void ReloadSettings()
+        {
+            LoadNewScene("Settings", false);
         }
 
         public static void MainMenu()
@@ -70,14 +76,24 @@
             LoadNewScene(last, false);
         }
 
+        public static void LoadUser()
+        {
+            LoadNewScene("NewUser");
+        }
+
         public void PreviousScene()
         {
             GoOneSceneBack();
         }
 
-        public void KinectView()
+        public void NewUser()
         {
-            LoadNewScene("KinectView");
+            LoadNewScene("NewUser");
+        }
+
+        public void Users()
+        {
+            LoadNewScene("Users");
         }
 
         public void TrainingMode()

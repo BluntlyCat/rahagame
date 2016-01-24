@@ -1,6 +1,6 @@
 ﻿namespace HSA.RehaGame.UI
 {
-    using Scenes;
+    using Scene;
     using UnityEngine;
 
     public class ClickButton : MonoBehaviour
