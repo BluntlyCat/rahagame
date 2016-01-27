@@ -3,7 +3,8 @@
     using UnityEngine;
     using System.Collections;
     using UnityEngine.UI;
-    using Settings;
+    using InGame;
+    using Scene;
 
     public class GetPatients : MonoBehaviour
     {
@@ -12,20 +13,25 @@
         // Use this for initialization
         void Start()
         {
-            var patients = DBManager.Query("SELECT name from editor_player");
+            var patients = DBManager.Query("SELECT name from editor_patient");
 
-            foreach(var patient in patients)
+            if (patients.Count > 0)
             {
-                var button = Instantiate(patientButton) as Transform;
-                var text = button.GetComponentInChildren<Text>();
-                var name = patient["name"].ToString();
+                foreach (var patient in patients)
+                {
+                    var button = Instantiate(patientButton) as Transform;
+                    var text = button.GetComponentInChildren<Text>();
+                    var name = patient["name"].ToString();
 
-                button.SetParent(this.transform, false);
-                button.name = name;
-                text.text = name;
+                    button.SetParent(this.transform, false);
+                    button.name = name;
+                    text.text = name;
+                }
             }
+            else
+                LoadScene.LoadNewUser();
 
-            RGSettings.ActivePatient = null;
+            GameState.PatientName = null;
         }
 
         // Update is called once per frame

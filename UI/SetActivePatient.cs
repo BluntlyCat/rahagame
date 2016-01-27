@@ -2,15 +2,20 @@
 {
     using User;
     using Scene;
-    using Settings;
+    using InGame;
     using UnityEngine;
+    using DB;
 
     public class SetActivePatient : MonoBehaviour
     {
         public void SetPatient()
         {
-            RGSettings.ActivePatient = Patient.Instance(this.name);
-            LoadScene.LoadUser();
+            if (DBManager.Exists("editor_patient", this.name))
+            {
+                GameState.PatientName = this.name;
+                GameState.ActivePatient = Patient.Instance(this.name);
+                LoadScene.LoadUser();
+            }
         }
     }
 }

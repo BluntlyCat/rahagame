@@ -1,4 +1,4 @@
-﻿namespace HSA.RehaGame.Settings
+﻿namespace HSA.RehaGame.InGame
 {
     using System;
     using DB;
@@ -9,7 +9,6 @@
     public class RGSettings : MonoBehaviour
     {
         private static int languageIndex = -1;
-        private static Patient activePatient;
 
         [Setting(true)]
         public static string[] languages
@@ -81,24 +80,6 @@
             {
                 SettingsManager.Set("music", value);
             }
-        }
-
-        public static Patient ActivePatient
-        {
-            get
-            {
-                return activePatient;
-            }
-
-            set
-            {
-                activePatient = value;
-            }
-        }
-
-        public static string GetTranslation(string name)
-        {
-            return DBManager.Query("translation", "editor_valuetranslation", name);
         }
 
         public static string GetByPropertyName(object caller, string name)

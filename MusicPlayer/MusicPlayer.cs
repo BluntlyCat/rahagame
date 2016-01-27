@@ -4,7 +4,7 @@
     using UnityEngine;
     using System.Linq;
     using Logging;
-    using Settings;
+    using InGame;
 
     public class MusicPlayer
     {

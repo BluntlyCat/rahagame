@@ -1,4 +1,4 @@
-﻿namespace HSA.RehaGame.Settings
+﻿namespace HSA.RehaGame.InGame
 {
     using System;
     using System.Collections.Generic;

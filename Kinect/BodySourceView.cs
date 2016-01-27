@@ -25,9 +25,9 @@
         {
             return new Dictionary<string, Windows.Kinect.Joint>
             {
-                { "base", body.Joints[joint.type] },
-                { "parent", body.Joints[joint.Parent.type] },
-                { "child", body.Joints[joint.Children.First().Value.type] },
+                { "base", body.Joints[joint.Type] },
+                { "parent", body.Joints[joint.Parent.Type] },
+                { "child", body.Joints[joint.Children.First().Value.Type] },
             };
         }
 
@@ -134,7 +134,7 @@
                     Kinect.Joint? targetJoint = null;
 
                     if (rgJoint.Parent != null)
-                        targetJoint = body.Joints[rgJoint.Parent.type];
+                        targetJoint = body.Joints[rgJoint.Parent.Type];
 
                     Transform jointObj = bodyObject.transform.FindChild(jt.ToString());
                     jointObj.localPosition = Calculations.GetVector3FromJoint(sourceJoint);

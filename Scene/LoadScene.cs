@@ -63,6 +63,11 @@
             LoadNewScene("MainMenu");
         }
 
+        public static void LoadNewUser()
+        {
+            LoadNewScene("NewUser");
+        }
+
         public static void ReturnToWindows()
         {
             Application.Quit();

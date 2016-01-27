@@ -1,21 +1,26 @@
 ﻿namespace HSA.RehaGame.Kinect
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using DB;
+    using User;
     using Kinect = Windows.Kinect;
 
     public class RGJoints
     {
         private static RGJoints rgJoints;
-        private Dictionary<Kinect.JointType, RGJoint> jointMap = new Dictionary<Kinect.JointType, RGJoint>();
+        private Dictionary<Kinect.JointType, PatientJoint> jointMap = new Dictionary<Kinect.JointType, PatientJoint>();
 
         private RGJoints()
         {
-            var joints = DBManager.Query("SELECT name, parent_id FROM editor_joint");
+            var joints = DBManager.Query("SELECT * FROM editor_joint");
 
+            CreateJoints(joints);
+            LinkChildren();
+        }
+
+        private RGJoints(IList<Dictionary<string, object>> joints)
+        {
             CreateJoints(joints);
             LinkChildren();
         }
@@ -27,15 +32,59 @@
                 var jtChild = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), joint["name"].ToString());
                 var parentName = joint["parent_id"].ToString();
 
+                var xAxis = joint["x_axis"].ToString().ToLower();
+                var yAxis = joint["y_axis"].ToString().ToLower();
+                var zAxis = joint["z_axis"].ToString().ToLower();
+
+                var xAxisMinValue = joint["x_axis_min_value"].ToString();
+                var xAxisMaxValue = joint["x_axis_max_value"].ToString();
+
+                var yAxisMinValue = joint["y_axis_min_value"].ToString();
+                var yAxisMaxValue = joint["y_axis_max_value"].ToString();
+
+                var zAxisMinValue = joint["z_axis_min_value"].ToString();
+                var zAxisMaxValue = joint["z_axis_max_value"].ToString();
+
                 if (jointMap.ContainsKey(jtChild) == false)
-                    jointMap.Add(jtChild, new RGJoint(jtChild));
+                {
+                    var rgJoint = new PatientJoint(jtChild, xAxis, yAxis, zAxis, xAxisMinValue, xAxisMaxValue, yAxisMinValue, yAxisMaxValue, zAxisMinValue, zAxisMaxValue);
+                    jointMap.Add(jtChild, rgJoint);
+                }
 
                 if (parentName != "")
                 {
                     var jtParent = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), parentName);
 
                     if (jointMap.ContainsKey(jtParent) == false)
-                        jointMap.Add(jtParent, new RGJoint(jtParent));
+                    {
+                        var parentJoint = DBManager.Query("SELECT * FROM editor_joint WHERE name = '" + parentName + "';").First();
+
+                        var xAxisParent = parentJoint["x_axis"].ToString().ToLower();
+                        var yAxisParent = parentJoint["y_axis"].ToString().ToLower();
+                        var zAxisParent = parentJoint["z_axis"].ToString().ToLower();
+
+                        var xAxisMinValueParent = parentJoint["x_axis_min_value"].ToString();
+                        var xAxisMaxValueParent = parentJoint["x_axis_max_value"].ToString();
+
+                        var yAxisMinValueParent = parentJoint["y_axis_min_value"].ToString();
+                        var yAxisMaxValueParent = parentJoint["y_axis_max_value"].ToString();
+
+                        var zAxisMinValueParent = parentJoint["z_axis_min_value"].ToString();
+                        var zAxisMaxValueParent = parentJoint["z_axis_max_value"].ToString();
+
+                        var rgJointParent = new PatientJoint(jtParent,
+                            xAxisParent,
+                            yAxisParent,
+                            zAxisParent,
+                            xAxisMinValueParent,
+                            xAxisMaxValueParent,
+                            yAxisMinValueParent,
+                            yAxisMaxValueParent,
+                            zAxisMinValueParent,
+                            zAxisMaxValueParent);
+
+                        jointMap.Add(jtParent, rgJointParent);
+                    }
 
                     jointMap[jtChild].Parent = jointMap[jtParent];
                 }
@@ -63,7 +112,7 @@
             }
         }
 
-        public static IDictionary<Kinect.JointType, RGJoint> All()
+        public static IDictionary<Kinect.JointType, PatientJoint> All()
         {
             if (rgJoints == null)
                 rgJoints = new RGJoints();
@@ -71,15 +120,56 @@
             return rgJoints.jointMap;
         }
 
-        public static IDictionary<Kinect.JointType, RGJoint> Copy()
+        public static IDictionary<Kinect.JointType, PatientJoint> Copy()
         {
             if (rgJoints == null)
                 rgJoints = new RGJoints();
 
-            return new Dictionary<Kinect.JointType, RGJoint>(rgJoints.jointMap);
+            return new Dictionary<Kinect.JointType, PatientJoint>(rgJoints.jointMap);
         }
 
-        public static RGJoint Get(Kinect.JointType type)
+        public static IDictionary<Kinect.JointType, PatientJoint> Copy(IList<Dictionary<string, object>> patientJointIDs)
+        {
+            if (rgJoints == null)
+                rgJoints = new RGJoints();
+
+            var joints = new Dictionary<Kinect.JointType, PatientJoint>(rgJoints.jointMap);
+
+            foreach(var patientJointId in patientJointIDs)
+            {
+                var patientJoint = DBManager.Query("SELECT * FROM editor_patientjoint WHERE id = '" + patientJointId["patientjoint_id"] + "';").First();
+                var kinectJoint = DBManager.Query("SELECT * FROM editor_joint WHERE name = '" + patientJoint["kinectJoint_id"] + "';").First();
+                var type = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), patientJoint["kinectJoint_id"].ToString());
+
+                joints[type].XAxis = kinectJoint["x_axis"].ToString().ToLower() == "true";
+                joints[type].YAxis = kinectJoint["y_axis"].ToString().ToLower() == "true";
+                joints[type].ZAxis = kinectJoint["z_axis"].ToString().ToLower() == "true";
+
+                joints[type].XAxisMinValue = int.Parse(kinectJoint["x_axis_min_value"].ToString());
+                joints[type].XAxisMaxValue = int.Parse(kinectJoint["x_axis_max_value"].ToString());
+
+                joints[type].YAxisMinValue = int.Parse(kinectJoint["y_axis_min_value"].ToString());
+                joints[type].YAxisMaxValue = int.Parse(kinectJoint["y_axis_max_value"].ToString());
+
+                joints[type].ZAxisMinValue = int.Parse(kinectJoint["z_axis_min_value"].ToString());
+                joints[type].ZAxisMaxValue = int.Parse(kinectJoint["z_axis_max_value"].ToString());
+
+                joints[type].Active = patientJoint["active"].ToString().ToLower() == "true";
+
+                joints[type].XAxisPatientMinValue = int.Parse(patientJoint["x_axis_min_value"].ToString());
+                joints[type].XAxisPatientMaxValue = int.Parse(patientJoint["x_axis_max_value"].ToString());
+
+                joints[type].YAxisPatientMinValue = int.Parse(patientJoint["y_axis_min_value"].ToString());
+                joints[type].YAxisPatientMaxValue = int.Parse(patientJoint["y_axis_max_value"].ToString());
+
+                joints[type].ZAxisPatientMinValue = int.Parse(patientJoint["z_axis_min_value"].ToString());
+                joints[type].ZAxisPatientMaxValue = int.Parse(patientJoint["z_axis_max_value"].ToString());
+            }
+
+            return joints;
+        }
+
+        public static PatientJoint Get(Kinect.JointType type)
         {
             if (rgJoints == null)
                 rgJoints = new RGJoints();
@@ -90,12 +180,12 @@
             return null;
         }
 
-        public static IList<RGJoint> Get(params Kinect.JointType[] types)
+        public static IList<PatientJoint> Get(params Kinect.JointType[] types)
         {
             if (rgJoints == null)
                 rgJoints = new RGJoints();
 
-            var joints = new List<RGJoint>();
+            var joints = new List<PatientJoint>();
 
             foreach (var type in types)
                 if (rgJoints.jointMap.ContainsKey(type))

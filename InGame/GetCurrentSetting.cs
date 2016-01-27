@@ -1,4 +1,4 @@
-﻿namespace HSA.RehaGame.Settings
+﻿namespace HSA.RehaGame.InGame
 {
     using DB;
     using UnityEngine;
@@ -16,9 +16,9 @@
             var text = this.GetComponentInChildren<Text>();
             var name = DBManager.Query("entry", "editor_menuentry", this.name);
             var value = RGSettings.GetByPropertyName(this, this.name);
-            var trans = RGSettings.GetTranslation(value);
+            var trans = DBManager.GetTranslation(value);
 
-            text.text = name + ": " + trans;
+            text.text = name + ": " + trans["translation"].ToString();
         }
 
         // Update is called once per frame
