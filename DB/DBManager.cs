@@ -3,10 +3,11 @@
     using UnityEngine;
     using System;
     using System.Data;
-    using System.Linq;
+    using Kinect = Windows.Kinect;
     using Mono.Data.Sqlite;
     using System.Collections.Generic;
     using InGame;
+    using Logging;
 
     public class DBManager
     {
@@ -18,9 +19,12 @@
 
         private string dbFile;
 
+        private static Logger<DBManager> logger = new Logger<DBManager>();
+
         private DBManager()
         {
-            dbFile = "URI=file:" + Application.dataPath + "/StreamingAssets/db/rgdbe.db";
+            logger.AddLogAppender<ConsoleAppender>();
+            dbFile = "Data Source=" + Application.dataPath + "/StreamingAssets/db/rgdbe.db";
         }
 
         private void Open()
@@ -42,15 +46,31 @@
 
         private string GetPKName(string table)
         {
-            var info = Query("PRAGMA table_info(" + table + ");");
+            string pkName = null;
 
-            foreach (var entry in info)
+            manager.Open();
+
+            manager.dbcmd = manager.dbconn.CreateCommand();
+
+            manager.dbcmd.CommandText = "PRAGMA table_info(" + table + ");";
+            manager.reader = manager.dbcmd.ExecuteReader();
+
+            while (manager.reader.Read())
             {
-                if (int.Parse(entry["pk"].ToString()) == 1)
-                    return entry["name"].ToString();
+                for (int i = 0; i < manager.reader.FieldCount; i++)
+                {
+                    var name = manager.reader.GetName(i).ToString();
+                    var value = manager.reader.GetValue(i).ToString();
+
+                    if (name == "pk" && int.Parse(value) == 1)
+                    {
+                        pkName = manager.reader.GetString(1);
+                    }
+                }
             }
 
-            return null;
+            manager.Close();
+            return pkName;
         }
 
         private KeyValuePair<string, object> GetLastEntry(string table, string pkName, KeyValuePair<string, object>[] values)
@@ -61,7 +81,7 @@
                     return kv;
             }
 
-            int seq = int.Parse(Query("SELECT seq FROM sqlite_sequence WHERE name='" + table + "';").First().First().Value.ToString());
+            int seq = Query("sqlite_sequence", "SELECT seq FROM sqlite_sequence WHERE name='" + table + "';").GetInt("seq");
             return new KeyValuePair<string, object>(pkName, seq);
         }
 
@@ -73,7 +93,7 @@
                     return kv;
             }
 
-            int seq = int.Parse(Query("SELECT seq FROM sqlite_sequence WHERE name='" + table + "';").First().First().Value.ToString()) + 1;
+            int seq = Query("sqlite_sequence", "SELECT seq FROM sqlite_sequence WHERE name='" + table + "';").GetInt("seq") + 1;
             return new KeyValuePair<string, object>(pkName, seq);
         }
 
@@ -115,6 +135,8 @@
                 }
             }
 
+            logger.Debug();
+
             return sql;
         }
 
@@ -140,19 +162,22 @@
             return columns + values;
         }
 
-        private string GetUpdateValues(KeyValuePair<string, object>[] values)
+        private string GetUpdateValues(string pkName, KeyValuePair<string, object>[] values)
         {
-            var sql = " SET ";
+            var sql = " SET " + pkName + " = :" + pkName + ", ";
 
             for (int i = 0; i < values.Length; i++)
             {
-                if (i < values.Length - 1)
+                if (pkName != values[i].Key)
                 {
-                    sql += values[i].Key + " = '" + values[i].Value + "', ";
-                }
-                else
-                {
-                    sql += values[i].Key + " = '" + values[i].Value + "' ";
+                    if (i < values.Length - 1)
+                    {
+                        sql += values[i].Key + " = :" + values[i].Key + ", ";
+                    }
+                    else
+                    {
+                        sql += values[i].Key + " = :" + values[i].Key + " ";
+                    }
                 }
             }
 
@@ -164,14 +189,17 @@
             manager = new DBManager();
         }
 
-        public static IList<Dictionary<string, object>> Query(string query)
+        public static DBTable Query(string tableName, string query)
         {
             if (manager == null)
                 Instaciate();
 
             try
             {
-                IList<Dictionary<string, object>> list = new List<Dictionary<string, object>>();
+                logger.Debug(string.Format("Query in {0}", tableName), query);
+
+                var table = new DBTable(tableName);
+                var pkName = manager.GetPKName(tableName);
 
                 manager.Open();
 
@@ -182,23 +210,23 @@
 
                 while (manager.reader.Read())
                 {
-                    var dict = new Dictionary<string, object>();
+                    var row = new DBTableRow(table, pkName);
 
                     for (int i = 0; i < manager.reader.FieldCount; i++)
                     {
+                        var type = manager.reader.GetFieldType(i);
                         var name = manager.reader.GetName(i);
                         var value = manager.reader.GetValue(i);
 
-                        dict.Add(name, value);
+                        row.AddColumn(name, new DBTableColumn(row, type, name, value));
                     }
 
-                    if (dict.Count > 0)
-                        list.Add(dict);
+                    table.AddRow(row);
                 }
 
                 manager.Close();
 
-                return list;
+                return table;
             }
 
             catch (Exception e)
@@ -208,29 +236,17 @@
             }
         }
 
-        public static string Query(string column, string table, string unityObjectName)
+        public static DBTableColumn Query(string column, string table, string unityObjectName)
         {
             if (manager == null)
                 Instaciate();
 
             try
             {
-                string value;
                 string language = RGSettings.activeLanguage;
                 string sql = "SELECT " + column + "_" + language + " FROM " + table + " WHERE unityObjectName = '" + unityObjectName + "'";
 
-                manager.Open();
-
-                manager.dbcmd = manager.dbconn.CreateCommand();
-                manager.dbcmd.CommandText = sql;
-
-                manager.reader = manager.dbcmd.ExecuteReader();
-
-                value = manager.reader.GetValue(0).ToString();
-
-                manager.Close();
-
-                return value;
+                return Query(table, sql).GetRow().GetColumn();
             }
 
             catch (Exception e)
@@ -240,19 +256,32 @@
             }
         }
 
-        public static IList<Dictionary<string, object>> Join(string fromTable, string joinTable, string joinTableCol, string fromTableCol, string matchCol, string matchValue)
+        public static DBTable GetPatientJoint(Kinect.JointType kinectJoint_id, string patientName)
         {
             if (manager == null)
                 Instaciate();
 
             try
             {
-                var sql = "SELECT *"
-                + "FROM " + fromTable
-                + "JOIN " + joinTable + " ON " + joinTable + "." + joinTableCol + " = " + fromTable + "." + fromTableCol
-                + " WHERE " + fromTable + "." + matchCol + "= " + matchValue + ";";
+                var sql = string.Format(@"
+                    SELECT editor_patientjoint.id,
+                    editor_patientjoint.active,
+                    editor_patientjoint.x_axis_min_value,
+                    editor_patientjoint.x_axis_max_value,
+                    editor_patientjoint.y_axis_min_value,
+                    editor_patientjoint.y_axis_max_value,
+                    editor_patientjoint.z_axis_min_value,
+                    editor_patientjoint.z_axis_max_value,
+                    editor_patientjoint.kinectJoint_id
+                    FROM editor_patientjoint
+                    JOIN editor_patient_joints ON editor_patient_joints.patientjoint_id = editor_patientjoint.id
+                    JOIN editor_patient ON editor_patient.name = editor_patient_joints.patient_id
+                    WHERE editor_patientjoint.kinectJoint_id = '{0}' and editor_patient.name = '{1}';
+                    ", kinectJoint_id, patientName);
 
-                IList<Dictionary<string, object>> list = new List<Dictionary<string, object>>();
+                logger.Info("Join in database to fetch a specific patients joint", sql);
+
+                DBTable table = new DBTable("editor_patientjoint");
 
                 manager.Open();
 
@@ -263,23 +292,23 @@
 
                 while (manager.reader.Read())
                 {
-                    var dict = new Dictionary<string, object>();
+                    var row = new DBTableRow(table, "id");
 
                     for (int i = 0; i < manager.reader.FieldCount; i++)
                     {
+                        var type = manager.reader.GetFieldType(i);
                         var name = manager.reader.GetName(i);
                         var value = manager.reader.GetValue(i);
 
-                        dict.Add(name, value);
+                        row.AddColumn(name, new DBTableColumn(row, type, name, value));
                     }
 
-                    if (dict.Count > 0)
-                        list.Add(dict);
+                    table.AddRow(row);
                 }
 
                 manager.Close();
 
-                return list;
+                return table;
             }
 
             catch (Exception e)
@@ -291,10 +320,10 @@
 
         public static IDictionary<string, object> GetMenuHeader(string name)
         {
-            var header = Query("SELECT name, auditiveName FROM editor_menu WHERE unityObjectName = '" + name + "';").First();
+            var table = Query("editor_menu", "SELECT * FROM editor_menu WHERE unityObjectName = '" + name + "';");
 
-            var text = header["name"];
-            var audio = header["auditiveName"].ToString().Replace(".mp3", "").Replace("Assets/Resources/", "");
+            var text = table.GetValueFromLanguage("name");
+            var audio = table.GetResource("auditiveName", "mp3");
 
             return new Dictionary<string, object> {
                 {"name", text },
@@ -302,17 +331,11 @@
             };
         }
 
-        public static IDictionary<string, object> GetTranslation(string name)
+        public static DBTable GetTranslation(string name)
         {
-            var translation = Query("SELECT translation, auditiveTranslation FROM editor_valuetranslation WHERE unityObjectName = '" + name + "';").First();
+            var table = Query("editor_valuetranslation", "SELECT translation, auditiveTranslation FROM editor_valuetranslation WHERE unityObjectName = '" + name + "';");
 
-            var text = translation["translation"];
-            var audio = translation["auditiveTranslation"].ToString().Replace(".mp3", "").Replace("Assets/Resources/", "");
-
-            return new Dictionary<string, object> {
-                {"translation", text },
-                { "clip", Resources.Load(audio) }
-            };
+            return table;
         }
 
         public static string Insert(string table, params KeyValuePair<string, object>[] values)
@@ -358,7 +381,7 @@
 
                 manager.Close();
 
-                var all = Query("SELECT * FROM " + table + ";");
+                var all = Query(table, "SELECT * FROM " + table + ";");
                 var lastId = manager.GetLastEntry(table, pkName, values);
 
                 return lastId.Value.ToString();
@@ -376,26 +399,49 @@
             }
         }
 
-        public static object Update(string pk, string table, params KeyValuePair<string, object>[] values)
+        public static string Update(string pk, string table, params KeyValuePair<string, object>[] values)
         {
             if (manager == null)
                 Instaciate();
 
             try
             {
-                var sql = "UPDATE " + table + manager.GetUpdateValues(values) + " WHERE " + manager.GetPKName(table) + " = '" + pk + "';";
+                var pkName = manager.GetPKName(table);
+                var pkParam = new SqliteParameter(pkName, pk);
+                var sql = @"UPDATE " + table + manager.GetUpdateValues(pkName, values) + "WHERE " + pkName + " = '" + pk + "';";
 
                 manager.Open();
 
                 manager.dbcmd = manager.dbconn.CreateCommand();
                 manager.dbcmd.CommandText = sql;
+
+                manager.dbcmd.Parameters.Add(pkParam);
+
+                foreach (KeyValuePair<string, object> value in values)
+                {
+                    bool canAdd = true;
+                    var param = new SqliteParameter(value.Key, value.Value);
+
+                    foreach (var p in manager.dbcmd.Parameters)
+                    {
+                        var addedParam = (SqliteParameter)p;
+
+                        if (addedParam.ParameterName == param.ParameterName && addedParam.Value == param.Value)
+                        {
+                            canAdd = false;
+                            break;
+                        }
+                    }
+
+                    if (canAdd)
+                        manager.dbcmd.Parameters.Add(param);
+                }
+
                 manager.reader = manager.dbcmd.ExecuteReader();
 
                 manager.Close();
 
-                var all = Query("SELECT * FROM " + table + ";");
-
-                return from e in all.Last() where e.Key == manager.GetPKName(table) select e.Key;
+                return pk;
             }
 
             catch (Exception e)

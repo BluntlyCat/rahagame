@@ -1,11 +1,16 @@
 ﻿namespace HSA.RehaGame.User
 {
     using System.Collections.Generic;
-    using System.Linq;
+    using DB;
     using Kinect;
 
-    public class PatientJoint : RGJoint
+    public class PatientJoint : KinectJoint
     {
+        private int id;
+        private int patientjoint_id;
+
+        private string patientName;
+
         private bool active = true;
 
         private int xAxisPatientMinValue;
@@ -17,16 +22,44 @@
         private int zAxisPatientMinValue;
         private int zAxisPatientMaxValue;
 
-        public PatientJoint(Windows.Kinect.JointType type, string xAxis, string yAxis, string zAxis, string xAxisMinValue, string xAxisMaxValue, string yAxisMinValue, string yAxisMaxValue, string zAxisMinValue, string zAxisMaxValue) : base(type, xAxis, yAxis, zAxis, xAxisMinValue, xAxisMaxValue, yAxisMinValue, yAxisMaxValue, zAxisMinValue, zAxisMaxValue)
+        public PatientJoint(string patientName, Windows.Kinect.JointType type, bool xAxis, bool yAxis, bool zAxis, int xAxisMinValue, int xAxisMaxValue, int yAxisMinValue, int yAxisMaxValue, int zAxisMinValue, int zAxisMaxValue) : base(type, xAxis, yAxis, zAxis, xAxisMinValue, xAxisMaxValue, yAxisMinValue, yAxisMaxValue, zAxisMinValue, zAxisMaxValue)
         {
-            this.xAxisPatientMinValue = int.Parse(xAxisMinValue);
-            this.xAxisPatientMaxValue = int.Parse(xAxisMaxValue);
+            this.patientName = patientName;
 
-            this.yAxisPatientMinValue = int.Parse(yAxisMinValue);
-            this.yAxisPatientMaxValue = int.Parse(yAxisMaxValue);
+            this.xAxisPatientMinValue = xAxisMinValue;
+            this.xAxisPatientMaxValue = xAxisMaxValue;
 
-            this.zAxisPatientMinValue = int.Parse(zAxisMinValue);
-            this.zAxisPatientMaxValue = int.Parse(zAxisMaxValue);
+            this.yAxisPatientMinValue = yAxisMinValue;
+            this.yAxisPatientMaxValue = yAxisMaxValue;
+
+            this.zAxisPatientMinValue = zAxisMinValue;
+            this.zAxisPatientMaxValue = zAxisMaxValue;
+        }
+
+        public int ID
+        {
+            get
+            {
+                return id;
+            }
+
+            private set
+            {
+                id = value;
+            }
+        }
+
+        public int PatientJoint_ID
+        {
+            get
+            {
+                return patientjoint_id;
+            }
+
+            private set
+            {
+                patientjoint_id = value;
+            }
         }
 
         public bool Active
@@ -133,12 +166,74 @@
                 children.AddRange(childJoint.Activate(active));
             }
 
+            this.Update();
             return children;
+        }
+
+        public override object Insert()
+        {
+            ID = int.Parse(DBManager.Insert("editor_patientjoint",
+                    new KeyValuePair<string, object>("active", this.Active),
+                    new KeyValuePair<string, object>("x_axis_min_value", this.XAxisMinValue),
+                    new KeyValuePair<string, object>("x_axis_max_value", this.XAxisMaxValue),
+                    new KeyValuePair<string, object>("y_axis_min_value", this.YAxisMinValue),
+                    new KeyValuePair<string, object>("y_axis_max_value", this.YAxisMaxValue),
+                    new KeyValuePair<string, object>("z_axis_min_value", this.ZAxisMinValue),
+                    new KeyValuePair<string, object>("z_axis_max_value", this.ZAxisMaxValue),
+                    new KeyValuePair<string, object>("kinectJoint_id", this.JointType.ToString())
+                ));
+
+            PatientJoint_ID = int.Parse(DBManager.Insert("editor_patient_joints",
+                new KeyValuePair<string, object>("patient_id", patientName),
+                new KeyValuePair<string, object>("patientjoint_id", ID)
+            ));
+
+            return ID;
+        }
+
+        public override IDBObject Select()
+        {
+            var joint = DBManager.GetPatientJoint(JointType, patientName);
+
+            ID = joint.GetInt("id");
+            Active = joint.GetBool("active");
+
+            XAxisPatientMinValue = joint.GetInt("x_axis_min_value");
+            XAxisPatientMinValue = joint.GetInt("x_axis_max_value");
+
+            XAxisPatientMinValue = joint.GetInt("y_axis_min_value");
+            XAxisPatientMinValue = joint.GetInt("y_axis_max_value");
+
+            XAxisPatientMinValue = joint.GetInt("z_axis_min_value");
+            XAxisPatientMinValue = joint.GetInt("z_axis_max_value");
+
+            return this;
+        }
+
+        public override bool Update()
+        {
+            DBManager.Update(ID.ToString(), "editor_patientjoint",
+                new KeyValuePair<string, object>("active", Active),
+                new KeyValuePair<string, object>("x_axis_min_value", XAxisMinValue),
+                new KeyValuePair<string, object>("x_axis_max_value", XAxisMaxValue),
+                new KeyValuePair<string, object>("y_axis_min_value", YAxisMinValue),
+                new KeyValuePair<string, object>("y_axis_max_value", YAxisMaxValue),
+                new KeyValuePair<string, object>("z_axis_min_value", ZAxisMinValue),
+                new KeyValuePair<string, object>("z_axis_max_value", ZAxisMaxValue)
+            );
+
+            return true;
+        }
+
+        public override void Delete()
+        {
+            DBManager.Detete("editor_patientjoint", this.ID.ToString());
+            DBManager.Detete("editor_patient_joints", this.PatientJoint_ID.ToString());
         }
 
         public override string ToString()
         {
-            return this.Type + " (" + this.Active + ")";
+            return this.JointType + " (" + this.Active + ")";
         }
     }
 }

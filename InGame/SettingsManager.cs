@@ -20,16 +20,16 @@
 
         private void LoadSettings()
         {
-            var groupID = DBManager.Query("SELECT id FROM editor_settings WHERE \"group\" = 'ingame'").First()["id"];
-            var settingsIDs = DBManager.Query("SELECT settingskeyvalue_id FROM editor_settings_setting WHERE settings_id = '" + groupID + "'");
+            var groupID = DBManager.Query("editor_settings", "SELECT id FROM editor_settings WHERE \"group\" = 'ingame'").GetValue("id");
+            var settingsIDs = DBManager.Query("editor_settings_setting", "SELECT settingskeyvalue_id FROM editor_settings_setting WHERE settings_id = '" + groupID + "'");
 
-            foreach (var entry in settingsIDs)
+            foreach (var row in settingsIDs.Rows)
             {
-                var settingEntry = DBManager.Query("SELECT key, value FROM editor_settingskeyvalue WHERE id = '" + entry["settingskeyvalue_id"] + "'");
-                var setting = settingEntry.First();
+                var settingEntry = DBManager.Query("editor_settingskeyvalue", "SELECT key, value FROM editor_settingskeyvalue WHERE id = '" + row.GetValue("settingskeyvalue_id") + "'");
+                var setting = settingEntry.GetRow();
 
-                var key = setting["key"].ToString();
-                var value = setting["value"].ToString();
+                var key = setting.GetValue("key");
+                var value = setting.GetValue("value");
 
                 if (value.Contains(","))
                     settings.Add(key, value.Split(','));
@@ -58,7 +58,7 @@
         {
             if (manager != null)
             {
-                var properties = Type.GetType("HSA.RehaGame.Settings.RGSettings").GetProperties();
+                var properties = Type.GetType("HSA.RehaGame.InGame.RGSettings").GetProperties();
 
                 foreach (var property in properties)
                 {
@@ -81,7 +81,7 @@
                             result = slots.Substring(0, slots.Length - 1);
                         }
 
-                        DBManager.Query("UPDATE editor_settingskeyvalue SET value='" + result.ToString().ToLower() + "' WHERE key = '" + property.Name + "'");
+                        DBManager.Query("editor_settingskeyvalue", "UPDATE editor_settingskeyvalue SET value='" + result.ToString().ToLower() + "' WHERE key = '" + property.Name + "'");
                     }
                 }
             }

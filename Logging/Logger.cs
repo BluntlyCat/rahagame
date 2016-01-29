@@ -35,13 +35,16 @@ namespace HSA.RehaGame.Logging
             }
         }
 
-        private string ObjectsToString(params object[] gameObjects)
+        private string ObjectsToString(object[] gameObjects)
         {
-            string tmp = "";
+            string tmp = "({0}{1}";
 
-            foreach (var gameObject in gameObjects)
+            for(int i = 0; i < gameObjects.Length; i++)
             {
-                tmp += gameObject.ToString() + " | ";
+                if (i < gameObjects.Length - 1)
+                    tmp = string.Format(tmp, gameObjects[i].ToString(), ", {0}{1}");
+                else
+                    tmp = string.Format(tmp, gameObjects[i].ToString(), ")");
             }
 
             return tmp;
@@ -52,11 +55,27 @@ namespace HSA.RehaGame.Logging
         /// </summary>
         /// <param name="name">The name of the new logger.</param>
         /// <returns>The ILog logger.</returns>
-        private void Log(LogLevels level, params object[] gameObjects)
+        private void Log(LogLevels level, object[] gameObjects)
         {
-            string log = level.ToString().ToUpper() + " IN " + this.type + " AT " + DateTime.Now + ": " + this.ObjectsToString(gameObjects);
+            string log = string.Format("{0} IN {1} AT {2}: {3}", level.ToString().ToUpper(), this.type.Name, DateTime.Now, this.ObjectsToString(gameObjects));
 
             foreach(var logAppender in this.logAppenders)
+            {
+                logAppender.Value.Append(log, level);
+            }
+        }
+
+        /// <summary>
+        /// Gets the logger and add a new logger if not exist.
+        /// </summary>
+        /// <param message="message">The name of the new logger.</param>
+        /// <param name="name">The name of the new logger.</param>
+        /// <returns>The ILog logger.</returns>
+        private void Log(LogLevels level, string message, object[] gameObjects)
+        {
+            string log = string.Format("{0} IN {1} AT {2}: {3}:\n{4}", level.ToString().ToUpper(), this.type.Name, DateTime.Now, message, this.ObjectsToString(gameObjects));
+
+            foreach (var logAppender in this.logAppenders)
             {
                 logAppender.Value.Append(log, level);
             }
@@ -66,25 +85,45 @@ namespace HSA.RehaGame.Logging
         {
             this.Log(LogLevels.debug, objects);
         }
+        public void Debug(string message, params object[] objects)
+        {
+            this.Log(LogLevels.debug, message, objects);
+        }
 
         public void Error(params object[] objects)
         {
             this.Log(LogLevels.error, objects);
+        }
+        public void Error(string message, params object[] objects)
+        {
+            this.Log(LogLevels.error, message, objects);
         }
 
         public void Fatal(params object[] objects)
         {
             this.Log(LogLevels.fatal, objects);
         }
+        public void Fatal(string message, params object[] objects)
+        {
+            this.Log(LogLevels.fatal, message, objects);
+        }
 
         public void Info(params object[] objects)
         {
             this.Log(LogLevels.info, objects);
         }
+        public void Info(string message, params object[] objects)
+        {
+            this.Log(LogLevels.info, message, objects);
+        }
 
         public void Warning(params object[] objects)
         {
             this.Log(LogLevels.warning, objects);
+        }
+        public void Warning(string message, params object[] objects)
+        {
+            this.Log(LogLevels.warning, message, objects);
         }
     }
 }

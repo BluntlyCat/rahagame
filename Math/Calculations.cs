@@ -9,15 +9,15 @@
         public static float GetAngle(Dictionary<string, Kinect.Joint> joints)
         {
             var b = GetVector3FromJoint(joints["base"]);
-            var u = GetVector3FromJoint(joints["parent"]);
-            var v = GetVector3FromJoint(joints["child"]);
+            var p = GetVector3FromJoint(joints["parent"]);
+            var c = GetVector3FromJoint(joints["child"]);
 
-            u = Substract(b, u);
-            v = Substract(b, v);
+            var pDelta = Substract(b, p);
+            var cDelta = Substract(b, c);
 
-            var scalar = CalculateVectorScalar(u, v);
-            var length_u = CalculateVectorLength(u);
-            var length_v = CalculateVectorLength(v);
+            var scalar = CalculateVectorScalar(pDelta, cDelta);
+            var length_u = CalculateVectorLength(pDelta);
+            var length_v = CalculateVectorLength(cDelta);
             var cos_phi = scalar / (length_u * length_v);
 
             return (Mathf.Acos(cos_phi) * 180) / Mathf.PI;

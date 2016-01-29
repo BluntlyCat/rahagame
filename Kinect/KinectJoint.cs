@@ -1,12 +1,13 @@
 ﻿namespace HSA.RehaGame.Kinect
 {
     using System.Collections.Generic;
+    using DB;
     using Kinect = Windows.Kinect;
 
-    public class RGJoint
+    public abstract class KinectJoint : DBObject
     {
-        private RGJoint parent;
-        private Dictionary<Kinect.JointType, RGJoint> children = new Dictionary<Kinect.JointType, RGJoint>();
+        private KinectJoint parent;
+        private Dictionary<Kinect.JointType, KinectJoint> children = new Dictionary<Kinect.JointType, KinectJoint>();
         private Kinect.JointType type;
 
         private bool xAxis;
@@ -22,34 +23,34 @@
         private int zAxisMinValue;
         private int zAxisMaxValue;
 
-        public RGJoint(Kinect.JointType type,
-            string xAxis,
-            string yAxis,
-            string zAxis,
-            string xAxisMinValue,
-            string xAxisMaxValue,
-            string yAxisMinValue,
-            string yAxisMaxValue,
-            string zAxisMinValue,
-            string zAxisMaxValue)
+        public KinectJoint(Kinect.JointType type,
+            bool xAxis,
+            bool yAxis,
+            bool zAxis,
+            int xAxisMinValue,
+            int xAxisMaxValue,
+            int yAxisMinValue,
+            int yAxisMaxValue,
+            int zAxisMinValue,
+            int zAxisMaxValue)
         {
             this.type = type;
 
-            this.xAxis = xAxis == "true";
-            this.yAxis = yAxis == "true";
-            this.zAxis = zAxis == "true";
+            this.xAxis = xAxis;
+            this.yAxis = yAxis;
+            this.zAxis = zAxis;
 
-            this.xAxisMinValue = int.Parse(xAxisMinValue);
-            this.xAxisMaxValue = int.Parse(xAxisMaxValue);
+            this.xAxisMinValue = xAxisMinValue;
+            this.xAxisMaxValue = xAxisMaxValue;
 
-            this.yAxisMinValue = int.Parse(yAxisMinValue);
-            this.yAxisMaxValue = int.Parse(yAxisMaxValue);
+            this.yAxisMinValue = yAxisMinValue;
+            this.yAxisMaxValue = yAxisMaxValue;
 
-            this.zAxisMinValue = int.Parse(zAxisMinValue);
-            this.zAxisMaxValue = int.Parse(zAxisMaxValue);
+            this.zAxisMinValue = zAxisMinValue;
+            this.zAxisMaxValue = zAxisMaxValue;
         }
 
-        public Kinect.JointType Type
+        public Kinect.JointType JointType
         {
             get
             {
@@ -179,7 +180,7 @@
             }
         }
 
-        public RGJoint Parent
+        public KinectJoint Parent
         {
             get
             {
@@ -191,7 +192,7 @@
             }
         }
 
-        public Dictionary<Kinect.JointType, RGJoint> Children
+        public Dictionary<Kinect.JointType, KinectJoint> Children
         {
             get
             {
@@ -203,12 +204,20 @@
             }
         }
 
-        public RGJoint GetChild(Kinect.JointType name)
+        public KinectJoint GetChild(Kinect.JointType name)
         {
             if (children.ContainsKey(name))
                 return children[name];
 
             return null;
         }
+
+        public abstract override object Insert();
+
+        public abstract override IDBObject Select();
+
+        public abstract override bool Update();
+
+        public abstract override void Delete();
     }
 }

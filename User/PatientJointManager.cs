@@ -30,14 +30,18 @@
 
         void OnEnable()
         {
-            if (GameState.PatientName != null)
+            if (GameState.ActivePatient != null)
             {
+                this.button = GetComponent<Button>();
+                this.buttonColors = this.button.colors;
+
                 this.joint = GameState.ActivePatient.GetJoint(this.name);
                 states state = joint.Active ? states.active : states.inactive;
                 this.buttonColors.normalColor = colors[state];
                 this.buttonColors.pressedColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
                 this.buttonColors.highlightedColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
                 this.buttonColors.disabledColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
+                this.button.colors = this.buttonColors;
             }
         }
 
@@ -55,7 +59,7 @@
                 {
                     foreach(Transform transform in list.transform)
                     {
-                        if (transform.name == child.Type.ToString())
+                        if (transform.name == child.JointType.ToString())
                         {
                             var childButton = transform.GetComponent<Button>();
                             var childColors = childButton.colors;

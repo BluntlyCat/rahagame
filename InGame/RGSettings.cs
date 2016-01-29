@@ -53,11 +53,11 @@
         }
 
         [Setting(true)]
-        public static bool readingAloud
+        public static bool reading
         {
             get
             {
-                var aloud = SettingsManager.Get("readingAloud").ToString().ToLower();
+                var aloud = SettingsManager.Get("reading").ToString().ToLower();
                 return aloud == "true";
             }
 
@@ -84,7 +84,7 @@
 
         public static string GetByPropertyName(object caller, string name)
         {
-            var properties = Type.GetType("HSA.RehaGame.Settings.RGSettings").GetProperties();
+            var properties = Type.GetType("HSA.RehaGame.InGame.RGSettings").GetProperties();
 
             foreach (var property in properties)
             {
@@ -116,7 +116,7 @@
 
         public void SwapReadingAloud()
         {
-            readingAloud = !readingAloud;
+            reading = !reading;
             Save();
 
             LoadScene.ReloadSettings();

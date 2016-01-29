@@ -2,7 +2,6 @@
 {
     using UnityEngine;
     using UnityEngine.UI;
-    using System.Collections;
     using System.Linq;
     using System.Collections.Generic;
     using Kinect = Windows.Kinect;
@@ -10,6 +9,8 @@
     using Scene;
     using Math;
     using DB;
+    using User;
+    using InGame;
 
     public class BodySourceView : MonoBehaviour
     {
@@ -21,21 +22,22 @@
         private Dictionary<ulong, GameObject> _Bodies = new Dictionary<ulong, GameObject>();
         private BodySourceManager _BodyManager;
 
-        private Dictionary<string, Kinect.Joint> GetJoints(Kinect.Body body, RGJoint joint)
+        private Patient patient;
+
+        private Dictionary<string, Kinect.Joint> GetJoints(Kinect.Body body, KinectJoint joint)
         {
             return new Dictionary<string, Windows.Kinect.Joint>
             {
-                { "base", body.Joints[joint.Type] },
-                { "parent", body.Joints[joint.Parent.Type] },
-                { "child", body.Joints[joint.Children.First().Value.Type] },
+                { "base", body.Joints[joint.JointType] },
+                { "parent", body.Joints[joint.Parent.JointType] },
+                { "child", body.Joints[joint.Children.First().Value.JointType] },
             };
         }
 
         void Start()
         {
-            var list = DBManager.Query("SELECT name, parent_id FROM editor_joint");
-
             logger.AddLogAppender<ConsoleAppender>();
+            patient = GameState.ActivePatient == null ? new Patient("Hans").Select() as Patient : GameState.ActivePatient;
         }
 
         void Update()
@@ -114,27 +116,27 @@
             return body;
         }
 
-        private void DrawAngle(float angle, float x, float y, float z)
+        private void DrawAngle(Kinect.Joint joint, float angle, float x, float y, float z)
         {
             var text = GameObject.FindGameObjectWithTag("Angle");
 
             text.transform.position = new Vector3(x, y, 0);
-            text.GetComponent<Text>().text = angle.ToString("0") + "°";
+            text.GetComponent<Text>().text = angle.ToString("0") + "°" + " v(" + joint.Position.X + "/" + joint.Position.Y + "/" + joint.Position.Z + ")";
         }
 
         private void RefreshBodyObject(Kinect.Body body, GameObject bodyObject)
         {
             for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
             {
-                var rgJoint = RGJoints.Get(jt);
+                var joint = patient.GetJoint(jt);
 
-                if (rgJoint.Active)
+                if (joint.Active)
                 {
                     Kinect.Joint sourceJoint = body.Joints[jt];
                     Kinect.Joint? targetJoint = null;
 
-                    if (rgJoint.Parent != null)
-                        targetJoint = body.Joints[rgJoint.Parent.Type];
+                    if (joint.Parent != null)
+                        targetJoint = body.Joints[joint.Parent.JointType];
 
                     Transform jointObj = bodyObject.transform.FindChild(jt.ToString());
                     jointObj.localPosition = Calculations.GetVector3FromJoint(sourceJoint);
@@ -144,8 +146,8 @@
                     {
                         if (jt == Kinect.JointType.ElbowRight)
                         {
-                            var joints = GetJoints(body, rgJoint);
-                            DrawAngle(Calculations.GetAngle(joints), jointObj.localPosition.x, jointObj.localPosition.y, jointObj.localPosition.z);
+                            var joints = GetJoints(body, joint);
+                            DrawAngle(body.Joints[jt], Calculations.GetAngle(joints), jointObj.localPosition.x, jointObj.localPosition.y, jointObj.localPosition.z);
                         }
 
                         lr.SetPosition(0, jointObj.localPosition);

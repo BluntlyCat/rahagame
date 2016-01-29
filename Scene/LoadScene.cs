@@ -7,6 +7,7 @@
     using System.Collections.Generic;
     using Scene;
     using UnityEngine.SceneManagement;
+    using InGame;
 
     public class LoadScene : MonoBehaviour
     {
@@ -26,7 +27,7 @@
             hud = GameObject.FindGameObjectWithTag("HUD");
 
             musicPlayer = new MusicPlayer(this.GetComponent<AudioSource>());
-            
+
             musicPlayer.playlist = SceneManager.GetActiveScene().name;
             musicPlayer.Play();
         }
@@ -34,23 +35,24 @@
         // Update is called once per frame
         void Update()
         {
-            if (musicPlayer != null && musicPlayer.isPlaying == false && Pause.Paused == false)
-                musicPlayer.Next();
+            /*if (musicPlayer != null && musicPlayer.isPlaying == false && Pause.Paused == false)
+                musicPlayer.Next();*/
         }
 
         private static void LoadNewScene(string scene, bool addPrevious = true)
         {
             logger.Info("Load scene", scene);
 
-            if(addPrevious)
+            if (addPrevious)
                 previousScenes.Add(SceneManager.GetActiveScene().name);
 
             SceneManager.LoadScene(scene);
         }
 
-        public static void LoadExercise(string name)
+        public static void LoadExercise()
         {
-            LoadNewScene(name);
+            if (GameState.ActiveExercise != null)
+                LoadNewScene(GameState.ActiveExercise.UnityObjectName);
         }
 
         public static void ReloadSettings()
@@ -84,6 +86,11 @@
         public static void LoadUser()
         {
             LoadNewScene("NewUser");
+        }
+
+        public static void LoadUsersSlection()
+        {
+            LoadNewScene("Users");
         }
 
         public void PreviousScene()

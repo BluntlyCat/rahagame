@@ -3,33 +3,43 @@
     using UnityEngine;
     using InGame;
     using UnityEngine.UI;
+    using DB;
 
     public class PatientManager : MonoBehaviour
     {
         private Patient patient;
-        private bool update;
+        private bool queryDone;
 
         private InputField nameInput;
         private InputField ageInput;
-        private InputField sexInput;
+        private Dropdown sexInput;
 
         // Use this for initialization
         void Start()
         {
-            var inputFields = GameObject.Find("Image").GetComponentsInChildren<InputField>();
+            var name = DBManager.Query("editor_valuetranslation", "SELECT * FROM editor_valuetranslation WHERE unityObjectName = 'name'");
+            var age = DBManager.Query("editor_valuetranslation", "SELECT * FROM editor_valuetranslation WHERE unityObjectName = 'age'");
+            var sex = DBManager.Query("editor_valuetranslation", "SELECT * FROM editor_valuetranslation WHERE unityObjectName = 'sex'");
 
-            nameInput = inputFields[0];
-            ageInput = inputFields[1];
-            sexInput = inputFields[2];
+            nameInput = GameObject.Find("name").GetComponent<InputField>();
+            ageInput = GameObject.Find("age").GetComponent<InputField>();
+            sexInput = GameObject.Find("sex").GetComponent<Dropdown>();
 
-            if (GameState.PatientName != null)
+            GameObject.Find("nameLabel").GetComponent<Text>().text = string.Format("{0}: ", name.GetValueFromLanguage("translation"));
+            GameObject.Find("ageLabel").GetComponent<Text>().text = string.Format("{0}: ", age.GetValueFromLanguage("translation"));
+            GameObject.Find("sexLabel").GetComponent<Text>().text = string.Format("{0}: ", sex.GetValueFromLanguage("translation"));
+
+
+
+            if (GameState.ActivePatient != null)
             {
                 patient = GameState.ActivePatient;
 
                 nameInput.text = patient.Name;
-                ageInput.text = patient.Age;
-                sexInput.text = patient.Sex;
+                ageInput.text = patient.Age.ToString();
+                sexInput.value = (int)patient.Sex;
 
+                sexInput.RefreshShownValue();
                 ActivateJoints();
             }
         }
@@ -48,19 +58,21 @@
         {
             if (patient != null)
             {
-                update = true;
+                patient.Age = int.Parse(ageInput.text);
+                patient.Sex = (Gender)sexInput.value;
 
-                patient.Age = ageInput.text;
-                patient.Sex = sexInput.text;
+                queryDone = patient.Update();
             }
             else
             {
-                update = false;
-                patient = new Patient(nameInput.text, ageInput.text, sexInput.text);
+                patient = new Patient(nameInput.text, int.Parse(ageInput.text), (Gender)sexInput.value);
+                queryDone = patient.Insert() != null;
             }
 
-            if (patient.Save(update))
+            if (queryDone)
             {
+                GameState.ActivePatient = patient;
+
                 ActivateJoints();
             }
         }
@@ -70,7 +82,7 @@
             if (patient != null)
             {
                 patient.Delete();
-                update = false;
+                queryDone = false;
             }
         }
     }

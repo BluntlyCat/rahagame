@@ -2,24 +2,14 @@
 {
     using User;
     using UnityEngine;
+    using Exercises;
+    using System.Collections.Generic;
 
     public class GameState : MonoBehaviour
     {
-        private static string patientName;
         private static Patient activePatient;
-
-        public static string PatientName
-        {
-            get
-            {
-                return patientName;
-            }
-
-            set
-            {
-                patientName = value;
-            }
-        }
+        private static Exercise activeExercise;
+        private static IDictionary<string, Exercise> exercises = new Dictionary<string, Exercise>();
 
         public static Patient ActivePatient
         {
@@ -32,6 +22,23 @@
             {
                 activePatient = value;
             }
+        }
+        public static Exercise ActiveExercise
+        {
+            get
+            {
+                return activeExercise;
+            }
+        }
+
+        public static void AddExercise(Exercise exercise)
+        {
+            exercises.Add(exercise.UnityObjectName, exercise);
+        }
+
+        public static void SetActiveExercise(string unityObjectName)
+        {
+            activeExercise = exercises[unityObjectName];
         }
     }
 }

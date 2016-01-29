@@ -6,12 +6,8 @@
     using UnityEngine.SceneManagement;
     using UnityEngine.UI;
 
-    [RequireComponent(typeof(AudioSource))]
-
     public class SetMenuHeader : MonoBehaviour
     {
-        private AudioSource audioSource;
-
         // Use this for initialization
         void Start()
         {
@@ -19,11 +15,11 @@
             AudioClip headerClip;
             string headerText;
 
-            if (SceneManager.GetActiveScene().name == "newUser" && GameState.PatientName != "")
+            if (SceneManager.GetActiveScene().name == "newUser" && GameState.ActivePatient != null)
             {
                 var data  = DBManager.GetTranslation("welcome");
-                headerText = data["translation"].ToString() + ", " + GameState.PatientName; ;
-                headerClip = data["clip"] as AudioClip;
+                headerText = string.Format("{0}, {1}", data.GetValueFromLanguage("translation"), GameState.ActivePatient.Name);
+                headerClip = Resources.Load(data.GetResource("auditiveTranslation", "mp3")) as AudioClip;
             }
             else
             {
@@ -33,11 +29,6 @@
             }
 
             textComponent.text = headerText;
-            audioSource = this.GetComponent<AudioSource>();
-            audioSource.clip = headerClip;
-
-            if(RGSettings.readingAloud)
-                audioSource.Play();
         }
     }
 }

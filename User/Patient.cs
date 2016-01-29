@@ -7,53 +7,28 @@
     using DB;
     using Scene;
 
-    public class Patient
+    public class Patient : DBObject
     {
         private string name;
-        private string age;
-        private string sex;
+        private int age;
+        private Gender sex;
 
-        private IDictionary<Kinect.JointType, PatientJoint> joints;
+        private KinectJointManager jointManager;
         private bool insert = true;
 
-        public static Patient Instance(string name)
+        public Patient(string name)
         {
-            if (DBManager.Exists("editor_patient", name))
-            {
-                var patientData = DBManager.Query("SELECT * FROM editor_patient WHERE name ='" + name + "';").First();
-                var patientJointIDs = DBManager.Query("SELECT patientjoint_id FROM editor_patient_joints WHERE patient_id ='" + name + "';");
-
-                return new Patient(patientData["name"].ToString(), patientData["age"].ToString(), patientData["sex"].ToString(), patientJointIDs);
-            }
-
-            return null;
+            this.name = name;
+            this.jointManager = new KinectJointManager(name);
         }
 
-        public Patient(string name, string age, string sex)
+        public Patient(string name, int age, Gender sex)
         {
             this.name = name;
             this.age = age;
             this.sex = sex;
 
-            this.joints = RGJoints.Copy();
-        }
-
-        public Patient(string name, string age, string sex, IList<Dictionary<string, object>> patientJointIDs)
-        {
-            this.name = name;
-            this.age = age;
-            this.sex = sex;
-
-            this.joints = RGJoints.Copy(patientJointIDs);
-        }
-
-        public Patient(string name, string age, string sex, IDictionary<Kinect.JointType, PatientJoint> joints)
-        {
-            this.name = name;
-            this.age = age;
-            this.sex = sex;
-
-            this.joints = joints;
+            this.jointManager = new KinectJointManager(name);
         }
 
         public string Name
@@ -69,7 +44,7 @@
             }
         }
 
-        public string Sex
+        public Gender Sex
         {
             get
             {
@@ -82,7 +57,7 @@
             }
         }
 
-        public string Age
+        public int Age
         {
             get
             {
@@ -98,75 +73,86 @@
         public bool ActivateJoint(string name)
         {
             var jt = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), name);
-            this.joints[jt].Active = !this.joints[jt].Active;
+            this.jointManager.Joints[jt].Active = !this.jointManager.Joints[jt].Active;
 
-            return this.joints[jt].Active;
+            return this.jointManager.Joints[jt].Active;
         }
 
         public PatientJoint GetJoint(string name)
         {
             var jt = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), name);
-            return this.joints[jt];
+            return this.jointManager.Joints[jt];
         }
 
-        public bool Save(bool update)
+        public PatientJoint GetJoint(Kinect.JointType jt)
         {
-            if (update)
+            return this.jointManager.Joints[jt];
+        }
+
+        public override object Insert()
+        {
+            if (DBManager.Exists("editor_patient", this.Name))
+                return false;
+
+            var id = DBManager.Insert("editor_patient",
+                new KeyValuePair<string, object>("name", this.Name),
+                new KeyValuePair<string, object>("age", this.Age),
+                new KeyValuePair<string, object>("sex", (int)this.Sex)
+            );
+
+            foreach (var joint in this.jointManager.Joints.Values)
             {
-                DBManager.Update(this.Name, "editor_patient",
+                joint.Insert();
+            }
+
+            return id;
+        }
+
+        public override IDBObject Select()
+        {
+            if (DBManager.Exists("editor_patient", name))
+            {
+                var patientData = DBManager.Query("editor_patient", "SELECT age, sex FROM editor_patient WHERE name ='" + Name + "';").GetRow();
+
+                this.Age = patientData.GetInt("age");
+                this.Sex = (Gender)patientData.GetInt("sex");
+
+                foreach(var joint in this.jointManager.Joints.Values)
+                {
+                    joint.Select();
+                }
+
+                return this;
+            }
+
+            return null;
+        }
+
+        public override bool Update()
+        {
+            DBManager.Update(this.Name, "editor_patient",
                     new KeyValuePair<string, object>("age", this.age),
                     new KeyValuePair<string, object>("sex", this.sex)
                 );
-            }
-            else
-            {
-                if (DBManager.Exists("editor_patient", this.Name))
-                    return false;
-
-                var id = DBManager.Insert("editor_patient",
-                    new KeyValuePair<string, object>("name", this.Name),
-                    new KeyValuePair<string, object>("age", this.Age),
-                    new KeyValuePair<string, object>("sex", this.Sex)
-                );
-
-                foreach (var joint in this.joints.Values)
-                {
-                    var jid = DBManager.Insert("editor_patientjoint",
-                        new KeyValuePair<string, object>("active", joint.Active.ToString().ToLower()),
-                        new KeyValuePair<string, object>("x_axis_min_value", joint.XAxisMinValue),
-                        new KeyValuePair<string, object>("x_axis_max_value", joint.XAxisMaxValue),
-                        new KeyValuePair<string, object>("y_axis_min_value", joint.YAxisMinValue),
-                        new KeyValuePair<string, object>("y_axis_max_value", joint.YAxisMaxValue),
-                        new KeyValuePair<string, object>("z_axis_min_value", joint.ZAxisMinValue),
-                        new KeyValuePair<string, object>("z_axis_max_value", joint.ZAxisMaxValue),
-                        new KeyValuePair<string, object>("kinectJoint_id", joint.Type.ToString())
-                    );
-
-                    DBManager.Insert("editor_patient_joints",
-                        new KeyValuePair<string, object>("patient_id", id),
-                        new KeyValuePair<string, object>("patientjoint_id", jid)
-                    );
-                }
-            }
 
             return true;
         }
 
-        public void Delete()
+        public override void Delete()
         {
             if (DBManager.Exists("editor_patient", this.Name))
             {
-                var patientJointMap = DBManager.Query("SELECT * FROM editor_patient_joints WHERE patient_id ='" + this.Name + "';");
+                var patientJointMap = DBManager.Query("editor_patient_joints", "SELECT * FROM editor_patient_joints WHERE patient_id ='" + this.Name + "';");
 
-                foreach (var patientJointMapping in patientJointMap)
+                foreach (var patientJointMapping in patientJointMap.Rows)
                 {
-                    var patientJoint = DBManager.Query("SELECT * FROM editor_patientjoint WHERE id = '" + patientJointMapping["patientjoint_id"] + "';").First();
-                    DBManager.Detete("editor_patientjoint", patientJointMapping["patientjoint_id"].ToString());
-                    DBManager.Detete("editor_patient_joints", patientJointMapping["id"].ToString());
+                    var patientJoint = DBManager.Query("editor_patientjoint", "SELECT * FROM editor_patientjoint WHERE id = '" + patientJointMapping.GetValue("patientjoint_id") + "';").GetRow();
+                    DBManager.Detete("editor_patientjoint", patientJointMapping.GetValue("patientjoint_id"));
+                    DBManager.Detete("editor_patient_joints", patientJointMapping.GetValue("id"));
                 }
 
                 DBManager.Detete("editor_patient", this.Name);
-                LoadScene.GoOneSceneBack();
+                LoadScene.LoadUsersSlection();
             }
         }
     }

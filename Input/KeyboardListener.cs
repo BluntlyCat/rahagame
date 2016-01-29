@@ -11,46 +11,78 @@
     {
         private static Logger<KeyboardListener> logger = new Logger<KeyboardListener>();
         private static GameObject overlayMenu;
+        private static int inputElementIndex;
 
         // Use this for initialization
         void Start()
         {
             logger.AddLogAppender<ConsoleAppender>();
+            inputElementIndex = 0;
             overlayMenu = GameObject.FindGameObjectWithTag("OverlayMenu");
         }
 
-        // Update is called once per frame
-        void Update()
+        private void EscapePressed()
         {
-            Event e = Event.current;
-
-            if (Input.GetKeyUp(KeyCode.Escape))
+            if (SceneManager.GetActiveScene().name == "MainMenu")
             {
-                logger.Debug("KEY PRESS");
-
-                if (SceneManager.GetActiveScene().name == "MainMenu")
+                LoadScene.ReturnToWindows();
+            }
+            else
+            {
+                if (overlayMenu == null)
                 {
-                    LoadScene.ReturnToWindows();
+                    LoadScene.GoOneSceneBack();
                 }
                 else
                 {
-                    if (overlayMenu == null)
+                    if (overlayMenu.activeSelf)
                     {
+                        BodySourceManager.ShutdownKinect();
                         LoadScene.GoOneSceneBack();
                     }
                     else
                     {
-                        if (overlayMenu.activeSelf)
-                        {
-                            BodySourceManager.ShutdownKinect();
-                            LoadScene.GoOneSceneBack();
-                        }
-                        else
-                        {
-                            OverlayMenu.HideMenu();
-                        }
+                        OverlayMenu.HideMenu();
                     }
                 }
+            }
+        }
+
+        private void ArrowPressed(Event e)
+        {
+            var inputElements = GameObject.FindGameObjectsWithTag("inputElement");
+
+            switch (e.keyCode)
+            {
+                case KeyCode.LeftArrow:
+                case KeyCode.UpArrow:
+                    inputElementIndex = (inputElementIndex - 1) % inputElements.Length;
+                    break;
+
+                case KeyCode.RightArrow:
+                case KeyCode.DownArrow:
+                    inputElementIndex = (inputElementIndex + 1) % inputElements.Length;
+                    break;
+            }
+
+            GUI.FocusControl(inputElements[inputElementIndex].name);
+        }
+
+        // Update is called once per frame
+        void OnGui()
+        {
+            switch(Event.current.keyCode)
+            {
+                case KeyCode.Escape:
+                    EscapePressed();
+                    break;
+
+                case KeyCode.DownArrow:
+                case KeyCode.RightArrow:
+                case KeyCode.UpArrow:
+                case KeyCode.LeftArrow:
+                    //ArrowPressed(Event.current);
+                    break;
             }
         }
     }
