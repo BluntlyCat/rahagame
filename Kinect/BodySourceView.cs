@@ -5,28 +5,36 @@
     using System.Linq;
     using System.Collections.Generic;
     using Kinect = Windows.Kinect;
-    using HSA.RehaGame.Logging;
+    using Logging;
     using Scene;
     using Math;
-    using DB;
-    using User;
     using InGame;
+    using Exercises;
+    using User;
 
     public class BodySourceView : MonoBehaviour
     {
         private static Logger<BodySourceView> logger = new Logger<BodySourceView>();
 
-        public Material BoneMaterial;
-        public GameObject BodySourceManager;
+        public Material boneMaterial;
+        public Material jointMaterial;
+        public Material stressedJointMaterial;
+        public Material disabledJointMaterial;
 
-        private Dictionary<ulong, GameObject> _Bodies = new Dictionary<ulong, GameObject>();
-        private BodySourceManager _BodyManager;
+        public Transform jointInfoText;
 
-        private Patient patient;
+        public GameObject bodySourceManager;
+        private Dictionary<ulong, GameObject> kinectBodies = new Dictionary<ulong, GameObject>();
+        private BodySourceManager bodyManager;
+        private List<ulong> trackedIds;
+
+        private Dictionary<Kinect.JointType, Text> jointInfo = new Dictionary<Kinect.JointType, Text>();
+
+        private Exercise exercise;
 
         private Dictionary<string, Kinect.Joint> GetJoints(Kinect.Body body, KinectJoint joint)
         {
-            return new Dictionary<string, Windows.Kinect.Joint>
+            return new Dictionary<string, Kinect.Joint>
             {
                 { "base", body.Joints[joint.JointType] },
                 { "parent", body.Joints[joint.Parent.JointType] },
@@ -37,61 +45,73 @@
         void Start()
         {
             logger.AddLogAppender<ConsoleAppender>();
-            patient = GameState.ActivePatient == null ? new Patient("Hans").Select() as Patient : GameState.ActivePatient;
+            bodyManager = bodySourceManager.GetComponent<BodySourceManager>();
+            exercise = new Exercise("exercise1", new Patient("michael").Select() as Patient).Select() as Exercise;
+        }
+
+        private Kinect.Body[] GetBodies()
+        {
+            var bodies = bodyManager.GetData();
+
+            if (bodies == null)
+                return null;
+
+            trackedIds = new List<ulong>();
+            foreach (var body in bodies)
+            {
+                if (body == null)
+                    continue;
+
+                if (body.IsTracked)
+                    trackedIds.Add(body.TrackingId);
+            }
+
+            return bodies;
+        }
+
+        private void DeleteUntrackedBodies()
+        {
+            List<ulong> knownIds = new List<ulong>(kinectBodies.Keys);
+
+            // First delete untracked bodies
+            foreach (ulong trackingId in knownIds)
+            {
+                if (!trackedIds.Contains(trackingId))
+                {
+                    Destroy(kinectBodies[trackingId]);
+                    kinectBodies.Remove(trackingId);
+                }
+            }
         }
 
         void Update()
         {
-            if (Pause.Paused != true)
+            if (Pause.Paused)
+                return;
+
+            Kinect.Body[] bodies = GetBodies();
+
+            if (bodies == null)
+                return;
+
+            DeleteUntrackedBodies();
+
+            foreach (var body in bodies)
             {
-                if (BodySourceManager == null)
-                    return;
+                if (body == null)
+                    continue;
 
-                _BodyManager = BodySourceManager.GetComponent<BodySourceManager>();
-                if (_BodyManager == null)
-                    return;
-
-                Kinect.Body[] data = _BodyManager.GetData();
-                if (data == null)
-                    return;
-
-                List<ulong> trackedIds = new List<ulong>();
-                foreach (var body in data)
+                if (body.IsTracked)
                 {
-                    if (body == null)
-                        continue;
-
-                    if (body.IsTracked)
-                        trackedIds.Add(body.TrackingId);
-                }
-
-                List<ulong> knownIds = new List<ulong>(_Bodies.Keys);
-
-                // First delete untracked bodies
-                foreach (ulong trackingId in knownIds)
-                {
-                    if (!trackedIds.Contains(trackingId))
+                    if (!kinectBodies.ContainsKey(body.TrackingId))
                     {
-                        Destroy(_Bodies[trackingId]);
-                        _Bodies.Remove(trackingId);
+                        kinectBodies[body.TrackingId] = CreateBodyObject(body.TrackingId);
                     }
+
+                    RefreshBodyObject(body, kinectBodies[body.TrackingId]);
                 }
 
-                foreach (var body in data)
-                {
-                    if (body == null)
-                        continue;
-
-                    if (body.IsTracked)
-                    {
-                        if (!_Bodies.ContainsKey(body.TrackingId))
-                        {
-                            _Bodies[body.TrackingId] = CreateBodyObject(body.TrackingId);
-                        }
-
-                        RefreshBodyObject(body, _Bodies[body.TrackingId]);
-                    }
-                }
+                exercise.DoStep(body);
             }
         }
 
@@ -101,11 +121,20 @@
 
             for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
             {
-                GameObject jointObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
+                GameObject jointObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                PatientJoint patientJoint = exercise.Patient.GetJoint(jt);
                 LineRenderer lr = jointObj.AddComponent<LineRenderer>();
+                Renderer jointRenderer = jointObj.GetComponent<Renderer>();
+
+                if(patientJoint.Active == false)
+                    jointRenderer.material = disabledJointMaterial;
+                else if(patientJoint.Stressed)
+                    jointRenderer.material = stressedJointMaterial;
+                else
+                    jointRenderer.material = jointMaterial;
+
                 lr.SetVertexCount(2);
-                lr.material = BoneMaterial;
+                lr.material = boneMaterial;
                 lr.SetWidth(0.05f, 0.05f);
 
                 jointObj.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
@@ -116,48 +145,54 @@
             return body;
         }
 
-        private void DrawAngle(Kinect.Joint joint, float angle, float x, float y, float z)
+        private void DrawAngle(Kinect.Joint joint, float angle)
         {
-            var text = GameObject.FindGameObjectWithTag("Angle");
+            var text = jointInfo[joint.JointType];
 
-            text.transform.position = new Vector3(x, y, 0);
-            text.GetComponent<Text>().text = angle.ToString("0") + "°" + " v(" + joint.Position.X + "/" + joint.Position.Y + "/" + joint.Position.Z + ")";
+            text.transform.position = Calculations.GetVector3FromJoint(joint);
+            text.text = string.Format("Angle: {0}°\nX: {1}\nY: {2}\nZ: {3}", angle.ToString("0"), joint.Position.X.ToString("0.000"), joint.Position.Y.ToString("0.000"), joint.Position.Z.ToString("0.000"));
         }
 
         private void RefreshBodyObject(Kinect.Body body, GameObject bodyObject)
         {
             for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
             {
-                var joint = patient.GetJoint(jt);
+                var joint = exercise.Patient.GetJoint(jt);
 
-                if (joint.Active)
+                Kinect.Joint sourceJoint = body.Joints[jt];
+                Kinect.Joint? targetJoint = null;
+
+                if (joint.Parent != null)
+                    targetJoint = body.Joints[joint.Parent.JointType];
+
+                Transform jointObject = bodyObject.transform.FindChild(jt.ToString());
+                jointObject.localPosition = Calculations.GetVector3FromJoint(sourceJoint);
+
+                LineRenderer lr = jointObject.GetComponent<LineRenderer>();
+
+                if (targetJoint.HasValue)
                 {
-                    Kinect.Joint sourceJoint = body.Joints[jt];
-                    Kinect.Joint? targetJoint = null;
-
-                    if (joint.Parent != null)
-                        targetJoint = body.Joints[joint.Parent.JointType];
-
-                    Transform jointObj = bodyObject.transform.FindChild(jt.ToString());
-                    jointObj.localPosition = Calculations.GetVector3FromJoint(sourceJoint);
-
-                    LineRenderer lr = jointObj.GetComponent<LineRenderer>();
-                    if (targetJoint.HasValue)
+                    if (jt == exercise.Step.Behaviour.ActiveJoint.JointType)
                     {
-                        if (jt == Kinect.JointType.ElbowRight)
+                        if (jointInfo.ContainsKey(jt) == false)
                         {
-                            var joints = GetJoints(body, joint);
-                            DrawAngle(body.Joints[jt], Calculations.GetAngle(joints), jointObj.localPosition.x, jointObj.localPosition.y, jointObj.localPosition.z);
+                            var infoText = Instantiate(jointInfoText).GetComponent<Text>();
+                            infoText.transform.SetParent(GameObject.Find("JointInfoCanvas").transform, false);
+
+                            jointInfo.Add(jt, infoText);
                         }
 
-                        lr.SetPosition(0, jointObj.localPosition);
-                        lr.SetPosition(1, Calculations.GetVector3FromJoint(targetJoint.Value));
-                        lr.SetColors(GetColorForState(sourceJoint.TrackingState), GetColorForState(targetJoint.Value.TrackingState));
+                        var joints = GetJoints(body, joint);
+                        DrawAngle(body.Joints[jt], Calculations.GetAngle(joints));
                     }
-                    else
-                    {
-                        lr.enabled = false;
-                    }
+
+                    lr.SetPosition(0, jointObject.localPosition);
+                    lr.SetPosition(1, Calculations.GetVector3FromJoint(targetJoint.Value));
+                    lr.SetColors(GetColorForState(sourceJoint.TrackingState), GetColorForState(targetJoint.Value.TrackingState));
+                }
+                else
+                {
+                    lr.enabled = false;
                 }
             }
         }

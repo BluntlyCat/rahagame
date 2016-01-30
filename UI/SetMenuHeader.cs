@@ -19,13 +19,13 @@
             {
                 var data  = DBManager.GetTranslation("welcome");
                 headerText = string.Format("{0}, {1}", data.GetValueFromLanguage("translation"), GameState.ActivePatient.Name);
-                headerClip = Resources.Load(data.GetResource("auditiveTranslation", "mp3")) as AudioClip;
+                headerClip = data.GetResource<AudioClip>("auditiveTranslation", "mp3");
             }
             else
             {
                 var data = DBManager.GetMenuHeader(this.name);
-                headerText = data["name"].ToString();
-                headerClip = data["clip"] as AudioClip;
+                headerText = data.GetValueFromLanguage("name");
+                headerClip = data.GetResource<AudioClip>("auditiveName", "mp3");
             }
 
             textComponent.text = headerText;

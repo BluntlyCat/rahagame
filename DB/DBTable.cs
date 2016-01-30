@@ -90,15 +90,15 @@
             else
                 throw new Exception();
         }
-        public string GetResource(string column, string mime, bool lang = true)
+        public T GetResource<T>(string column, string mime, bool lang = true) where T : UnityEngine.Object
         {
-            return tableRows.First().GetResource(column, mime, lang);
+            return tableRows.First().GetResource<T>(column, mime, lang);
         }
 
-        public string GetResource(int row, string column, string mime, bool lang = true)
+        public T GetResource<T>(int row, string column, string mime, bool lang = true) where T : UnityEngine.Object
         {
             if (row < tableRows.Count)
-                return tableRows[row].GetResource(column, mime, lang);
+                return tableRows[row].GetResource<T>(column, mime, lang);
             else
                 throw new Exception();
         }

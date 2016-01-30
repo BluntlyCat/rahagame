@@ -23,7 +23,8 @@
                 var textComponent = button.GetComponentInChildren<Text>();
                 var image = button.GetComponentInChildren<RawImage>();
 
-                var exercise = new Exercise(row.GetValue("unityObjectName"));
+                GameState.ActivePatient.ResetJoints();
+                var exercise = new Exercise(row.GetValue("unityObjectName"), GameState.ActivePatient);
                 GameState.AddExercise(exercise.Select() as Exercise);
 
                 button.SetParent(this.transform, false);

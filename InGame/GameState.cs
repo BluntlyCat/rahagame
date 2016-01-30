@@ -29,6 +29,11 @@
             {
                 return activeExercise;
             }
+
+            set
+            {
+                activeExercise = value;
+            }
         }
 
         public static void AddExercise(Exercise exercise)

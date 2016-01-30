@@ -12,8 +12,7 @@
         {
             if (DBManager.Exists("editor_patient", this.name))
             {
-                Patient patient = new Patient(this.name);
-                GameState.ActivePatient = patient.Select() as Patient;
+                GameState.ActivePatient = new Patient(this.name).Select() as Patient;
                 LoadScene.MainMenu();
             }
         }

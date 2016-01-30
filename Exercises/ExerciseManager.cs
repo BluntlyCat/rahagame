@@ -3,6 +3,7 @@
     using UnityEngine;
     using InGame;
     using UnityEngine.UI;
+    using User;
 
     [RequireComponent(typeof(AudioSource))]
 
@@ -22,7 +23,10 @@
                 exercise = GameState.ActiveExercise;
             }
             else
-                exercise = new Exercise("exercise2").Select() as Exercise;
+            {
+                exercise = new Exercise("exercise1", new Patient("michael").Select() as Patient).Select() as Exercise;
+                GameState.ActiveExercise = exercise;
+            }
 
             movieTexture = exercise.Video;
             movieTexture.loop = true;

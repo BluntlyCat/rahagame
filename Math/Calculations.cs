@@ -23,9 +23,13 @@
             return (Mathf.Acos(cos_phi) * 180) / Mathf.PI;
         }
 
-        public static Vector3 GetVector3FromJoint(Kinect.Joint joint)
+        public static Vector3 GetVector3FromJoint(Kinect.Joint joint, bool x = true, bool y = true, bool z = true)
         {
-            return new Vector3(joint.Position.X * 10, joint.Position.Y * 10, joint.Position.Z * 10);
+            float X = x ? joint.Position.X : 0;
+            float Y = y ? joint.Position.Y : 0;
+            float Z = z ? joint.Position.Z : 0;
+
+            return new Vector3(X * 10, Y * 10, Z * 10);
         }
 
         public static Vector3 Substract(Vector3 b, Vector3 t)

@@ -21,10 +21,10 @@
             var name = DBManager.Query("editor_menuentry", string.Format("SELECT * FROM editor_menuentry WHERE unityObjectName = '{0}'", this.name));
             var trans = GetValue();
 
-            text.text = string.Format("{0}: {1}", name.GetValueFromLanguage("entry"), trans.GetValue("translation"));
+            text.text = string.Format("{0}: {1}", name.GetValueFromLanguage("entry"), trans.GetValueFromLanguage("translation"));
             audioSource = this.GetComponent<AudioSource>();
-            settingName = Resources.Load(name.GetResource("auditiveEntry", "mp3")) as AudioClip;
-            auditiveValue = Resources.Load(trans.GetResource("auditiveTranslation", "mp3")) as AudioClip;
+            settingName = name.GetResource<AudioClip>("auditiveEntry", "mp3");
+            auditiveValue = trans.GetResource<AudioClip>("auditiveTranslation", "mp3");
         }
 
         void Update()
@@ -48,7 +48,7 @@
             if (RGSettings.reading)
             {
                 var trans = GetValue();
-                auditiveValue = Resources.Load(trans.GetResource("auditiveTranslation", "mp3")) as AudioClip;
+                auditiveValue = trans.GetResource<AudioClip>("auditiveTranslation", "mp3");
 
                 audioSource.clip = settingName;
                 audioSource.Play();

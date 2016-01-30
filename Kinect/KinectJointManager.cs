@@ -1,7 +1,6 @@
 ﻿namespace HSA.RehaGame.Kinect
 {
     using System.Collections.Generic;
-    using System.Linq;
     using DB;
     using User;
     using Kinect = Windows.Kinect;
@@ -105,7 +104,7 @@
 
                 if (children.Rows.Count > 0)
                 {
-                    Dictionary<Kinect.JointType, KinectJoint> dict = new Dictionary<Kinect.JointType, KinectJoint>();
+                    Dictionary<Kinect.JointType, PatientJoint> dict = new Dictionary<Kinect.JointType, PatientJoint>();
 
                     foreach (var child in children.Rows)
                     {

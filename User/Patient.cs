@@ -1,7 +1,6 @@
 ﻿namespace HSA.RehaGame.User
 {
     using System.Collections.Generic;
-    using System.Linq;
     using Kinect = Windows.Kinect;
     using Kinect;
     using DB;
@@ -13,13 +12,13 @@
         private int age;
         private Gender sex;
 
-        private KinectJointManager jointManager;
+        private Dictionary<Kinect.JointType, PatientJoint> joints;
         private bool insert = true;
 
         public Patient(string name)
         {
             this.name = name;
-            this.jointManager = new KinectJointManager(name);
+            this.joints = new KinectJointManager(name).Joints;
         }
 
         public Patient(string name, int age, Gender sex)
@@ -28,7 +27,7 @@
             this.age = age;
             this.sex = sex;
 
-            this.jointManager = new KinectJointManager(name);
+            this.joints = new KinectJointManager(name).Joints;
         }
 
         public string Name
@@ -73,20 +72,28 @@
         public bool ActivateJoint(string name)
         {
             var jt = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), name);
-            this.jointManager.Joints[jt].Active = !this.jointManager.Joints[jt].Active;
+            this.joints[jt].Active = !this.joints[jt].Active;
 
-            return this.jointManager.Joints[jt].Active;
+            return this.joints[jt].Active;
+        }
+
+        public void ResetJoints()
+        {
+            foreach(var joint in joints.Values)
+            {
+                joint.Stressed = false;
+            }
         }
 
         public PatientJoint GetJoint(string name)
         {
             var jt = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), name);
-            return this.jointManager.Joints[jt];
+            return this.joints[jt];
         }
 
         public PatientJoint GetJoint(Kinect.JointType jt)
         {
-            return this.jointManager.Joints[jt];
+            return this.joints[jt];
         }
 
         public override object Insert()
@@ -100,7 +107,7 @@
                 new KeyValuePair<string, object>("sex", (int)this.Sex)
             );
 
-            foreach (var joint in this.jointManager.Joints.Values)
+            foreach (var joint in this.joints.Values)
             {
                 joint.Insert();
             }
@@ -117,7 +124,7 @@
                 this.Age = patientData.GetInt("age");
                 this.Sex = (Gender)patientData.GetInt("sex");
 
-                foreach(var joint in this.jointManager.Joints.Values)
+                foreach(var joint in this.joints.Values)
                 {
                     joint.Select();
                 }

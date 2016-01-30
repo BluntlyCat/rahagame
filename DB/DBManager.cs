@@ -317,23 +317,100 @@
                 throw e;
             }
         }
-
-        public static IDictionary<string, object> GetMenuHeader(string name)
+        public static DBTable GetStressedJoints(int exerciseID)
         {
-            var table = Query("editor_menu", "SELECT * FROM editor_menu WHERE unityObjectName = '" + name + "';");
+            if (manager == null)
+                Instaciate();
 
-            var text = table.GetValueFromLanguage("name");
-            var audio = table.GetResource("auditiveName", "mp3");
+            try
+            {
+                var sql = string.Format(@"
+                    SELECT editor_joint.name,
+                    editor_joint.value,
+                    editor_joint.description,
+                    editor_joint.x_axis,
+                    editor_joint.x_axis_min_value,
+                    editor_joint.x_axis_max_value,
+                    editor_joint.y_axis,
+                    editor_joint.y_axis_min_value,
+                    editor_joint.y_axis_max_value,
+                    editor_joint.z_axis,
+                    editor_joint.z_axis_min_value,
+                    editor_joint.z_axis_max_value,
+                    editor_joint.parent_id
+                    FROM editor_joint
+                    JOIN editor_exercise_stressedJoints ON editor_exercise_stressedJoints.joint_id = editor_joint.name
+                    JOIN editor_exercise ON editor_exercise.id = editor_exercise_stressedJoints.exercise_id
+                    WHERE editor_exercise.id = {0};
+                    ", exerciseID);
 
-            return new Dictionary<string, object> {
-                {"name", text },
-                { "clip", Resources.Load(audio) }
-            };
+                logger.Info("Join in database to fetch all stressed joints for the given exercise", sql);
+
+                DBTable table = new DBTable("editor_joint");
+
+                manager.Open();
+
+                manager.dbcmd = manager.dbconn.CreateCommand();
+
+                manager.dbcmd.CommandText = sql;
+                manager.reader = manager.dbcmd.ExecuteReader();
+
+                while (manager.reader.Read())
+                {
+                    var row = new DBTableRow(table, "name");
+
+                    for (int i = 0; i < manager.reader.FieldCount; i++)
+                    {
+                        var type = manager.reader.GetFieldType(i);
+                        var name = manager.reader.GetName(i);
+                        var value = manager.reader.GetValue(i);
+
+                        row.AddColumn(name, new DBTableColumn(row, type, name, value));
+                    }
+
+                    table.AddRow(row);
+                }
+
+                manager.Close();
+
+                return table;
+            }
+
+            catch (Exception e)
+            {
+                Debug.Log(e);
+                throw e;
+            }
+        }
+
+        public static DBTable GetMenuHeader(string name)
+        {
+            return Query("editor_menu", "SELECT * FROM editor_menu WHERE unityObjectName = '" + name + "';");
         }
 
         public static DBTable GetTranslation(string name)
         {
-            var table = Query("editor_valuetranslation", "SELECT translation, auditiveTranslation FROM editor_valuetranslation WHERE unityObjectName = '" + name + "';");
+            var table = Query("editor_valuetranslation", "SELECT * FROM editor_valuetranslation WHERE unityObjectName = '" + name + "';");
+
+            return table;
+        }
+
+        public static DBTable GetTranslation(Logics logic, Orders order, params string[] names)
+        {
+            string expression = "unityObjectName = '{0}'";
+            string WHERE = "WHERE ";
+
+            for(int i = 0; i < names.Length; i++)
+            {
+                if(i == 0)
+                    WHERE = string.Format("{0} {1} {2}", WHERE, string.Format(expression, names[i]), logic.ToString());
+                else
+                    WHERE = string.Format("{0} {1} ORDER BY unityObjectName {2}", WHERE, string.Format(expression, names[i]), order.ToString());
+            }
+
+            string query = string.Format("SELECT * FROM editor_valuetranslation {0}", WHERE);
+
+            var table = Query("editor_valuetranslation", query);
 
             return table;
         }

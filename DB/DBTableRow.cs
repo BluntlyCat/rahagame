@@ -55,10 +55,10 @@
             return tableColumns[string.Format("{0}_{1}", pk, RGSettings.activeLanguage)].GetValue();
         }
 
-        public string GetResource(string column, string mime, bool lang = true)
+        public T GetResource<T>(string column, string mime, bool lang = true) where T : UnityEngine.Object
         {
             string key = lang ? string.Format("{0}_{1}", column, RGSettings.activeLanguage) : column;
-            return tableColumns[key].GetResource(mime);
+            return tableColumns[key].GetResource<T>(mime);
         }
 
         public bool GetBool(string pk)

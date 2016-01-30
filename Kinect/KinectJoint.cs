@@ -2,12 +2,13 @@
 {
     using System.Collections.Generic;
     using DB;
+    using User;
     using Kinect = Windows.Kinect;
 
     public abstract class KinectJoint : DBObject
     {
-        private KinectJoint parent;
-        private Dictionary<Kinect.JointType, KinectJoint> children = new Dictionary<Kinect.JointType, KinectJoint>();
+        private PatientJoint parent;
+        private Dictionary<Kinect.JointType, PatientJoint> children = new Dictionary<Kinect.JointType, PatientJoint>();
         private Kinect.JointType type;
 
         private bool xAxis;
@@ -180,7 +181,7 @@
             }
         }
 
-        public KinectJoint Parent
+        public PatientJoint Parent
         {
             get
             {
@@ -192,7 +193,7 @@
             }
         }
 
-        public Dictionary<Kinect.JointType, KinectJoint> Children
+        public Dictionary<Kinect.JointType, PatientJoint> Children
         {
             get
             {
@@ -204,7 +205,7 @@
             }
         }
 
-        public KinectJoint GetChild(Kinect.JointType name)
+        public PatientJoint GetChild(Kinect.JointType name)
         {
             if (children.ContainsKey(name))
                 return children[name];

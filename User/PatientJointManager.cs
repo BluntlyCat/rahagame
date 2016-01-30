@@ -1,7 +1,6 @@
 ﻿namespace HSA.RehaGame.User
 {
     using UnityEngine;
-    using System.Collections;
     using InGame;
     using System.Collections.Generic;
     using UnityEngine.UI;

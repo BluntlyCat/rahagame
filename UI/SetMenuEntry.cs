@@ -19,7 +19,7 @@
 
             audioSource = this.GetComponent<AudioSource>();
             text.text = table.GetValueFromLanguage("entry");
-            audioSource.clip = Resources.Load(table.GetResource("auditiveEntry", "mp3")) as AudioClip;
+            audioSource.clip = table.GetResource<AudioClip>("auditiveEntry", "mp3");
         }
 
         public void Reading()

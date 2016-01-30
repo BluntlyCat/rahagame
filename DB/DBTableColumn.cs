@@ -1,6 +1,7 @@
 ﻿namespace HSA.RehaGame.DB
 {
     using System;
+    using UnityEngine;
 
     public class DBTableColumn
     {
@@ -54,9 +55,12 @@
         public string GetValue()
         {
             return this.Value.ToString();
-        }public string GetResource(string mime)
+        }
+
+        public T GetResource<T>(string mime) where T : UnityEngine.Object
         {
-            return this.Value.ToString().Replace(string.Format(".{0}", mime), "").Replace("Assets/Resources/", "");
+            string resource = this.Value.ToString().Replace(string.Format(".{0}", mime), "").Replace("Assets/Resources/", "");
+            return Resources.Load(resource) as T;
         }
 
         public bool GetBool()

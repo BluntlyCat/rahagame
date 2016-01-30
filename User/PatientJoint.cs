@@ -12,6 +12,7 @@
         private string patientName;
 
         private bool active = true;
+        private bool stressed = false;
 
         private int xAxisPatientMinValue;
         private int xAxisPatientMaxValue;
@@ -71,6 +72,19 @@
             set
             {
                 active = value;
+            }
+        }
+
+        public bool Stressed
+        {
+            get
+            {
+                return stressed;
+            }
+
+            set
+            {
+                stressed = value;
             }
         }
 

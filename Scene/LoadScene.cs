@@ -5,7 +5,6 @@
     using System.Linq;
     using MusicPlayer;
     using System.Collections.Generic;
-    using Scene;
     using UnityEngine.SceneManagement;
     using InGame;
 
@@ -90,7 +89,7 @@
 
         public static void LoadUsersSlection()
         {
-            LoadNewScene("Users");
+            LoadNewScene("UserSelection");
         }
 
         public void PreviousScene()
@@ -103,9 +102,9 @@
             LoadNewScene("NewUser");
         }
 
-        public void Users()
+        public void UserSelection()
         {
-            LoadNewScene("Users");
+            LoadNewScene("UserSelection");
         }
 
         public void TrainingMode()

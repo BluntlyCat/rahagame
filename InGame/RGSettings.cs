@@ -63,7 +63,7 @@
 
             set
             {
-                SettingsManager.Set("readingAloud", value);
+                SettingsManager.Set("reading", value);
             }
         }
 
