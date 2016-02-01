@@ -1,13 +1,13 @@
-﻿namespace HSA.RehaGame.Kinect
+﻿namespace HSA.RehaGame.User.Kinect
 {
     using System.Collections.Generic;
     using DB;
     using User;
-    using Kinect = Windows.Kinect;
+    using Windows.Kinect;
 
     public class KinectJointManager
     {
-        private Dictionary<Kinect.JointType, PatientJoint> joints = new Dictionary<Kinect.JointType, PatientJoint>();
+        private Dictionary<JointType, PatientJoint> joints = new Dictionary<JointType, PatientJoint>();
 
         public KinectJointManager(string patientName)
         {
@@ -21,8 +21,10 @@
         {
             foreach (var row in table.Rows)
             {
-                var jtChild = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), row.GetValue("name"));
+                var jtChild = (JointType)System.Enum.Parse(typeof(JointType), row.GetValue("name"));
                 var parentName = row.GetValue("parent_id");
+
+                var translation = row.GetValueFromLanguage("translation");
 
                 var xAxis = row.GetBool("x_axis");
                 var yAxis = row.GetBool("y_axis");
@@ -41,6 +43,7 @@
                 {
                     var patientJoint = new PatientJoint(patientName,
                         jtChild,
+                        translation,
                         xAxis,
                         yAxis,
                         zAxis,
@@ -57,11 +60,13 @@
 
                 if (parentName != "")
                 {
-                    var jtParent = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), parentName);
+                    var jtParent = (JointType)System.Enum.Parse(typeof(JointType), parentName);
 
                     if (joints.ContainsKey(jtParent) == false)
                     {
                         var parentJoint = DBManager.Query("editor_joint", "SELECT * FROM editor_joint WHERE name = '" + parentName + "';").GetRow();
+
+                        var translationParent = parentJoint.GetValueFromLanguage("translation");
 
                         var xAxisParent = parentJoint.GetBool("x_axis");
                         var yAxisParent = parentJoint.GetBool("y_axis");
@@ -78,6 +83,7 @@
 
                         var patientJointParent = new PatientJoint(patientName,
                             jtParent,
+                            translationParent,
                             xAxisParent,
                             yAxisParent,
                             zAxisParent,
@@ -104,11 +110,11 @@
 
                 if (children.Rows.Count > 0)
                 {
-                    Dictionary<Kinect.JointType, PatientJoint> dict = new Dictionary<Kinect.JointType, PatientJoint>();
+                    Dictionary<JointType, PatientJoint> dict = new Dictionary<JointType, PatientJoint>();
 
                     foreach (var child in children.Rows)
                     {
-                        var jtChild = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), child.GetValue("to_joint_id"));
+                        var jtChild = (JointType)System.Enum.Parse(typeof(JointType), child.GetValue("to_joint_id"));
                         dict.Add(jtChild, joints[jtChild]);
                     }
 
@@ -117,7 +123,7 @@
             }
         }
 
-        public Dictionary<Kinect.JointType, PatientJoint> Joints
+        public Dictionary<JointType, PatientJoint> Joints
         {
             get
             {

@@ -1,15 +1,18 @@
-﻿namespace HSA.RehaGame.Kinect
+﻿namespace HSA.RehaGame.User.Kinect
 {
     using System.Collections.Generic;
+    using System.Linq;
     using DB;
     using User;
-    using Kinect = Windows.Kinect;
+    using Windows.Kinect;
 
     public abstract class KinectJoint : DBObject
     {
         private PatientJoint parent;
-        private Dictionary<Kinect.JointType, PatientJoint> children = new Dictionary<Kinect.JointType, PatientJoint>();
-        private Kinect.JointType type;
+        private Dictionary<JointType, PatientJoint> children = new Dictionary<JointType, PatientJoint>();
+        private JointType type;
+
+        private string translation;
 
         private bool xAxis;
         private bool yAxis;
@@ -24,7 +27,8 @@
         private int zAxisMinValue;
         private int zAxisMaxValue;
 
-        public KinectJoint(Kinect.JointType type,
+        public KinectJoint(JointType type,
+            string translation,
             bool xAxis,
             bool yAxis,
             bool zAxis,
@@ -36,6 +40,7 @@
             int zAxisMaxValue)
         {
             this.type = type;
+            this.translation = translation;
 
             this.xAxis = xAxis;
             this.yAxis = yAxis;
@@ -51,7 +56,7 @@
             this.zAxisMaxValue = zAxisMaxValue;
         }
 
-        public Kinect.JointType JointType
+        public JointType JointType
         {
             get
             {
@@ -61,6 +66,14 @@
             set
             {
                 this.type = value;
+            }
+        }
+
+        public string Translation
+        {
+            get
+            {
+                return translation;
             }
         }
 
@@ -193,7 +206,7 @@
             }
         }
 
-        public Dictionary<Kinect.JointType, PatientJoint> Children
+        public Dictionary<JointType, PatientJoint> Children
         {
             get
             {
@@ -205,12 +218,25 @@
             }
         }
 
-        public PatientJoint GetChild(Kinect.JointType name)
+        public PatientJoint GetChild(JointType name)
         {
             if (children.ContainsKey(name))
                 return children[name];
 
             return null;
+        }
+
+        public static Dictionary<string, Joint> GetJoints(Body body, KinectJoint joint)
+        {
+            var parent = joint.Parent == null ? joint : joint.Parent;
+            var child = joint.Children.Count == 0 ? joint : joint.Children.First().Value;
+
+            return new Dictionary<string, Joint>
+            {
+                { "base", body.Joints[joint.JointType] },
+                { "parent", body.Joints[parent.JointType] },
+                { "child", body.Joints[child.JointType] },
+            };
         }
 
         public abstract override object Insert();

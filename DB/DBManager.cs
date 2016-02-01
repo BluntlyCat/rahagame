@@ -1,13 +1,13 @@
 ﻿namespace HSA.RehaGame.DB
 {
-    using UnityEngine;
     using System;
-    using System.Data;
-    using Kinect = Windows.Kinect;
-    using Mono.Data.Sqlite;
     using System.Collections.Generic;
+    using System.Data;
     using InGame;
     using Logging;
+    using Mono.Data.Sqlite;
+    using UnityEngine;
+    using Windows.Kinect;
 
     public class DBManager
     {
@@ -256,7 +256,7 @@
             }
         }
 
-        public static DBTable GetPatientJoint(Kinect.JointType kinectJoint_id, string patientName)
+        public static DBTable GetPatientJoint(JointType kinectJoint_id, string patientName)
         {
             if (manager == null)
                 Instaciate();
@@ -327,7 +327,9 @@
                 var sql = string.Format(@"
                     SELECT editor_joint.name,
                     editor_joint.value,
-                    editor_joint.description,
+                    editor_joint.translation,
+                    editor_joint.translation_de_de,
+                    editor_joint.translation_en_gb,
                     editor_joint.x_axis,
                     editor_joint.x_axis_min_value,
                     editor_joint.x_axis_max_value,
@@ -386,6 +388,16 @@
         public static DBTable GetMenuHeader(string name)
         {
             return Query("editor_menu", "SELECT * FROM editor_menu WHERE unityObjectName = '" + name + "';");
+        }
+
+        public static DBTable GetAction(string name)
+        {
+            return Query("editor_exerciseaction", "SELECT * FROM editor_exerciseaction WHERE unityObjectName = '" + name + "';");
+        }
+
+        public static DBTable GetBehaviour(string name)
+        {
+            return Query("editor_exercisebehaviour", "SELECT * FROM editor_exercisebehaviour WHERE unityObjectName = '" + name + "';");
         }
 
         public static DBTable GetTranslation(string name)

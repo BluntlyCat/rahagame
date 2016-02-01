@@ -1,10 +1,10 @@
 ﻿namespace HSA.RehaGame.User
 {
     using System.Collections.Generic;
-    using Kinect = Windows.Kinect;
-    using Kinect;
+    using Windows.Kinect;
     using DB;
     using Scene;
+    using Kinect;
 
     public class Patient : DBObject
     {
@@ -12,7 +12,7 @@
         private int age;
         private Gender sex;
 
-        private Dictionary<Kinect.JointType, PatientJoint> joints;
+        private Dictionary<JointType, PatientJoint> joints;
         private bool insert = true;
 
         public Patient(string name)
@@ -71,7 +71,7 @@
 
         public bool ActivateJoint(string name)
         {
-            var jt = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), name);
+            var jt = (JointType)System.Enum.Parse(typeof(JointType), name);
             this.joints[jt].Active = !this.joints[jt].Active;
 
             return this.joints[jt].Active;
@@ -87,11 +87,11 @@
 
         public PatientJoint GetJoint(string name)
         {
-            var jt = (Kinect.JointType)System.Enum.Parse(typeof(Kinect.JointType), name);
+            var jt = (JointType)System.Enum.Parse(typeof(JointType), name);
             return this.joints[jt];
         }
 
-        public PatientJoint GetJoint(Kinect.JointType jt)
+        public PatientJoint GetJoint(JointType jt)
         {
             return this.joints[jt];
         }

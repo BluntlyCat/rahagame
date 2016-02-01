@@ -3,17 +3,20 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
-    using System.Text;
     using System.Xml;
-    using User;
+    using Actions;
+    using Behaviours;
+    using FulFillables;
+    using Logging;
 
     public class ExecutionLanguage
     {
+        private static Logger<ExecutionLanguage> logger = new Logger<ExecutionLanguage>();
         private string rel;
 
         public ExecutionLanguage(string rel)
         {
+            logger.AddLogAppender<ConsoleAppender>();
             this.rel = rel;
         }
 
@@ -30,149 +33,163 @@
             return attributes;
         }
 
-        private bool IsBehaviour(string key)
+        private BaseAction CreateAction(XmlReader reader, Exercise exercise, Joint lastJoint)
         {
-            bool isBehaviour = false;
-
-            foreach(JointBehaviours behaviour in Enum.GetValues(typeof(JointBehaviours)))
-            {
-                if(behaviour.ToString() == key)
-                {
-                    isBehaviour = true;
-                    break;
-                }
-            }
-
-            return isBehaviour;
-        }
-
-        private JointBehaviour CreateBehaviour(string action, string value, PatientJoint active, PatientJoint passive, JointBehaviour lastBehaviour)
-        {
-            if(IsBehaviour(action))
-            {
-                JointBehaviours behaviour = (JointBehaviours)Enum.Parse(typeof(JointBehaviours), action);
-                JointBehaviour newBehaviour = new JointBehaviour(behaviour, value, active, passive);
-
-                if (lastBehaviour != null)
-                    lastBehaviour.AddNextBehaviour(newBehaviour);
-
-                return newBehaviour;
-            }
-
-            throw new Exception();
-        }
-
-        private bool HasActionValue(string action)
-        {
-            return action.Contains(':');
-        }
-
-        private JointBehaviour ParseBehaviours(string stringActions, PatientJoint active, PatientJoint passive)
-        {
-            JointBehaviour firstBehaviour = null;
-            JointBehaviour lastBehaviour = null;
-
-            string[] actions = stringActions.Split(';');
-
-            foreach(var actionKeyValue in actions)
-            {
-                string action = null;
-                string value = null;
-
-                if(HasActionValue(actionKeyValue))
-                {
-                    string[] keyValueParts = actionKeyValue.Split(':');
-                    action = keyValueParts[0];
-                    value = keyValueParts[1];
-                }
-                else
-                {
-                    action = actionKeyValue;
-                }
-
-                lastBehaviour = CreateBehaviour(action, value, active, passive, lastBehaviour);
-
-                if (firstBehaviour == null)
-                    firstBehaviour = lastBehaviour;
-            }
-
-            return firstBehaviour;
-        }
-
-        private JointBehaviour CreateBehaviours(XmlReader reader, Exercise exercise)
-        {
-            JointBehaviour firstBehaviour = null;
-            
-            PatientJoint active = null;
-            PatientJoint passive = null;
+            BaseAction action = null;
 
             var attributes = GetAttributes(reader);
-            
-            foreach(var attribute in attributes)
+            var actionName = attributes["name"];
+            var baseJoint = exercise.Patient.GetJoint(lastJoint.Name);
+
+            if (actionName == "hold")
             {
-                if (attribute.Key == "active")
-                    active = exercise.Patient.GetJoint(attribute.Value);
-
-                else if (attribute.Key == "passive")
-                    passive = exercise.Patient.GetJoint(attribute.Value);
-
-                else if (attribute.Key == "behaviours")
-                {
-                    firstBehaviour = ParseBehaviours(attribute.Value, active, passive);
-                }
+                action = new HoldAction(actionName, double.Parse(attributes["value"]));
             }
 
-            if(firstBehaviour != null && active != null && passive != null)
-                return firstBehaviour;
+            else if (actionName == "repeat")
+            {
+                action = new RepeatAction(actionName, double.Parse(attributes["value"]));
+            }
 
-            throw new Exception();
+            else if (actionName == "open")
+            {
+                action = new OpenJointAction(actionName, baseJoint, double.Parse(attributes["value"]));
+            }
+
+            else if (actionName == "close")
+            {
+                action = new CloseJointAction(actionName, baseJoint, double.Parse(attributes["value"]));
+            }
+
+            return action;
         }
 
-        private Step CreateStep(XmlReader reader, Step lastStep)
+        private BaseJointBehaviour CreateJointBehaviour(XmlReader reader, Exercise exercise, Joint lastJoint)
         {
-            Step step = new Step(GetAttributes(reader));
+            BaseJointBehaviour behaviour = null;
+
+            var attributes = GetAttributes(reader);
+            var behaviourName = attributes["is"];
+
+            var active = exercise.Patient.GetJoint(lastJoint.Name);
+            var passive = exercise.Patient.GetJoint(attributes["joint"]);
+
+            if (behaviourName == "above")
+                behaviour = new AboveBehaviour(behaviourName, active, passive);
+            else if (behaviourName == "below")
+                behaviour = new BelowBehaviour(behaviourName, active, passive);
+
+            return behaviour;
+        }
+
+        private Joint CreateJoint(XmlReader reader, Exercise exercise)
+        {
+            var attributes = GetAttributes(reader);
+
+            return new Joint(attributes["name"]);
+        }
+
+        private Step CreateStep(XmlReader reader, BaseStep lastStep)
+        {
+            var attributes = GetAttributes(reader);
+
+            Step step = new Step(attributes["description"], lastStep);
 
             if (lastStep != null)
-                lastStep.AddNextStep(step);
+                lastStep.AddNext(step);
 
             return step;
         }
 
-        public Step GetSteps(Exercise exercise)
+        public BaseStep GetSteps(Exercise exercise)
         {
-            IList<Step> steps = new List<Step>();
-            Step lastStep = null;
-            Step firstStep = null;
+            IList<RelNodeTypes> nodeTypes = new List<RelNodeTypes>();
+
+            BaseStep lastStep = null;
+            BaseStep firstStep = null;
+            Joint lastJoint = null;
 
             using (XmlReader reader = XmlReader.Create(new StringReader(rel)))
             {
+                RelNodeTypes nodeType = RelNodeTypes.none;
+                RelNodeTypes lastNodeType = RelNodeTypes.none;
+
                 while (reader.Read())
                 {
-                    if (reader.Name != "")
+                    switch (reader.NodeType)
                     {
-                        RelNodeTypes nodeType = (RelNodeTypes)Enum.Parse(typeof(RelNodeTypes), reader.Name);
+                        case XmlNodeType.Element:
+                            nodeType = (RelNodeTypes)Enum.Parse(typeof(RelNodeTypes), reader.Name);
 
-                        switch (reader.NodeType)
-                        {
-                            case XmlNodeType.Element:
-                                switch (nodeType)
-                                {
-                                    case RelNodeTypes.step:
-                                        lastStep = CreateStep(reader, lastStep);
+                            switch (nodeType)
+                            {
+                                case RelNodeTypes.exercise:
+                                    break;
 
-                                        if (firstStep == null)
-                                            firstStep = lastStep;
+                                case RelNodeTypes.stepGroup:
+                                    break;
 
-                                        steps.Add(lastStep);
-                                        break;
+                                case RelNodeTypes.step:
+                                    var newStep = CreateStep(reader, lastStep);
 
-                                    case RelNodeTypes.joint:
-                                        if(lastStep != null)
-                                            lastStep.SetFirstBehaviour(CreateBehaviours(reader, exercise));
-                                        break;
-                                }
-                                break;
-                        }
+                                    if (firstStep == null)
+                                        firstStep = newStep;
+
+                                    lastStep = newStep;
+                                    break;
+
+                                case RelNodeTypes.joint:
+                                    lastJoint = CreateJoint(reader, exercise);
+
+                                    if (lastStep != null && lastStep.GetType() == typeof(Step))
+                                        ((Step)lastStep).AddJoint(lastJoint);
+                                    break;
+
+                                case RelNodeTypes.action:
+                                    if (lastNodeType == RelNodeTypes.step)
+                                    {
+                                        if (lastStep != null && lastStep.GetType() == typeof(Step))
+                                            ((Step)lastStep).AddAction(CreateAction(reader, exercise, lastJoint));
+                                    }
+                                    else if (lastNodeType == RelNodeTypes.joint)
+                                    {
+                                        if (lastJoint != null)
+                                            lastJoint.AddAction(CreateAction(reader, exercise, lastJoint));
+                                    }
+                                    break;
+
+                                case RelNodeTypes.behaviour:
+                                    if (lastNodeType == RelNodeTypes.joint && lastJoint != null)
+                                        lastJoint.AddJointBehaviour(CreateJointBehaviour(reader, exercise, lastJoint));
+                                    break;
+                            }
+
+                            if (nodeType != lastNodeType)
+                            {
+                                lastNodeType = nodeType;
+                                nodeTypes.Add(nodeType);
+                            }
+
+                            break;
+
+                        //case XmlNodeType.Whitespace:
+                        case XmlNodeType.EndElement:
+                            switch (nodeType)
+                            {
+                                case RelNodeTypes.behaviour:
+                                case RelNodeTypes.action:
+                                case RelNodeTypes.exercise:
+                                case RelNodeTypes.step:
+                                case RelNodeTypes.stepGroup:
+                                case RelNodeTypes.joint:
+                                    nodeTypes.RemoveAt(nodeTypes.Count - 1);
+
+                                    if (nodeTypes.Count > 0)
+                                        lastNodeType = nodeTypes[nodeTypes.Count - 1];
+
+                                    break;
+                            }
+                            break;
                     }
                 }
             }

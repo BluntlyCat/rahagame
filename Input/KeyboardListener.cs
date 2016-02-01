@@ -29,22 +29,7 @@
             }
             else
             {
-                if (overlayMenu == null)
-                {
-                    LoadScene.GoOneSceneBack();
-                }
-                else
-                {
-                    if (overlayMenu.activeSelf)
-                    {
-                        BodySourceManager.ShutdownKinect();
-                        LoadScene.GoOneSceneBack();
-                    }
-                    else
-                    {
-                        OverlayMenu.HideMenu();
-                    }
-                }
+                
             }
         }
 

@@ -1,8 +1,6 @@
 ﻿namespace HSA.RehaGame.InGame
 {
     using System;
-    using DB;
-    using User;
     using Scene;
     using UnityEngine;
 
@@ -79,6 +77,20 @@
             set
             {
                 SettingsManager.Set("music", value);
+            }
+        }
+
+        [Setting(true)]
+        public static double angleTolerance
+        {
+            get
+            {
+                return double.Parse(SettingsManager.Get("angleTolerance").ToString().ToLower());
+            }
+
+            set
+            {
+                SettingsManager.Set("angleTolerance", value);
             }
         }
 

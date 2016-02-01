@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-namespace HSA.RehaGame.DB
+﻿namespace HSA.RehaGame.DB
 {
     public interface IDBObject
     {

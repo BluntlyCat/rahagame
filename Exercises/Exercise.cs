@@ -1,11 +1,12 @@
 ﻿namespace HSA.RehaGame.Exercises
 {
     using DB;
-    using User;
+    using FulFillables;
+    using UI.VisualExercise;
     using UnityEngine;
-    using Kinect = Windows.Kinect;
-    using System.Collections.Generic;
     using UnityEngine.UI;
+    using User;
+    using Windows.Kinect;
 
     public class Exercise : DBObject
     {
@@ -21,9 +22,11 @@
         private AudioClip auditiveInformation;
         private string information;
 
-        private Patient patient;
-        private Step step;
+        private bool exerciseRuns;
         private bool exerciseDone;
+
+        private Patient patient;
+        private ExerciseExecutionManager executionManager;
 
         public Exercise(string unityObjectName, Patient patient)
         {
@@ -127,26 +130,48 @@
             }
         }
 
-        public Step Step
+        public bool IsActive
         {
             get
             {
-                return step;
+                return !exerciseDone && exerciseRuns;
             }
         }
 
-        public void DoStep(Kinect.Body body)
+        public ExerciseExecutionManager ExecutionManager
         {
-            if (step.StepDone)
-                step = step.NextStep;
+            get
+            {
+                return executionManager;
+            }
+        }
 
-            else if (step.StepDone && step.NextStep == null)
-                exerciseDone = true;
+        public bool DoExercise(Body body)
+        {
+            if (exerciseRuns)
+            {
+                exerciseDone = executionManager.IsFulfilled(body);
 
-            else
-                step.DoStep(body);
+                if (exerciseDone)
+                    exerciseRuns = false;
+                else
+                {
+                    executionManager.VisualInformation(body);
+                    Drawing.ShowInformation(executionManager.Information());
+                }
+            }
 
-            GameObject.Find("stateText").GetComponent<Text>().text = string.Format("Step: {0}\nBehaviour: {1}", step, step.Behaviour);
+            return exerciseDone || !exerciseRuns;
+        }
+
+        public void StartDoingExercise()
+        {
+            exerciseRuns = true;
+        }
+
+        public void StopDoingExercise()
+        {
+            exerciseRuns = false;
         }
 
         public override void Delete() {}
@@ -175,7 +200,7 @@
                 patient.GetJoint(joint.GetValue("name")).Stressed = true;
             }
 
-            this.step = this.rel.GetSteps(this);
+            this.executionManager = new ExerciseExecutionManager(this.rel.GetSteps(this));
 
             return this;
         }

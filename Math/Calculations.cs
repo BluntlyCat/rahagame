@@ -6,7 +6,7 @@
 
     class Calculations
     {
-        public static float GetAngle(Dictionary<string, Kinect.Joint> joints)
+        public static double GetAngle(Dictionary<string, Kinect.Joint> joints)
         {
             var b = GetVector3FromJoint(joints["base"]);
             var p = GetVector3FromJoint(joints["parent"]);

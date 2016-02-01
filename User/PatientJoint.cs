@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using DB;
     using Kinect;
+    using Windows.Kinect;
 
     public class PatientJoint : KinectJoint
     {
@@ -23,7 +24,7 @@
         private int zAxisPatientMinValue;
         private int zAxisPatientMaxValue;
 
-        public PatientJoint(string patientName, Windows.Kinect.JointType type, bool xAxis, bool yAxis, bool zAxis, int xAxisMinValue, int xAxisMaxValue, int yAxisMinValue, int yAxisMaxValue, int zAxisMinValue, int zAxisMaxValue) : base(type, xAxis, yAxis, zAxis, xAxisMinValue, xAxisMaxValue, yAxisMinValue, yAxisMaxValue, zAxisMinValue, zAxisMaxValue)
+        public PatientJoint(string patientName, JointType type, string translation, bool xAxis, bool yAxis, bool zAxis, int xAxisMinValue, int xAxisMaxValue, int yAxisMinValue, int yAxisMaxValue, int zAxisMinValue, int zAxisMaxValue) : base(type, translation, xAxis, yAxis, zAxis, xAxisMinValue, xAxisMaxValue, yAxisMinValue, yAxisMaxValue, zAxisMinValue, zAxisMaxValue)
         {
             this.patientName = patientName;
 

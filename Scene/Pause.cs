@@ -1,33 +1,29 @@
 ﻿namespace HSA.RehaGame.Scene
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
     using UnityEngine;
 
     class Pause : MonoBehaviour
     {
-        private static bool _PAUSE;
+        private static bool pause;
 
         void Start()
         {
-            _PAUSE = true;
-            Time.timeScale = _PAUSE ? 0 : 1;
+            pause = false;
+            Time.timeScale = pause ? 0 : 1;
         }
 
         public static bool SetPause()
         {
-            _PAUSE = !_PAUSE;
-            Time.timeScale = _PAUSE ? 0 : 1;
-            return _PAUSE;
+            pause = !pause;
+            Time.timeScale = pause ? 0 : 1;
+            return pause;
         }
 
-        public static bool Paused
+        public bool IsPause
         {
             get
             {
-                return _PAUSE;
+                return pause;
             }
         }
     }

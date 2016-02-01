@@ -1,9 +1,8 @@
-﻿namespace HSA.RehaGame.Kinect
+﻿namespace HSA.RehaGame.Input.Kinect
 {
-    using UnityEngine;
-    using System.Collections;
-    using Windows.Kinect;
     using Scene;
+    using UnityEngine;
+    using Windows.Kinect;
 
     public class BodySourceManager : MonoBehaviour
     {
@@ -50,7 +49,7 @@
 
         void Update()
         {
-            if (kinectReader == null || Pause.Paused)
+            if (kinectReader == null)
                 return;
 
             var frame = kinectReader.AcquireLatestFrame();

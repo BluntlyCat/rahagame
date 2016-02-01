@@ -1,7 +1,7 @@
 ﻿namespace HSA.RehaGame.Exercises
 {
-    using UnityEngine;
     using InGame;
+    using UnityEngine;
     using UnityEngine.UI;
     using User;
 
@@ -12,7 +12,6 @@
         private Exercise exercise;
         private MovieTexture movieTexture;
         private AudioSource audioSource;
-        private bool isReading = false;
         private Vector2 scrollPosition;
 
         // Use this for initialization
@@ -24,8 +23,10 @@
             }
             else
             {
-                exercise = new Exercise("exercise1", new Patient("michael").Select() as Patient).Select() as Exercise;
-                GameState.ActiveExercise = exercise;
+                // ToDo Set exercise from gamestate
+                GameState.ActivePatient = GameState.ActivePatient == null ? new Patient("Michael").Select() as Patient : GameState.ActivePatient;
+                GameState.ActiveExercise = GameState.ActiveExercise == null ? new Exercise("exercise1", GameState.ActivePatient).Select() as Exercise : GameState.ActiveExercise;
+                exercise = GameState.ActiveExercise;
             }
 
             movieTexture = exercise.Video;
@@ -34,7 +35,7 @@
             audioSource = this.GetComponent<AudioSource>();
             audioSource.clip = exercise.AuditiveDescription;
 
-            GameObject.Find("exerciseHeader").GetComponent<Text>().text = exercise.Name;
+            GameObject.Find("ExerciseHeader").GetComponent<Text>().text = exercise.Name;
 
             GameObject.Find("Video").GetComponent<RawImage>().texture = movieTexture;
             GameObject.Find("Description").GetComponentInChildren<Text>().text = exercise.Description;
@@ -51,28 +52,61 @@
             GUILayout.EndScrollView();*/
         }
 
-        void Update()
+        public void StartExercise()
         {
-            if(isReading && !audioSource.isPlaying)
-            {
-                audioSource.clip = exercise.AuditiveInformation;
-                audioSource.Play();
-                isReading = false;
-            }
+            exercise.StartDoingExercise();
         }
 
-        // Update is called once per frame
+        public void StopExercise()
+        {
+            exercise.StopDoingExercise();
+        }
+
         public void PlayVideo()
         {
-            movieTexture.Play();
+            if (movieTexture.isPlaying)
+                movieTexture.Stop();
+            else
+                movieTexture.Play();
+        }
+
+        public void StopMedia()
+        {
+            movieTexture.Stop();
+            audioSource.Stop();
         }
 
         public void ReadDescription()
         {
-            if (RGSettings.reading)
+            bool justStopped = false;
+
+            if (audioSource.isPlaying)
             {
+                audioSource.Stop();
+                justStopped = true;
+            }
+
+            if (RGSettings.reading && (!justStopped || audioSource.clip != exercise.AuditiveDescription))
+            {
+                audioSource.clip = exercise.AuditiveDescription;
                 audioSource.Play();
-                isReading = true;
+            }
+        }
+
+        public void ReadInformation()
+        {
+            bool justStopped = false;
+
+            if (audioSource.isPlaying)
+            {
+                audioSource.Stop();
+                justStopped = true;
+            }
+
+            if (RGSettings.reading && (!justStopped || audioSource.clip != exercise.AuditiveInformation))
+            {
+                audioSource.clip = exercise.AuditiveInformation;
+                audioSource.Play();
             }
         }
     }

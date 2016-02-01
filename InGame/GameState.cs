@@ -1,9 +1,9 @@
 ﻿namespace HSA.RehaGame.InGame
 {
-    using User;
-    using UnityEngine;
-    using Exercises;
     using System.Collections.Generic;
+    using Exercises;
+    using UnityEngine;
+    using User;
 
     public class GameState : MonoBehaviour
     {
