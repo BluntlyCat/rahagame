@@ -1,6 +1,7 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
     using System;
+    using UI.VisualExercise;
     using User;
     using Windows.Kinect;
 
@@ -8,7 +9,7 @@
     {
         private double start = -1;
 
-        public HoldAction(string unityObjectName, double value) : base(unityObjectName, value)
+        public HoldAction(string unityObjectName, double value, Drawing drawing) : base(unityObjectName, value, drawing)
         {
 
         }

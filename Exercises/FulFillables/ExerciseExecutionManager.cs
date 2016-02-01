@@ -4,13 +4,14 @@
     using User;
     using Logging;
     using Windows.Kinect;
+    using UI.VisualExercise;
 
     public class ExerciseExecutionManager : Informable
     {
         private static Logger<ExerciseExecutionManager> logger = new Logger<ExerciseExecutionManager>();
         private BaseStep currentFulFillable;
 
-        public ExerciseExecutionManager(BaseStep firstFulFillable)
+        public ExerciseExecutionManager(BaseStep firstFulFillable, Drawing drawing) : base(drawing)
         {
             logger.AddLogAppender<ConsoleAppender>();
             this.currentFulFillable = firstFulFillable;

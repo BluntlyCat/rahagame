@@ -9,14 +9,15 @@
 
     public class Drawing : MonoBehaviour
     {
-        private static Text debugText;
-        private static Text informationText;
-        private static GameObject visualInformation;
+        private Text debugText;
+        private Text informationText;
+        private GameObject visualInformation;
+        private ShowCircle showCircle;
 
         public GameObject debugTextPrefab;
         public GameObject infoTextPrefab;
-
-        private static ShowCircle showCircle;
+        public GameObject circlePrefab;
+        public GameObject visualInformationPrefab;
 
         void Start()
         {
@@ -24,33 +25,31 @@
             debugText = debugTextPrefab.GetComponent<Text>();
             debugText.transform.SetParent(this.transform, false);*/
 
-            infoTextPrefab = Instantiate(infoTextPrefab) as GameObject;
+            visualInformation = Instantiate(visualInformationPrefab);
+            visualInformation.transform.SetParent(this.transform, false);
+
+            showCircle = Instantiate(circlePrefab).GetComponent<ShowCircle>();
+            showCircle.transform.SetParent(visualInformation.transform, false);
+
+            infoTextPrefab = Instantiate(infoTextPrefab);
             informationText = infoTextPrefab.GetComponent<Text>();
             informationText.transform.SetParent(GameObject.Find("MiddlePanel").transform, false);
-
-            visualInformation = GameObject.Find("VisualInformation");
-
-            showCircle = new ShowCircle(new Circle(100, 100, 100, GameObject.Find("Reference"), Color.black),
-                new Circle(100, 100, 100, GameObject.Find("Current"), new Color(255, 255, 255, 64)));
         }
 
-        public static void ShowInformation(string information)
+        public void ShowInformation(string information)
         {
             if (informationText != null)
                 informationText.text = information;
         }
 
-        public static void DrawCircle(Kinect.Body body, PatientJoint patientJoint, double initialAngle, double currentAngle)
+        public void DrawCircle(Kinect.Body body, PatientJoint patientJoint, double initialAngle, double currentAngle)
         {
-            if (visualInformation != null)
-            {
-                var joint = body.Joints[patientJoint.JointType];
-                visualInformation.transform.position = Calculations.GetVector3FromJoint(joint);
-                showCircle.Update((float)initialAngle, (float)currentAngle);
-            }
+            var joint = body.Joints[patientJoint.JointType];
+            visualInformation.transform.position = Calculations.GetVector3FromJoint(joint);
+            showCircle.UpdateCircles((float)initialAngle, (float)currentAngle);
         }
 
-        public static void DrawDebug(Kinect.Body body, PatientJoint patientJoint)
+        public void DrawDebug(Kinect.Body body, PatientJoint patientJoint)
         {
             if (debugText != null)
             {

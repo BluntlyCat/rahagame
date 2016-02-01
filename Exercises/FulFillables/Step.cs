@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using UI.VisualExercise;
     using Logging;
     using Windows.Kinect;
 
@@ -12,7 +13,7 @@
         private IList<Joint> joints = new List<Joint>();
         private Joint currentJoint;
 
-        public Step(string description, BaseStep prevStep) : base(description, prevStep)
+        public Step(string description, BaseStep prevStep, Drawing drawing) : base(description, prevStep, drawing)
         {
             if (current == null)
                 current = this;

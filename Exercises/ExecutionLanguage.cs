@@ -7,16 +7,20 @@
     using Actions;
     using Behaviours;
     using FulFillables;
+    using UI.VisualExercise;
     using Logging;
 
     public class ExecutionLanguage
     {
         private static Logger<ExecutionLanguage> logger = new Logger<ExecutionLanguage>();
+        private Drawing drawing;
         private string rel;
 
-        public ExecutionLanguage(string rel)
+        public ExecutionLanguage(Drawing drawing, string rel)
         {
             logger.AddLogAppender<ConsoleAppender>();
+
+            this.drawing = drawing;
             this.rel = rel;
         }
 
@@ -43,22 +47,22 @@
 
             if (actionName == "hold")
             {
-                action = new HoldAction(actionName, double.Parse(attributes["value"]));
+                action = new HoldAction(actionName, double.Parse(attributes["value"]), drawing);
             }
 
             else if (actionName == "repeat")
             {
-                action = new RepeatAction(actionName, double.Parse(attributes["value"]));
+                action = new RepeatAction(actionName, double.Parse(attributes["value"]), drawing);
             }
 
             else if (actionName == "open")
             {
-                action = new OpenJointAction(actionName, baseJoint, double.Parse(attributes["value"]));
+                action = new OpenJointAction(actionName, baseJoint, double.Parse(attributes["value"]), drawing);
             }
 
             else if (actionName == "close")
             {
-                action = new CloseJointAction(actionName, baseJoint, double.Parse(attributes["value"]));
+                action = new CloseJointAction(actionName, baseJoint, double.Parse(attributes["value"]), drawing);
             }
 
             return action;
@@ -75,9 +79,9 @@
             var passive = exercise.Patient.GetJoint(attributes["joint"]);
 
             if (behaviourName == "above")
-                behaviour = new AboveBehaviour(behaviourName, active, passive);
+                behaviour = new AboveBehaviour(behaviourName, active, passive, drawing);
             else if (behaviourName == "below")
-                behaviour = new BelowBehaviour(behaviourName, active, passive);
+                behaviour = new BelowBehaviour(behaviourName, active, passive, drawing);
 
             return behaviour;
         }
@@ -86,14 +90,14 @@
         {
             var attributes = GetAttributes(reader);
 
-            return new Joint(attributes["name"]);
+            return new Joint(attributes["name"], drawing);
         }
 
         private Step CreateStep(XmlReader reader, BaseStep lastStep)
         {
             var attributes = GetAttributes(reader);
 
-            Step step = new Step(attributes["description"], lastStep);
+            Step step = new Step(attributes["description"], lastStep, drawing);
 
             if (lastStep != null)
                 lastStep.AddNext(step);

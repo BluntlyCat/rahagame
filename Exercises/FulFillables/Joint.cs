@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using Actions;
     using Behaviours;
+    using UI.VisualExercise;
     using User;
     using Windows.Kinect;
 
@@ -17,7 +18,7 @@
 
         private string name;
 
-        public Joint(string name)
+        public Joint(string name, Drawing drawing) : base(drawing)
         {
             this.name = name;
         }

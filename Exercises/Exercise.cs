@@ -18,14 +18,16 @@
         private MovieTexture video;
         private string description;
         private AudioClip auditiveDescription;
-        private ExecutionLanguage rel;
+        private string rel;
         private AudioClip auditiveInformation;
         private string information;
 
         private bool exerciseRuns;
         private bool exerciseDone;
 
+        private Drawing drawing;
         private Patient patient;
+        private ExecutionLanguage relManager;
         private ExerciseExecutionManager executionManager;
 
         public Exercise(string unityObjectName, Patient patient)
@@ -98,7 +100,7 @@
             }
         }
 
-        public ExecutionLanguage REL
+        public string REL
         {
             get
             {
@@ -157,15 +159,18 @@
                 else
                 {
                     executionManager.VisualInformation(body);
-                    Drawing.ShowInformation(executionManager.Information());
+                    drawing.ShowInformation(executionManager.Information());
                 }
             }
 
             return exerciseDone || !exerciseRuns;
         }
 
-        public void StartDoingExercise()
+        public void StartDoingExercise(Drawing drawing)
         {
+            this.drawing = drawing;
+            this.relManager = new ExecutionLanguage(drawing, this.rel);
+            this.executionManager = new ExerciseExecutionManager(this.relManager.GetSteps(this), drawing);
             exerciseRuns = true;
         }
 
@@ -189,7 +194,7 @@
             this.video = table.GetResource<MovieTexture>("video", "mp4");
             this.description = table.GetValueFromLanguage("description");
             this.auditiveDescription = table.GetResource<AudioClip>("auditiveDescription", "mp3");
-            this.rel = new ExecutionLanguage(table.GetValue("rel"));
+            this.rel = table.GetValue("rel");
             this.auditiveInformation = table.GetResource<AudioClip>("auditiveInformation", "mp3");
             this.information = table.GetValueFromLanguage("information");
 
@@ -199,8 +204,6 @@
             {
                 patient.GetJoint(joint.GetValue("name")).Stressed = true;
             }
-
-            this.executionManager = new ExerciseExecutionManager(this.rel.GetSteps(this));
 
             return this;
         }

@@ -1,6 +1,7 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
     using System;
+    using UI.VisualExercise;
     using Logging;
     using User;
     using Windows.Kinect;
@@ -9,7 +10,7 @@
     {
         private static Logger<AboveBehaviour> logger = new Logger<AboveBehaviour>();
 
-        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint) : base(unityObjectName, activeJoint, passiveJoint)
+        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing) : base(unityObjectName, activeJoint, passiveJoint, drawing)
         {
             logger.AddLogAppender<ConsoleAppender>();
         }

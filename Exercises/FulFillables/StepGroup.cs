@@ -1,11 +1,12 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
     using System;
+    using UI.VisualExercise;
     using Windows.Kinect;
 
     public class StepGroup : BaseStep
     {
-        public StepGroup(string description, BaseStep previous) : base(description, previous) {}
+        public StepGroup(string description, BaseStep previous, Drawing drawing) : base(description, previous, drawing) {}
 
         public override bool IsFulfilled(Body body)
         {

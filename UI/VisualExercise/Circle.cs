@@ -2,31 +2,28 @@
 {
     using UnityEngine;
 
-    public class Circle
+    [RequireComponent(typeof(LineRenderer))]
+    public class Circle : MonoBehaviour
     {
         private LineRenderer lineRenderer;
         
-        private int segments;
-        private float xRadius;
-        private float yRadius;
+        public int segments;
+        public float xRadius;
+        public float yRadius;
+        public Color color;
 
-        public Circle(int segments, float xRadius, float yRadius, GameObject gameObject, Color color)
+        void Start()
         {
-            this.lineRenderer = gameObject.AddComponent<LineRenderer>();
+            this.lineRenderer = this.GetComponent<LineRenderer>();
 
             this.lineRenderer.SetVertexCount(segments + 1);
             this.lineRenderer.useWorldSpace = false;
-
-            this.segments = segments;
-            this.xRadius = xRadius;
-            this.yRadius = yRadius;
-
             this.lineRenderer.material.color = color;
 
-            Update(0, 0);
+            UpdateCircle(0, 0);
         }
 
-        public void Update(float jointAngle, float zLayer)
+        public void UpdateCircle(float jointAngle, float zLayer)
         {
             float x;
             float y;

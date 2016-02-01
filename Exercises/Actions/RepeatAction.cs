@@ -1,11 +1,12 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
     using System;
+    using UI.VisualExercise;
     using Windows.Kinect;
 
     public class RepeatAction : BaseAction
     {
-        public RepeatAction(string unityObjectName, double value) : base(unityObjectName, value)
+        public RepeatAction(string unityObjectName, double value, Drawing drawing) : base(unityObjectName, value, drawing)
         {
 
         }

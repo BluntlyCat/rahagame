@@ -8,7 +8,7 @@
     {
         protected PatientJoint baseJoint;
 
-        public BaseJointAction(PatientJoint baseJoint, string unityObjectName, double value) : base(unityObjectName, value)
+        public BaseJointAction(PatientJoint baseJoint, string unityObjectName, double value, Drawing drawing) : base(unityObjectName, value, drawing)
         {
             this.baseJoint = baseJoint;
         }
@@ -25,7 +25,7 @@
         public override void Debug(Body body)
         {
             var joint = body.Joints[baseJoint.JointType];
-            Drawing.DrawDebug(body, baseJoint);
+            drawing.DrawDebug(body, baseJoint);
         }
 
         public PatientJoint BaseJoint

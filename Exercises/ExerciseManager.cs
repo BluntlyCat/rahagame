@@ -1,22 +1,26 @@
 ﻿namespace HSA.RehaGame.Exercises
 {
+    using UI.VisualExercise;
     using InGame;
     using UnityEngine;
     using UnityEngine.UI;
-    using User;
 
     [RequireComponent(typeof(AudioSource))]
-
     public class ExerciseManager : MonoBehaviour
     {
+        public GameObject DrawingPrefab;
+
         private Exercise exercise;
         private MovieTexture movieTexture;
         private AudioSource audioSource;
         private Vector2 scrollPosition;
+        private Drawing drawing;
 
         // Use this for initialization
         void Start()
         {
+            drawing = DrawingPrefab.GetComponent<Drawing>();
+
             if (GameState.ActiveExercise != null)
             {
                 exercise = GameState.ActiveExercise;
@@ -24,8 +28,8 @@
             else
             {
                 // ToDo Set exercise from gamestate
-                GameState.ActivePatient = GameState.ActivePatient == null ? new Patient("Michael").Select() as Patient : GameState.ActivePatient;
-                GameState.ActiveExercise = GameState.ActiveExercise == null ? new Exercise("exercise1", GameState.ActivePatient).Select() as Exercise : GameState.ActiveExercise;
+                //GameState.ActivePatient = GameState.ActivePatient == null ? new Patient("Michael").Select() as Patient : GameState.ActivePatient;
+                //GameState.ActiveExercise = GameState.ActiveExercise == null ? new Exercise("exercise1", GameState.ActivePatient).Select() as Exercise : GameState.ActiveExercise;
                 exercise = GameState.ActiveExercise;
             }
 
@@ -54,7 +58,7 @@
 
         public void StartExercise()
         {
-            exercise.StartDoingExercise();
+            exercise.StartDoingExercise(drawing);
         }
 
         public void StopExercise()

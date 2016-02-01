@@ -36,8 +36,8 @@
             informationCanvas = informationCanvasObject.GetComponent<Canvas>();
 
             // ToDo Set exercise from gamestate
-            GameState.ActivePatient = GameState.ActivePatient == null ? new Patient("Michael").Select() as Patient : GameState.ActivePatient;
-            GameState.ActiveExercise = GameState.ActiveExercise == null ? new Exercise("exercise1", GameState.ActivePatient).Select() as Exercise : GameState.ActiveExercise;
+            //GameState.ActivePatient = GameState.ActivePatient == null ? new Patient("Michael").Select() as Patient : GameState.ActivePatient;
+            //GameState.ActiveExercise = GameState.ActiveExercise == null ? new Exercise("exercise1", GameState.ActivePatient).Select() as Exercise : GameState.ActiveExercise;
             exercise = GameState.ActiveExercise;
         }
 

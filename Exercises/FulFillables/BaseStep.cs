@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using Actions;
+    using UI.VisualExercise;
     using Windows.Kinect;
 
     public abstract class BaseStep : Informable
@@ -14,7 +15,7 @@
 
         private string description;
 
-        public BaseStep(string description, BaseStep previous)
+        public BaseStep(string description, BaseStep previous, Drawing drawing) : base (drawing)
         {
             this.description = description;
             this.previous = previous;

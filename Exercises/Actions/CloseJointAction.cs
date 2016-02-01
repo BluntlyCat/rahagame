@@ -16,7 +16,7 @@
         private double minAngle;
         private double maxAngle;
 
-        public CloseJointAction(string unityObjectName, PatientJoint baseJoint, double value) : base(baseJoint, unityObjectName, value)
+        public CloseJointAction(string unityObjectName, PatientJoint baseJoint, double value, Drawing drawing) : base(baseJoint, unityObjectName, value, drawing)
         {
             this.tolerance = RGSettings.angleTolerance;
 
@@ -41,7 +41,7 @@
 
         public override void VisualInformation(Body body)
         {
-            Drawing.DrawCircle(body, baseJoint, initialValue, angle);
+            drawing.DrawCircle(body, baseJoint, initialValue, angle);
         }
 
         public override void Reset()

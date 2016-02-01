@@ -12,7 +12,7 @@
         protected PatientJoint activeJoint;
         protected PatientJoint passiveJoint;
 
-        public BaseJointBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint)
+        public BaseJointBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing) : base(drawing)
         {
             this.unityObjectName = unityObjectName;
             this.activeJoint = activeJoint;
@@ -29,7 +29,7 @@
 
         public override void Debug(Body body)
         {
-            Drawing.DrawDebug(body, activeJoint);
+            drawing.DrawDebug(body, activeJoint);
         }
 
         public PatientJoint ActiveJoint

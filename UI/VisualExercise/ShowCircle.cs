@@ -1,20 +1,25 @@
 ﻿namespace HSA.RehaGame.UI.VisualExercise
 {
-    public class ShowCircle
+    using UnityEngine;
+
+    public class ShowCircle : MonoBehaviour
     {
+        public GameObject referenceCircleObject;
+        public GameObject currentCircleObject;
+
         private Circle referenceCircle;
         private Circle currentCircle;
 
-        public ShowCircle(Circle reference, Circle current)
+        void Start()
         {
-            this.referenceCircle = reference;
-            this.currentCircle = current;
+            this.referenceCircle = referenceCircleObject.GetComponent<Circle>();
+            this.currentCircle = currentCircleObject.GetComponent<Circle>();
         }
 
-        public void Update(float initialAngle, float currentAngle)
+        public void UpdateCircles(float initialAngle, float currentAngle)
         {
-            referenceCircle.Update(initialAngle, initialAngle > currentAngle ? 1 : 0);
-            currentCircle.Update(currentAngle, initialAngle > currentAngle ? 0 : 1);
+            referenceCircle.UpdateCircle(initialAngle, initialAngle > currentAngle ? 1 : 0);
+            currentCircle.UpdateCircle(currentAngle, initialAngle > currentAngle ? 0 : 1);
         }
     }
 }

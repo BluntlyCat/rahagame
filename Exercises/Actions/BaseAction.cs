@@ -2,6 +2,7 @@
 {
     using DB;
     using FulFillables;
+    using UI.VisualExercise;
     using Windows.Kinect;
 
     public abstract class BaseAction : Informable
@@ -10,7 +11,7 @@
         protected double value;
         protected double initialValue;
 
-        public BaseAction(string unityObjectName, double value)
+        public BaseAction(string unityObjectName, double value, Drawing drawing) : base (drawing)
         {
             this.unityObjectName = unityObjectName;
             this.initialValue = this.value = value;
