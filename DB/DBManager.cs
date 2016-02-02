@@ -382,19 +382,9 @@
             return Query("editor_menu", "SELECT * FROM editor_menu WHERE unityObjectName = '" + name + "';");
         }
 
-        public static DBTable GetAction(string name)
+        public static DBTable GetExerciseInformation(string name, string type)
         {
-            return Query("editor_exerciseaction", "SELECT * FROM editor_exerciseaction WHERE unityObjectName = '" + name + "';");
-        }
-
-        public static DBTable GetBehaviour(string name)
-        {
-            return Query("editor_exercisebehaviour", "SELECT * FROM editor_exercisebehaviour WHERE unityObjectName = '" + name + "';");
-        }
-
-        public static DBTable GetStepInformation(string name)
-        {
-            return Query("editor_step", "SELECT * FROM editor_step WHERE unityObjectName = '" + name + "';");
+            return Query("editor_exerciseinformation", "SELECT * FROM editor_exerciseinformation WHERE unityObjectName = '" + name + "' AND type = '" + type + "';");
         }
 
         public static DBTable GetTranslation(string name)

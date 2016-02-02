@@ -41,7 +41,7 @@
 
         public override void Clear()
         {
-            throw new NotImplementedException();
+            drawing.ClearDrawings();
         }
     }
 }

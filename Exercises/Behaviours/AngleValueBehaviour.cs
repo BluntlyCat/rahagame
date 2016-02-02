@@ -35,12 +35,12 @@
 
         public override string Information()
         {
-            var angleString = string.Format(information, activeJoint.Translation, value.ToString("000"));
+            var angleString = value.ToString("000");
 
             if (angleString[0] == '0')
                 angleString = angleString.Substring(1);
 
-            return angleString;
+            return string.Format(information, activeJoint.Translation, angleString); ;
         }
 
         public override void Draw(Body body)

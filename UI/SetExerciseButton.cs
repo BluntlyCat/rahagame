@@ -17,7 +17,7 @@
             var table = DBManager.Query("editor_exercise", "SELECT * FROM editor_exercise");
 
             audioSource = this.GetComponent<AudioSource>();
-            audioSource.clip = table.GetResource<AudioClip>("auditiveDescription", "mp3");
+            audioSource.clip = table.GetResource<AudioClip>("auditiveName", "mp3");
         }
 
         public void LoadExrcise()

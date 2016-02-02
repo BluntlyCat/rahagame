@@ -16,7 +16,7 @@
             this.unityObjectName = unityObjectName;
 
             if (unityObjectName != null)
-                this.information = DBManager.GetStepInformation(unityObjectName).GetValueFromLanguage("order");
+                this.information = DBManager.GetExerciseInformation(unityObjectName, "step").GetValueFromLanguage("order");
         }
 
         public override bool IsFulfilled(Body body)

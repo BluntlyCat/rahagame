@@ -31,7 +31,7 @@
                 button.name = exercise.UnityObjectName;
                 button.tag = "inputElement";
                 textComponent.text = exercise.Name;
-                image.texture = exercise.Thumbnail;
+                //image.texture = exercise.Thumbnail;
 
                 if(isFirst)
                 {

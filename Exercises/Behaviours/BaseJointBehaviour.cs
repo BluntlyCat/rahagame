@@ -18,7 +18,7 @@
             this.activeJoint = activeJoint;
             this.passiveJoint = passiveJoint;
 
-            this.information = DBManager.GetBehaviour(unityObjectName).GetValueFromLanguage("order");
+            this.information = DBManager.GetExerciseInformation(unityObjectName, "behaviour").GetValueFromLanguage("order");
         }
 
         public abstract override bool IsFulfilled(Body body);

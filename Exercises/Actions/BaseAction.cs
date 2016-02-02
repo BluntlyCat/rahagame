@@ -16,7 +16,7 @@
         public BaseAction(string unityObjectName, double value, FulFillable previous) : base (previous)
         {
             this.initialValue = this.value = value;
-            this.information = DBManager.GetAction(unityObjectName).GetValueFromLanguage("order");
+            this.information = DBManager.GetExerciseInformation(unityObjectName, "action").GetValueFromLanguage("order");
         }
 
         public override string Information()
