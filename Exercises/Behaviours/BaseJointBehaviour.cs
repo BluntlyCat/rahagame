@@ -1,22 +1,23 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
+    using System;
+    using System.Collections.Generic;
     using DB;
     using FulFillables;
-    using UI.VisualExercise;
+    using UI = UI.VisualExercise;
     using User;
     using Windows.Kinect;
 
-    public abstract class BaseJointBehaviour : Informable
-    {
-        private string unityObjectName;
+    public abstract class BaseJointBehaviour : Drawable
+    {   
         protected PatientJoint activeJoint;
         protected PatientJoint passiveJoint;
 
-        public BaseJointBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing) : base(drawing)
+        public BaseJointBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, UI.Drawing drawing, FulFillable previous) : base(drawing, previous)
         {
-            this.unityObjectName = unityObjectName;
             this.activeJoint = activeJoint;
             this.passiveJoint = passiveJoint;
+
             this.information = DBManager.GetBehaviour(unityObjectName).GetValueFromLanguage("order");
         }
 
@@ -27,9 +28,14 @@
             return string.Format(information, activeJoint.Translation, passiveJoint.Translation);
         }
 
-        public override void Debug(Body body)
+        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
         {
-            drawing.DrawDebug(body, activeJoint);
+            drawing.DrawDebug(body, stressedJoints);
+        }
+
+        public override void Debug(Body body, PatientJoint jointJoint)
+        {
+            drawing.DrawDebug(body, jointJoint);
         }
 
         public PatientJoint ActiveJoint

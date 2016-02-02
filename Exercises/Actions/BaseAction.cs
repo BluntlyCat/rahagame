@@ -1,19 +1,20 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
+    using System.Collections.Generic;
     using DB;
     using FulFillables;
+    using User;
     using UI.VisualExercise;
     using Windows.Kinect;
+    using System;
 
     public abstract class BaseAction : Informable
     {
-        private string unityObjectName;
         protected double value;
         protected double initialValue;
 
-        public BaseAction(string unityObjectName, double value, Drawing drawing) : base (drawing)
+        public BaseAction(string unityObjectName, double value, FulFillable previous) : base (previous)
         {
-            this.unityObjectName = unityObjectName;
             this.initialValue = this.value = value;
             this.information = DBManager.GetAction(unityObjectName).GetValueFromLanguage("order");
         }
@@ -23,12 +24,15 @@
             return string.Format(information, value.ToString("0"));
         }
 
-        public override void Debug(Body body)
+        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
         {
             return;
         }
 
-        public abstract override bool IsFulfilled(Body body);
+        public override void Debug(Body body, PatientJoint jointJoint)
+        {
+            return;
+        }
 
         public abstract void Reset();
     }

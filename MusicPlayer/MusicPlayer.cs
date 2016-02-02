@@ -76,8 +76,6 @@
             {
                 if (this.playlists.ContainsKey(value))
                     this.currentScene = value;
-                else
-                    logger.Debug("Scene has no Playlist, use default");
             }
         }
     }

@@ -1,15 +1,14 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
     using System;
-    using UI.VisualExercise;
-    using User;
+    using FulFillables;
     using Windows.Kinect;
 
     public class HoldAction : BaseAction
     {
-        private double start = -1;
+        protected double start = -1;
 
-        public HoldAction(string unityObjectName, double value, Drawing drawing) : base(unityObjectName, value, drawing)
+        public HoldAction(string unityObjectName, double value, FulFillable previous) : base(unityObjectName, value, previous)
         {
 
         }
@@ -30,11 +29,6 @@
             }
 
             return isFulfilled;
-        }
-
-        public override void VisualInformation(Body body)
-        {
-            
         }
 
         public override void Reset()

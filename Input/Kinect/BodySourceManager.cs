@@ -1,6 +1,5 @@
 ﻿namespace HSA.RehaGame.Input.Kinect
 {
-    using Scene;
     using UnityEngine;
     using Windows.Kinect;
 

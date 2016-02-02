@@ -1,26 +1,28 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
-    using System;
-    using User;
+    using System.Collections.Generic;
     using Logging;
+    using User;
     using Windows.Kinect;
-    using UI.VisualExercise;
 
     public class ExerciseExecutionManager : Informable
     {
         private static Logger<ExerciseExecutionManager> logger = new Logger<ExerciseExecutionManager>();
-        private BaseStep currentFulFillable;
+        private Informable currentFulFillable;
+        private IDictionary<string, PatientJoint> stressedJoints;
 
-        public ExerciseExecutionManager(BaseStep firstFulFillable, Drawing drawing) : base(drawing)
+        public ExerciseExecutionManager(BaseStep firstFulFillable, IDictionary<string, PatientJoint> stressedJoints, FulFillable previous) : base(previous)
         {
             logger.AddLogAppender<ConsoleAppender>();
+
             this.currentFulFillable = firstFulFillable;
+            this.stressedJoints = stressedJoints;
         }
 
         public override bool IsFulfilled(Body body)
         {
 #if UNITY_EDITOR
-            //this.Debug(body);
+            this.Debug(body, stressedJoints);
 #endif
             isFulfilled = currentFulFillable.IsFulfilled(body);
 
@@ -32,7 +34,7 @@
                 }
                 else
                 {
-                    currentFulFillable = currentFulFillable.Next;
+                    currentFulFillable = currentFulFillable.Next as Informable;
                     isFulfilled = false;
                 }
             }
@@ -45,25 +47,14 @@
             return currentFulFillable.Information();
         }
 
-        public override void VisualInformation(Body body)
+        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
         {
-            currentFulFillable.VisualInformation(body);
+            currentFulFillable.Debug(body, stressedJoints);
         }
 
-        public override void Debug(Body body)
+        public override void Debug(Body body, PatientJoint jointJoint)
         {
-            currentFulFillable.Debug(body);
-        }
-
-        public Step CurrentFulFillable
-        {
-            get
-            {
-                if (currentFulFillable.GetType() == typeof(StepGroup))
-                    return ((StepGroup)currentFulFillable).Current as Step;
-
-                return currentFulFillable as Step;
-            }
+            currentFulFillable.Debug(body, jointJoint);
         }
     }
 }

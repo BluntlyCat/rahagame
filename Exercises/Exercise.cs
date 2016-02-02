@@ -1,12 +1,10 @@
 ﻿namespace HSA.RehaGame.Exercises
 {
+    using System.Collections.Generic;
     using DB;
-    using FulFillables;
-    using UI.VisualExercise;
+    using InGame;
     using UnityEngine;
-    using UnityEngine.UI;
     using User;
-    using Windows.Kinect;
 
     public class Exercise : DBObject
     {
@@ -21,19 +19,12 @@
         private string rel;
         private AudioClip auditiveInformation;
         private string information;
+        
+        private IDictionary<string, PatientJoint> stressedJoints = new Dictionary<string, PatientJoint>();
 
-        private bool exerciseRuns;
-        private bool exerciseDone;
-
-        private Drawing drawing;
-        private Patient patient;
-        private ExecutionLanguage relManager;
-        private ExerciseExecutionManager executionManager;
-
-        public Exercise(string unityObjectName, Patient patient)
+        public Exercise(string unityObjectName)
         {
             this.unityObjectName = unityObjectName;
-            this.patient = patient;
         }
 
         public int ID
@@ -124,59 +115,12 @@
             }
         }
 
-        public Patient Patient
+        public IDictionary<string, PatientJoint> StressedJoints
         {
             get
             {
-                return patient;
+                return stressedJoints;
             }
-        }
-
-        public bool IsActive
-        {
-            get
-            {
-                return !exerciseDone && exerciseRuns;
-            }
-        }
-
-        public ExerciseExecutionManager ExecutionManager
-        {
-            get
-            {
-                return executionManager;
-            }
-        }
-
-        public bool DoExercise(Body body)
-        {
-            if (exerciseRuns)
-            {
-                exerciseDone = executionManager.IsFulfilled(body);
-
-                if (exerciseDone)
-                    exerciseRuns = false;
-                else
-                {
-                    executionManager.VisualInformation(body);
-                    drawing.ShowInformation(executionManager.Information());
-                }
-            }
-
-            return exerciseDone || !exerciseRuns;
-        }
-
-        public void StartDoingExercise(Drawing drawing)
-        {
-            this.drawing = drawing;
-            this.relManager = new ExecutionLanguage(drawing, this.rel);
-            this.executionManager = new ExerciseExecutionManager(this.relManager.GetSteps(this), drawing);
-            exerciseRuns = true;
-        }
-
-        public void StopDoingExercise()
-        {
-            exerciseRuns = false;
         }
 
         public override void Delete() {}
@@ -198,11 +142,15 @@
             this.auditiveInformation = table.GetResource<AudioClip>("auditiveInformation", "mp3");
             this.information = table.GetValueFromLanguage("information");
 
-            var stressedJoints = DBManager.GetStressedJoints(this.id);
+            var stressedJointsDB = DBManager.GetStressedJoints(this.id);
 
-            foreach(var joint in stressedJoints.Rows)
+            foreach(var joint in stressedJointsDB.Rows)
             {
-                patient.GetJoint(joint.GetValue("name")).Stressed = true;
+                var name = joint.GetValue("name");
+                var stressedJoint = GameState.ActivePatient.GetJoint(name);
+
+                stressedJoint.Stressed = true;
+                stressedJoints.Add(name, stressedJoint);
             }
 
             return this;

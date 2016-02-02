@@ -1,120 +1,73 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
-    using System.Collections.Generic;
+    using DB;
     using Actions;
-    using UI.VisualExercise;
     using Windows.Kinect;
 
     public abstract class BaseStep : Informable
     {
-        protected IList<BaseAction> actions = new List<BaseAction>();
-        protected BaseAction currentAction;
-        protected BaseStep current;
-        protected BaseStep previous;
-        protected BaseStep next;
+        protected Informable firstToDoAble;
+        protected Informable currentToDoAble;
 
-        private string description;
+        protected string unityObjectName;
 
-        public BaseStep(string description, BaseStep previous, Drawing drawing) : base (drawing)
+        public BaseStep(string unityObjectName, FulFillable previous) : base (previous)
         {
-            this.description = description;
-            this.previous = previous;
+            this.unityObjectName = unityObjectName;
+
+            if (unityObjectName != null)
+                this.information = DBManager.GetStepInformation(unityObjectName).GetValueFromLanguage("order");
         }
 
-        public void AddAction(BaseAction action)
+        public override bool IsFulfilled(Body body)
         {
-            this.actions.Add(action);
-        }
+            // ToDo Was ist wenn man die Position vom vorherigen Schritt verlässt?
 
-        public void AddNext(BaseStep next)
-        {
-            this.next = next;
+            if (currentToDoAble.GetType().IsSubclassOf(typeof(BaseAction)) && currentToDoAble.Previous != null)
+            {
+                isFulfilled = currentToDoAble.Previous.IsFulfilled(body);
+
+                if (isFulfilled)
+                    isFulfilled = currentToDoAble.IsFulfilled(body);
+                else
+                    ((BaseAction)currentToDoAble).Reset();
+            }
+            else
+                isFulfilled = currentToDoAble.IsFulfilled(body);
+
+            if (isFulfilled)
+            {
+                if (currentToDoAble.Next == null)
+                {
+                    isFulfilled = true;
+                }
+                else
+                {
+                    currentToDoAble = currentToDoAble.Next as Informable;
+                    isFulfilled = false;
+                }
+            }
+
+            return isFulfilled;
         }
 
         public override string ToString()
         {
-            return string.Format("{0}: {1}: {2}", this.GetType().Name, description, isFulfilled);
+            return string.Format("{0}: {1}: {2}", this.GetType().Name, unityObjectName, isFulfilled);
         }
 
         public string Description
         {
             get
             {
-                return description;
+                return unityObjectName;
             }
         }
 
-        public BaseStep First
+        protected void ResetAction()
         {
-            get
-            {
-                var current = this;
-
-                while (current.previous != null)
-                    current = current.previous;
-
-                return current;
-            }
-        }
-
-        public BaseStep Last
-        {
-            get
-            {
-                var current = this;
-
-                while (current.next != null)
-                    current = current.next;
-
-                return current;
-            }
-        }
-
-        public BaseStep Current
-        {
-            get
-            {
-                return current;
-            }
-        }
-
-        public BaseStep Previous
-        {
-            get
-            {
-                return previous;
-            }
-        }
-
-        public BaseStep Next
-        {
-            get
-            {
-                return next;
-            }
-        }
-
-        protected bool CheckActions(Body body)
-        {
-            foreach (var action in actions)
-            {
-                currentAction = action;
-
-                if (action.IsFulfilled(body) == false)
-                    return false;
-            }
-
-            return true;
-        }
-
-        protected void ResetActions()
-        {
-            foreach (var action in actions)
-            {
-                action.Reset();
-            }
-
-            currentAction = null;
+            if(currentToDoAble.GetType() == typeof(BaseAction))
+                ((BaseAction)currentToDoAble).Reset();
         }
     }
 }

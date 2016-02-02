@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using UnityEngine;
+    using System;
     using Kinect = Windows.Kinect;
 
     class Calculations
@@ -32,9 +33,39 @@
             return new Vector3(X * 10, Y * 10, Z * 10);
         }
 
+        public static Vector3 GetDistance(Kinect.Joint jointX, Kinect.Joint jointY)
+        {
+            var xDistance = Math.Abs(jointX.Position.X - jointY.Position.X) * 100;
+            var yDistance = Math.Abs(jointX.Position.Y - jointY.Position.Y) * 100;
+            var zDistance = Math.Abs(jointX.Position.Z - jointY.Position.Z) * 100;
+
+            return new Vector3(xDistance, yDistance, zDistance);
+        }
+
         public static Vector3 Substract(Vector3 b, Vector3 t)
         {
             return new Vector3(b.x - t.x, b.y - t.y, b.z - t.z);
+        }
+
+        public static Vector3 Add(Vector3 b, Vector3 t)
+        {
+            return new Vector3(b.x + t.x, b.y + t.y, b.z + t.z);
+        }
+
+        public static Vector3 Substract(Kinect.Joint joint1, Kinect.Joint joint2)
+        {
+            var u = GetVector3FromJoint(joint1);
+            var v = GetVector3FromJoint(joint2);
+
+            return Substract(u, v);
+        }
+
+        public static Vector3 Add(Kinect.Joint joint1, Kinect.Joint joint2)
+        {
+            var u = GetVector3FromJoint(joint1);
+            var v = GetVector3FromJoint(joint2);
+
+            return Add(u, v);
         }
 
         public static float CalculateVectorScalar(Vector3 u, Vector3 v)
@@ -43,6 +74,11 @@
         }
 
         public static float CalculateVectorLength(Vector3 v)
+        {
+            return Mathf.Sqrt(Mathf.Pow(v.x, 2) + Mathf.Pow(v.y, 2) + Mathf.Pow(v.z, 2));
+        }
+
+        public static double CalculateVectorLength2d(Vector3 v)
         {
             return Mathf.Sqrt(Mathf.Pow(v.x, 2) + Mathf.Pow(v.y, 2) + Mathf.Pow(v.z, 2));
         }

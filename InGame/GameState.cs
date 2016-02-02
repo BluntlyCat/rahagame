@@ -9,7 +9,11 @@
     {
         private static Patient activePatient;
         private static Exercise activeExercise;
+
         private static IDictionary<string, Exercise> exercises = new Dictionary<string, Exercise>();
+
+        private static bool exerciseIsActive;
+        private static bool hasKinectUser;
 
         public static Patient ActivePatient
         {
@@ -33,6 +37,32 @@
             set
             {
                 activeExercise = value;
+            }
+        }
+
+        public static bool ExerciseIsActive
+        {
+            get
+            {
+                return exerciseIsActive;
+            }
+
+            set
+            {
+                exerciseIsActive = value;
+            }
+        }
+
+        public static bool HasKinectUser
+        {
+            get
+            {
+                return hasKinectUser;
+            }
+
+            set
+            {
+                hasKinectUser = value;
             }
         }
 

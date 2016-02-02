@@ -13,7 +13,6 @@
         private Gender sex;
 
         private Dictionary<JointType, PatientJoint> joints;
-        private bool insert = true;
 
         public Patient(string name)
         {
@@ -153,7 +152,6 @@
 
                 foreach (var patientJointMapping in patientJointMap.Rows)
                 {
-                    var patientJoint = DBManager.Query("editor_patientjoint", "SELECT * FROM editor_patientjoint WHERE id = '" + patientJointMapping.GetValue("patientjoint_id") + "';").GetRow();
                     DBManager.Detete("editor_patientjoint", patientJointMapping.GetValue("patientjoint_id"));
                     DBManager.Detete("editor_patient_joints", patientJointMapping.GetValue("id"));
                 }

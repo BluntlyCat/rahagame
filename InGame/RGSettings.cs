@@ -8,7 +8,7 @@
     {
         private static int languageIndex = -1;
 
-        [Setting(true)]
+        [Setting()]
         public static string[] languages
         {
             get
@@ -22,7 +22,7 @@
             }
         }
 
-        [Setting(true)]
+        [Setting()]
         public static string activeLanguage
         {
             get
@@ -50,7 +50,7 @@
             }
         }
 
-        [Setting(true)]
+        [Setting()]
         public static bool reading
         {
             get
@@ -65,7 +65,7 @@
             }
         }
 
-        [Setting(true)]
+        [Setting()]
         public static bool music
         {
             get
@@ -80,7 +80,7 @@
             }
         }
 
-        [Setting(true)]
+        [Setting()]
         public static double angleTolerance
         {
             get

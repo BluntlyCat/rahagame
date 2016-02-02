@@ -1,111 +1,65 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
-    using System;
     using System.Collections.Generic;
-    using Actions;
     using Behaviours;
-    using UI.VisualExercise;
     using User;
     using Windows.Kinect;
 
     public class Joint : Informable
     {
-        private IList<BaseJointBehaviour> jointBehaviours = new List<BaseJointBehaviour>();
+        private BaseJointBehaviour firstJointBehaviour;
         private BaseJointBehaviour currentJointBehaviour;
-
-        protected IList<BaseAction> actions = new List<BaseAction>();
-        protected BaseAction currentAction;
 
         private string name;
 
-        public Joint(string name, Drawing drawing) : base(drawing)
+        public Joint(string name, FulFillable previous) : base (previous)
         {
             this.name = name;
         }
 
+        public void SetFirstBehaviour(BaseJointBehaviour behaviour)
+        {
+            this.firstJointBehaviour = this.currentJointBehaviour = behaviour;
+        }
+
         public override bool IsFulfilled(Body body)
         {
-            isFulfilled = CheckBehaviours(body);
+            // ToDo Was ist wenn man die Position vom vorherigen Schritt verlässt?
+            isFulfilled = currentJointBehaviour.IsFulfilled(body);
 
             if (isFulfilled)
-                isFulfilled = CheckActions(body);
+            {
+                currentJointBehaviour.Clear();
+
+                if (currentJointBehaviour.Next == null)
+                {
+                    isFulfilled = true;
+                }
+                else
+                {
+                    currentJointBehaviour = currentJointBehaviour.Next as BaseJointBehaviour;
+                    isFulfilled = false;
+                }
+            }
+            else
+                currentJointBehaviour.Draw(body);
 
             return isFulfilled;
         }
 
         public override string Information()
         {
-            if(currentJointBehaviour != null)
-                return currentJointBehaviour.Information();
-
-            else if (currentAction != null)
-                return currentAction.Information();
-
-            return "";
+            return currentJointBehaviour.Information();
         }
 
-        public override void VisualInformation(Body body)
+        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
         {
-            if (currentJointBehaviour != null)
-                currentJointBehaviour.VisualInformation(body);
-
-            else if (currentAction != null)
-                currentAction.VisualInformation(body);
+            currentJointBehaviour.Debug(body, stressedJoints);
         }
 
-        public override void Debug(Body body)
+        public override void Debug(Body body, PatientJoint patientJoint)
         {
-            if (currentAction != null)
-                currentAction.Debug(body);
-
-            else if (currentJointBehaviour != null)
-                currentJointBehaviour.Debug(body);
-        }
-
-        public void AddJointBehaviour(BaseJointBehaviour jointBehaviour)
-        {
-            this.jointBehaviours.Add(jointBehaviour);
-        }
-
-        public void AddAction(BaseAction action)
-        {
-            this.actions.Add(action);
-        }
-
-        private bool CheckBehaviours(Body body)
-        {
-            foreach (var behaviour in jointBehaviours)
-            {
-                currentJointBehaviour = behaviour;
-
-                if (behaviour.IsFulfilled(body) == false)
-                    return false;
-            }
-
-            return true;
-        }
-
-        private bool CheckActions(Body body)
-        {
-            foreach (var action in actions)
-            {
-                currentAction = action;
-
-                if (action.IsFulfilled(body) == false)
-                    return false;
-            }
-
-            return true;
-        }
-
-        private void ResetActions()
-        {
-            foreach (var action in actions)
-            {
-                action.Reset();
-            }
-
-            currentAction = null;
+            currentJointBehaviour.Debug(body, patientJoint);
         }
 
         public string Name
@@ -113,21 +67,6 @@
             get
             {
                 return name;
-            }
-        }
-
-        public BaseJointBehaviour CurrentJointBehaviour
-        {
-            get
-            {
-                return currentJointBehaviour;
-            }
-        }
-        public BaseAction CurrentAction
-        {
-            get
-            {
-                return currentAction;
             }
         }
 

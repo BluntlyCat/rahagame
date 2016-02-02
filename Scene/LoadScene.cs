@@ -13,7 +13,6 @@
         private static Logger<LoadScene> logger = new Logger<LoadScene>();
 
         private static GameObject menuItems;
-        private static GameObject hud;
         private static List<string> previousScenes = new List<string>();
 
         public static MusicPlayer musicPlayer;
@@ -22,26 +21,14 @@
         void Start()
         {
             logger.AddLogAppender<ConsoleAppender>();
-
-            hud = GameObject.FindGameObjectWithTag("HUD");
-
             musicPlayer = new MusicPlayer(this.GetComponent<AudioSource>());
 
             musicPlayer.playlist = SceneManager.GetActiveScene().name;
             musicPlayer.Play();
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-            /*if (musicPlayer != null && musicPlayer.isPlaying == false && Pause.Paused == false)
-                musicPlayer.Next();*/
-        }
-
         private static void LoadNewScene(string scene, bool addPrevious = true)
         {
-            logger.Info("Load scene", scene);
-
             if (addPrevious)
                 previousScenes.Add(SceneManager.GetActiveScene().name);
 
@@ -68,6 +55,10 @@
         {
             LoadNewScene("NewUser");
         }
+        public static void LoadStatistics()
+        {
+            LoadNewScene("Statistics");
+        }
 
         public static void ReturnToWindows()
         {
@@ -85,6 +76,11 @@
         public static void LoadUser()
         {
             LoadNewScene("NewUser");
+        }
+
+        public static void LoadTrainingMode()
+        {
+            LoadNewScene("TrainingMode");
         }
 
         public static void LoadUsersSlection()

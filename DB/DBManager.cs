@@ -135,8 +135,6 @@
                 }
             }
 
-            logger.Debug();
-
             return sql;
         }
 
@@ -196,8 +194,6 @@
 
             try
             {
-                logger.Debug(string.Format("Query in {0}", tableName), query);
-
                 var table = new DBTable(tableName);
                 var pkName = manager.GetPKName(tableName);
 
@@ -279,8 +275,6 @@
                     WHERE editor_patientjoint.kinectJoint_id = '{0}' and editor_patient.name = '{1}';
                     ", kinectJoint_id, patientName);
 
-                logger.Info("Join in database to fetch a specific patients joint", sql);
-
                 DBTable table = new DBTable("editor_patientjoint");
 
                 manager.Open();
@@ -346,8 +340,6 @@
                     WHERE editor_exercise.id = {0};
                     ", exerciseID);
 
-                logger.Info("Join in database to fetch all stressed joints for the given exercise", sql);
-
                 DBTable table = new DBTable("editor_joint");
 
                 manager.Open();
@@ -398,6 +390,11 @@
         public static DBTable GetBehaviour(string name)
         {
             return Query("editor_exercisebehaviour", "SELECT * FROM editor_exercisebehaviour WHERE unityObjectName = '" + name + "';");
+        }
+
+        public static DBTable GetStepInformation(string name)
+        {
+            return Query("editor_step", "SELECT * FROM editor_step WHERE unityObjectName = '" + name + "';");
         }
 
         public static DBTable GetTranslation(string name)
@@ -470,7 +467,6 @@
 
                 manager.Close();
 
-                var all = Query(table, "SELECT * FROM " + table + ";");
                 var lastId = manager.GetLastEntry(table, pkName, values);
 
                 return lastId.Value.ToString();

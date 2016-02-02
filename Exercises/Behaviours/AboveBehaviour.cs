@@ -5,12 +5,13 @@
     using Logging;
     using User;
     using Windows.Kinect;
+    using FulFillables;
 
     public class AboveBehaviour : BaseJointBehaviour
     {
         private static Logger<AboveBehaviour> logger = new Logger<AboveBehaviour>();
 
-        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing) : base(unityObjectName, activeJoint, passiveJoint, drawing)
+        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, drawing, previous)
         {
             logger.AddLogAppender<ConsoleAppender>();
         }
@@ -21,9 +22,14 @@
             return isFulfilled;
         }
 
-        public override void VisualInformation(Body body)
+        public override void Draw(Body body)
         {
             
+        }
+
+        public override void Clear()
+        {
+            throw new NotImplementedException();
         }
     }
 }

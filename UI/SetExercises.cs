@@ -24,7 +24,7 @@
                 var image = button.GetComponentInChildren<RawImage>();
 
                 GameState.ActivePatient.ResetJoints();
-                var exercise = new Exercise(row.GetValue("unityObjectName"), GameState.ActivePatient);
+                var exercise = new Exercise(row.GetValue("unityObjectName"));
                 GameState.AddExercise(exercise.Select() as Exercise);
 
                 button.SetParent(this.transform, false);

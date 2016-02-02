@@ -67,7 +67,6 @@
 
         public string GetValue(string pk)
         {
-            logger.Debug(pk);
             return tableRows.First().GetValue(pk);
         }
 

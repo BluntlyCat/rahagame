@@ -1,92 +1,50 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
-    using System;
     using System.Collections.Generic;
-    using UI.VisualExercise;
+    using Actions;
     using Logging;
+    using User;
     using Windows.Kinect;
 
     public class Step : BaseStep
     {
         private static Logger<Step> logger = new Logger<Step>();
 
-        private IList<Joint> joints = new List<Joint>();
-        private Joint currentJoint;
-
-        public Step(string description, BaseStep prevStep, Drawing drawing) : base(description, prevStep, drawing)
+        public Step(string name, BaseStep prevStep) : base(name, prevStep)
         {
-            if (current == null)
-                current = this;
-
             logger.AddLogAppender<ConsoleAppender>();
-        }
-
-        public override bool IsFulfilled(Body body)
-        {
-            isFulfilled = CheckJoints(body);
-
-            if (isFulfilled)
-                isFulfilled = CheckActions(body);
-
-            return isFulfilled;
         }
 
         public override string Information()
         {
-            if (currentAction != null)
-                information = currentAction.Information();
 
-            else if (currentJoint != null)
-                information = currentJoint.Information();
+            if (currentToDoAble.GetType().IsSubclassOf(typeof(BaseAction)) && currentToDoAble.Previous != null && !currentToDoAble.Previous.Fullfilled)
+                return ((Informable)currentToDoAble.Previous).Information();
 
-            return information;
+            return currentToDoAble.Information();    
         }
 
-        public override void VisualInformation(Body body)
+        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
         {
-            if (currentAction != null)
-                currentAction.VisualInformation(body);
-
-            else if (currentJoint != null)
-                currentJoint.VisualInformation(body);
+            currentToDoAble.Debug(body, stressedJoints);
         }
 
-        public override void Debug(Body body)
+        public override void Debug(Body body, PatientJoint patintJoint)
         {
-            if (currentAction != null)
-                currentAction.Debug(body);
-
-            else if (currentJoint != null)
-                currentJoint.Debug(body);
+            currentToDoAble.Debug(body, patintJoint);
         }
 
-        public void AddJoint(Joint joint)
+        public void SetFirstToDoAble(Informable firstToDoAble)
         {
-            this.joints.Add(joint);
+            this.firstToDoAble = this.currentToDoAble = firstToDoAble;
         }
 
-        public Joint CurrentJoint
+        public Informable CurrentTodoAble
         {
             get
             {
-                return currentJoint;
+                return currentToDoAble;
             }
-        }
-
-        private bool CheckJoints(Body body)
-        {
-            foreach (var joint in joints)
-            {
-                currentJoint = joint;
-
-                if (joint.IsFulfilled(body) == false)
-                {
-                    ResetActions();
-                    return false;
-                }
-            }
-
-            return true;
         }
     }
 }
