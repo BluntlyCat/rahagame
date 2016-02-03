@@ -29,9 +29,9 @@
             return isFulfilled;
         }
 
-        public override string Information()
+        public override void Write(Body body)
         {
-            return string.Format(information, activeJoint.Translation, passiveJoint.Translation, value);
+            drawing.ShowInformation(string.Format(information, activeJoint.Translation, passiveJoint.Translation, value));
         }
 
         public override void Draw(Body body)

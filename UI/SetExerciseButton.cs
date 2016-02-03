@@ -14,7 +14,7 @@
 
         void Start()
         {
-            var table = DBManager.Query("editor_exercise", "SELECT * FROM editor_exercise");
+            var table = DBManager.Query("editor_exercise", "SELECT * FROM editor_exercise WHERE unityObjectName = '" + this.name + "';");
 
             audioSource = this.GetComponent<AudioSource>();
             audioSource.clip = table.GetResource<AudioClip>("auditiveName", "mp3");

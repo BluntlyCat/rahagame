@@ -1,17 +1,19 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
     using System.Collections.Generic;
+    using UI.VisualExercise;
     using Logging;
     using User;
     using Windows.Kinect;
+    using System;
 
-    public class ExerciseExecutionManager : Informable
+    public class ExerciseExecutionManager : Drawable
     {
         private static Logger<ExerciseExecutionManager> logger = new Logger<ExerciseExecutionManager>();
-        private Informable currentFulFillable;
+        private FulFillable currentFulFillable;
         private IDictionary<string, PatientJoint> stressedJoints;
 
-        public ExerciseExecutionManager(BaseStep firstFulFillable, IDictionary<string, PatientJoint> stressedJoints, FulFillable previous) : base(previous)
+        public ExerciseExecutionManager(BaseStep firstFulFillable, IDictionary<string, PatientJoint> stressedJoints, Drawing drawing, FulFillable previous) : base(drawing, previous)
         {
             logger.AddLogAppender<ConsoleAppender>();
 
@@ -34,7 +36,7 @@
                 }
                 else
                 {
-                    currentFulFillable = currentFulFillable.Next as Informable;
+                    currentFulFillable = currentFulFillable.Next as FulFillable;
                     isFulfilled = false;
                 }
             }
@@ -42,19 +44,29 @@
             return isFulfilled;
         }
 
-        public override string Information()
+        public override void Draw(Body body)
         {
-            return currentFulFillable.Information();
+            
         }
 
-        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
+        public override void Clear()
         {
-            currentFulFillable.Debug(body, stressedJoints);
+            
+        }
+
+        public override void Write(Body body)
+        {
+            
         }
 
         public override void Debug(Body body, PatientJoint jointJoint)
         {
-            currentFulFillable.Debug(body, jointJoint);
+            
+        }
+
+        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
+        {
+            
         }
     }
 }

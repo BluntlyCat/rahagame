@@ -23,9 +23,14 @@
 
         public abstract override bool IsFulfilled(Body body);
 
-        public override string Information()
+        public override void Draw(Body body)
         {
-            return string.Format(information, activeJoint.Translation, passiveJoint.Translation);
+            
+        }
+
+        public override void Write(Body body)
+        {
+            drawing.ShowInformation(string.Format(information, activeJoint.Translation, passiveJoint.Translation));
         }
 
         public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)

@@ -10,6 +10,8 @@
     using UnityEngine.UI;
     using User;
     using FulFillables;
+    using Kinect = Windows.Kinect;
+    using System;
 
     [RequireComponent(typeof(AudioSource))]
     public class ExerciseManager : MonoBehaviour
@@ -17,7 +19,6 @@
         public GameObject DrawingPrefab;
         public GameObject MenuPrefab;
         public GameObject waitPanel;
-        public BodyManager bodyManager;
 
         private MovieTexture movieTexture;
         private AudioSource audioSource;
@@ -25,37 +26,29 @@
 
         private SwapCanvas swapCanvas;
 
+        private Kinect.Body body;
         private Exercise exercise;
         private Patient patient;
-        private RELManager relManager;
+        private RGMLManager relManager;
         private ExerciseExecutionManager executionManager;
 
         private bool hasUser;
         private bool exerciseRuns;
         private bool isFullfilled;
 
+        private double startTime;
+        private double now;
+
         // Use this for initialization
         void Start()
         {
             drawing = DrawingPrefab.GetComponent<Drawing>();
-            bodyManager = bodyManager.GetComponent<BodyManager>();
 
             waitPanel.GetComponentInChildren<Text>().text = DBManager.GetTranslation("noUser").GetValueFromLanguage("translation");
             swapCanvas = MenuPrefab.GetComponent<SwapCanvas>();
 
-            if (GameState.ActiveExercise != null)
-            {
-                exercise = GameState.ActiveExercise;
-            }
-            else
-            {
-                // ToDo Set exercise from gamestate
-                GameState.ActivePatient = GameState.ActivePatient == null ? new Patient("Michael").Select() as Patient : GameState.ActivePatient;
-                GameState.ActiveExercise = GameState.ActiveExercise == null ? new Exercise("exercise1").Select() as Exercise : GameState.ActiveExercise;
-
-                patient = GameState.ActivePatient;
-                exercise = GameState.ActiveExercise;
-            }
+            patient = GameState.ActivePatient;
+            exercise = GameState.ActiveExercise;
 
             movieTexture = exercise.Video;
             movieTexture.loop = true;
@@ -72,24 +65,27 @@
 
         void Update()
         {
-            if (GameObject.Find(GameState.ActivePatient.Name) != null)
+            if (body != null && GameObject.Find(GameState.ActivePatient.Name) != null)
             {
                 GameState.HasKinectUser = hasUser = true;
                 waitPanel.SetActive(false);
 
                 if (exerciseRuns)
                 {
-                    isFullfilled = executionManager.IsFulfilled(bodyManager.GetBody());
+                    now = DateTime.Now.TimeOfDay.TotalSeconds;
+                    isFullfilled = executionManager.IsFulfilled(body);
 
                     if (isFullfilled)
                     {
                         exerciseRuns = false;
+                        GameState.ExecutionTime = now - startTime;
+
                         BodySourceManager.ShutdownKinect();
                         LoadScene.LoadStatistics();
                     }
                     else
                     {
-                        drawing.ShowInformation(executionManager.Information());
+                        executionManager.Write(body);
                     }
                 }
             }
@@ -112,11 +108,12 @@
 
                 if (relManager == null)
                 {
-                    this.relManager = new RELManager(patient, drawing, exercise.REL);
-                    this.executionManager = new ExerciseExecutionManager(this.relManager.GetSteps(), exercise.StressedJoints, null);
+                    this.relManager = new RGMLManager(patient, drawing, exercise.REL);
+                    this.executionManager = new ExerciseExecutionManager(this.relManager.ParseRGML(), exercise.StressedJoints, drawing, null);
                 }
 
                 GameState.ExerciseIsActive = exerciseRuns = true;
+                startTime = DateTime.Now.TimeOfDay.TotalSeconds;
             }
         }
 
@@ -170,6 +167,19 @@
             {
                 audioSource.clip = exercise.AuditiveInformation;
                 audioSource.Play();
+            }
+        }
+
+        public Kinect.Body Body
+        {
+            get
+            {
+                return body;
+            }
+
+            set
+            {
+                body = value;
             }
         }
     }

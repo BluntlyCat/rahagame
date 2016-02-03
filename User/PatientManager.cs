@@ -114,13 +114,13 @@
             if (patient != null)
             {
                 patient.Age = int.Parse(ageInput.text);
-                patient.Sex = (Gender)sexInput.value;
+                patient.Sex = (Sex)sexInput.value;
 
                 queryDone = patient.Update();
             }
             else
             {
-                patient = new Patient(nameInput.text, int.Parse(ageInput.text), (Gender)sexInput.value);
+                patient = new Patient(nameInput.text, int.Parse(ageInput.text), (Sex)sexInput.value);
                 queryDone = patient.Insert() != null;
             }
 
@@ -143,7 +143,7 @@
 
         public void ReadName()
         {
-            if (RGSettings.reading && !isReading)
+            if (GameState.ActivePatient == null && RGSettings.reading && !isReading)
             {
                 audioSource.clip = nameClip;
 
@@ -200,11 +200,11 @@
             {
                 switch (sexInput.value)
                 {
-                    case (int)Gender.male:
+                    case (int)Sex.male:
                         audioSource.clip = maleClip;
                         break;
 
-                    case (int)Gender.female:
+                    case (int)Sex.female:
                         audioSource.clip = femaleClip;
                         break;
                 }

@@ -1,7 +1,5 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
-    using System.Collections.Generic;
-    using User;
     using Windows.Kinect;
 
     public class StepGroup : BaseStep
@@ -11,21 +9,6 @@
         public override bool IsFulfilled(Body body)
         {
             return isFulfilled;
-        }
-
-        public override string Information()
-        {
-            return "";
-        }
-
-        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
-        {
-            
-        }
-
-        public override void Debug(Body body, PatientJoint joint)
-        {
-            
         }
 
         public Step CurrentStep

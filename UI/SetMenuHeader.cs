@@ -6,26 +6,32 @@
     using UnityEngine.SceneManagement;
     using UnityEngine.UI;
 
+    [RequireComponent(typeof(AudioSource))]
     public class SetMenuHeader : MonoBehaviour
     {
+        private AudioSource audioSource;
+
         // Use this for initialization
         void Start()
         {
             Text textComponent = this.GetComponent<Text>();
             AudioClip headerClip;
             string headerText;
+            var data = DBManager.GetMenuHeader(this.name);
 
-            if (SceneManager.GetActiveScene().name == "newUser" && GameState.ActivePatient != null)
+            audioSource = this.GetComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            headerText = data.GetValueFromLanguage("name");
+            headerClip = data.GetResource<AudioClip>("auditiveName", "mp3");
+            audioSource.clip = headerClip;
+
+            if (SceneManager.GetActiveScene().name == "NewUser" && GameState.ActivePatient != null)
             {
-                var data  = DBManager.GetTranslation("welcome");
-                headerText = string.Format("{0}, {1}", data.GetValueFromLanguage("translation"), GameState.ActivePatient.Name);
-                headerClip = data.GetResource<AudioClip>("auditiveTranslation", "mp3");
+                audioSource.Play();   
             }
-            else
+            else if (SceneManager.GetActiveScene().name != "NewUser")
             {
-                var data = DBManager.GetMenuHeader(this.name);
-                headerText = data.GetValueFromLanguage("name");
-                headerClip = data.GetResource<AudioClip>("auditiveName", "mp3");
+                audioSource.Play();
             }
 
             textComponent.text = headerText;

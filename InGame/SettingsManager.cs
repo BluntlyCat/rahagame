@@ -30,10 +30,13 @@
                 var key = setting.GetValue("key");
                 var value = setting.GetValue("value");
 
-                if (value.Contains(","))
-                    settings.Add(key, value.Split(','));
-                else
-                    settings.Add(key, value);
+                if (settings.ContainsKey(key) == false)
+                {
+                    if (value.Contains(","))
+                        settings.Add(key, value.Split(','));
+                    else
+                        settings.Add(key, value);
+                }
             }
         }
 

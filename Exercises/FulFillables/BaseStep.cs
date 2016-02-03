@@ -1,13 +1,16 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
-    using DB;
     using Actions;
+    using DB;
     using Windows.Kinect;
 
-    public abstract class BaseStep : Informable
+    public abstract class BaseStep : FulFillable
     {
-        protected Informable firstToDoAble;
-        protected Informable currentToDoAble;
+        protected Drawable firstDrawable;
+        protected Drawable currentDrawable;
+
+        protected bool prevIsAction;
+        protected bool prevIsNotNull;
 
         protected string unityObjectName;
 
@@ -16,36 +19,73 @@
             this.unityObjectName = unityObjectName;
 
             if (unityObjectName != null)
-                this.information = DBManager.GetExerciseInformation(unityObjectName, "step").GetValueFromLanguage("order");
+                DBManager.GetExerciseInformation(unityObjectName, "step").GetValueFromLanguage("order");
         }
 
-        public override bool IsFulfilled(Body body)
+        private bool CheckCurrent(Body body)
         {
-            // ToDo Was ist wenn man die Position vom vorherigen Schritt verlässt?
-
-            if (currentToDoAble.GetType().IsSubclassOf(typeof(BaseAction)) && currentToDoAble.Previous != null)
-            {
-                isFulfilled = currentToDoAble.Previous.IsFulfilled(body);
-
-                if (isFulfilled)
-                    isFulfilled = currentToDoAble.IsFulfilled(body);
-                else
-                    ((BaseAction)currentToDoAble).Reset();
-            }
-            else
-                isFulfilled = currentToDoAble.IsFulfilled(body);
+            isFulfilled = currentDrawable.IsFulfilled(body);
 
             if (isFulfilled)
             {
-                if (currentToDoAble.Next == null)
+                if (currentDrawable.Next == null)
                 {
                     isFulfilled = true;
                 }
                 else
                 {
-                    currentToDoAble = currentToDoAble.Next as Informable;
+                    currentDrawable = currentDrawable.Next as Drawable;
                     isFulfilled = false;
                 }
+            }
+            else
+            {
+                currentDrawable.Write(body);
+                currentDrawable.Draw(body);
+            }
+
+            return isFulfilled;
+        }
+
+        private bool CheckPrevious(Body body)
+        {
+            prevIsAction = currentDrawable.Previous.GetType().IsSubclassOf(typeof(BaseAction));
+
+            if (prevIsAction)
+                isFulfilled = CheckCurrent(body);
+            else
+            {
+                isFulfilled = currentDrawable.Previous.IsFulfilled(body);
+
+                if (isFulfilled)
+                {
+                    isFulfilled = CheckCurrent(body);
+                }
+                else
+                {
+                    if (currentDrawable.GetType().IsSubclassOf(typeof(BaseAction)))
+                        ((BaseAction)currentDrawable).Reset();
+
+                    ((Drawable)currentDrawable.Previous).Write(body);
+                    ((Drawable)currentDrawable.Previous).Draw(body);
+                }
+            }
+
+            return isFulfilled;
+        }
+
+        public override bool IsFulfilled(Body body)
+        {
+            prevIsNotNull = currentDrawable.Previous != null;
+
+            if(prevIsNotNull)
+            {
+                isFulfilled = CheckPrevious(body);
+            }
+            
+            else
+            {
+                isFulfilled = CheckCurrent(body);
             }
 
             return isFulfilled;
@@ -54,20 +94,6 @@
         public override string ToString()
         {
             return string.Format("{0}: {1}: {2}", this.GetType().Name, unityObjectName, isFulfilled);
-        }
-
-        public string Description
-        {
-            get
-            {
-                return unityObjectName;
-            }
-        }
-
-        protected void ResetAction()
-        {
-            if(currentToDoAble.GetType() == typeof(BaseAction))
-                ((BaseAction)currentToDoAble).Reset();
         }
     }
 }

@@ -21,7 +21,7 @@
             {
                 var button = Instantiate(exerciseButton) as Transform;
                 var textComponent = button.GetComponentInChildren<Text>();
-                var image = button.GetComponentInChildren<RawImage>();
+                var image = button.GetComponent<RawImage>();
 
                 GameState.ActivePatient.ResetJoints();
                 var exercise = new Exercise(row.GetValue("unityObjectName"));
@@ -31,12 +31,12 @@
                 button.name = exercise.UnityObjectName;
                 button.tag = "inputElement";
                 textComponent.text = exercise.Name;
-                //image.texture = exercise.Thumbnail;
+                image.texture = exercise.Thumbnail;
 
                 if(isFirst)
                 {
                     var eventSystem = GameObject.Find("EventSystem");
-                    eventSystem.GetComponent<EventSystem>().firstSelectedGameObject = button.gameObject;
+                    eventSystem.GetComponent<EventSystem>().firstSelectedGameObject = image.gameObject;
                     isFirst = false;
                 }
             }

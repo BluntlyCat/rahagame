@@ -33,14 +33,14 @@
             return isFulfilled;
         }
 
-        public override string Information()
+        public override void Write(Body body)
         {
             var angleString = value.ToString("000");
 
             if (angleString[0] == '0')
                 angleString = angleString.Substring(1);
 
-            return string.Format(information, activeJoint.Translation, angleString); ;
+            drawing.ShowInformation(string.Format(information, activeJoint.Translation, angleString));
         }
 
         public override void Draw(Body body)

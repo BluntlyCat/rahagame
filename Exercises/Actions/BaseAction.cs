@@ -3,25 +3,35 @@
     using System.Collections.Generic;
     using DB;
     using FulFillables;
+    using UI = UI.VisualExercise;
     using User;
-    using UI.VisualExercise;
     using Windows.Kinect;
     using System;
 
-    public abstract class BaseAction : Informable
+    public abstract class BaseAction : Drawable
     {
         protected double value;
         protected double initialValue;
 
-        public BaseAction(string unityObjectName, double value, FulFillable previous) : base (previous)
+        public BaseAction(string unityObjectName, double value, FulFillable previous, UI.Drawing drawing) : base (drawing, previous)
         {
             this.initialValue = this.value = value;
             this.information = DBManager.GetExerciseInformation(unityObjectName, "action").GetValueFromLanguage("order");
         }
 
-        public override string Information()
+        public override void Draw(Body body)
         {
-            return string.Format(information, value.ToString("0"));
+            
+        }
+
+        public override void Clear()
+        {
+            drawing.ClearDrawings();
+        }
+
+        public override void Write(Body body)
+        {
+            drawing.ShowInformation(string.Format(information, value.ToString("0")));
         }
 
         public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)

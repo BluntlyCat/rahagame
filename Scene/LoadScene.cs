@@ -46,11 +46,6 @@
             LoadNewScene("Settings", false);
         }
 
-        public static void MainMenu()
-        {
-            LoadNewScene("MainMenu");
-        }
-
         public static void LoadNewUser()
         {
             LoadNewScene("NewUser");
@@ -73,14 +68,14 @@
             LoadNewScene(last, false);
         }
 
-        public static void LoadUser()
-        {
-            LoadNewScene("NewUser");
-        }
-
         public static void LoadTrainingMode()
         {
             LoadNewScene("TrainingMode");
+        }
+
+        public static void LoadMainMenu()
+        {
+            LoadNewScene("MainMenu");
         }
 
         public static void LoadUsersSlection()
@@ -111,6 +106,16 @@
         public void Settings()
         {
             LoadNewScene("Settings");
+        }
+
+        public void Credits()
+        {
+            LoadNewScene("Credits");
+        }
+
+        public void MainMenu()
+        {
+            LoadNewScene("MainMenu");
         }
 
         public void Exit()

@@ -10,7 +10,7 @@
     {
         private string name;
         private int age;
-        private Gender sex;
+        private Sex sex;
 
         private Dictionary<JointType, PatientJoint> joints;
 
@@ -20,7 +20,7 @@
             this.joints = new KinectJointManager(name).Joints;
         }
 
-        public Patient(string name, int age, Gender sex)
+        public Patient(string name, int age, Sex sex)
         {
             this.name = name;
             this.age = age;
@@ -42,7 +42,7 @@
             }
         }
 
-        public Gender Sex
+        public Sex Sex
         {
             get
             {
@@ -121,7 +121,7 @@
                 var patientData = DBManager.Query("editor_patient", "SELECT age, sex FROM editor_patient WHERE name ='" + Name + "';").GetRow();
 
                 this.Age = patientData.GetInt("age");
-                this.Sex = (Gender)patientData.GetInt("sex");
+                this.Sex = (Sex)patientData.GetInt("sex");
 
                 foreach(var joint in this.joints.Values)
                 {

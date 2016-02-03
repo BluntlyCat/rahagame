@@ -15,6 +15,8 @@
         private static bool exerciseIsActive;
         private static bool hasKinectUser;
 
+        private static double executionTime;
+
         public static Patient ActivePatient
         {
             get
@@ -66,8 +68,24 @@
             }
         }
 
+        public static double ExecutionTime
+        {
+            get
+            {
+                return executionTime;
+            }
+
+            set
+            {
+                executionTime = value;
+            }
+        }
+
         public static void AddExercise(Exercise exercise)
         {
+            if (exercises.ContainsKey(exercise.UnityObjectName))
+                exercises.Remove(exercise.UnityObjectName);
+
             exercises.Add(exercise.UnityObjectName, exercise);
         }
 

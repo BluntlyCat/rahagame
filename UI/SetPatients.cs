@@ -38,12 +38,6 @@
                     }
                 }
             }
-            else
-            {
-                LoadScene.LoadNewUser();
-            }
-
-            GameState.ActivePatient = null;
         }
 
         // Update is called once per frame

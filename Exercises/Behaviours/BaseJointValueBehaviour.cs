@@ -17,9 +17,9 @@
             this.initialValue = this.value = value;
         }
 
-        public override string Information()
+        public override void Write(Body body)
         {
-            return string.Format(information, value.ToString("0"));
+            drawing.ShowInformation(string.Format(information, value.ToString("0")));
         }
     }
 }

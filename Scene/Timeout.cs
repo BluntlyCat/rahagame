@@ -5,15 +5,19 @@
 
     public class Timeout : MonoBehaviour
     {
+        public GameObject dependLoaderObject;
         public double seconds;
 
         private double now;
         private double start;
         private double timeDelta;
 
+        private LoadSceneDependOnUserCount dependLoader;
+
         // Use this for initialization
         void Start()
         {
+            dependLoader = this.GetComponent<LoadSceneDependOnUserCount>();
             now = DateTime.Now.TimeOfDay.TotalSeconds;
             start = now;
         }
@@ -25,7 +29,7 @@
             timeDelta = now - start;
 
             if (timeDelta >= seconds)
-                LoadScene.LoadUsersSlection();
+                dependLoader.LoadSceneDependingOnUserCount();
         }
     }
 }

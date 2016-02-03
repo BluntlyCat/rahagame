@@ -12,9 +12,9 @@
 
         }
 
-        public override string Information()
+        public override void Write(Body body)
         {
-            return string.Format(information, activeJoint.Translation, passiveJoint.Translation);
+            drawing.ShowInformation(string.Format(information, activeJoint.Translation, passiveJoint.Translation));
         }
 
         public override void Draw(Body body)

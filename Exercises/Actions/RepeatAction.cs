@@ -7,7 +7,7 @@
 
     public class RepeatAction : BaseAction
     {
-        public RepeatAction(string unityObjectName, double value, FulFillable previous) : base(unityObjectName, value, previous)
+        public RepeatAction(string unityObjectName, double value, FulFillable previous, Drawing drawing) : base(unityObjectName, value, previous, drawing)
         {
 
         }

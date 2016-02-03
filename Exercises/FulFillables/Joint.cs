@@ -1,18 +1,20 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
+    using System;
     using System.Collections.Generic;
     using Behaviours;
     using User;
+    using UI.VisualExercise;
     using Windows.Kinect;
 
-    public class Joint : Informable
+    public class Joint : Drawable
     {
         private BaseJointBehaviour firstJointBehaviour;
         private BaseJointBehaviour currentJointBehaviour;
 
         private string name;
 
-        public Joint(string name, FulFillable previous) : base (previous)
+        public Joint(string name, Drawing drawing, FulFillable previous) : base (drawing, previous)
         {
             this.name = name;
         }
@@ -42,24 +44,12 @@
                 }
             }
             else
+            {
+                currentJointBehaviour.Write(body);
                 currentJointBehaviour.Draw(body);
+            }
 
             return isFulfilled;
-        }
-
-        public override string Information()
-        {
-            return currentJointBehaviour.Information();
-        }
-
-        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
-        {
-            currentJointBehaviour.Debug(body, stressedJoints);
-        }
-
-        public override void Debug(Body body, PatientJoint patientJoint)
-        {
-            currentJointBehaviour.Debug(body, patientJoint);
         }
 
         public string Name
@@ -73,6 +63,31 @@
         public override string ToString()
         {
             return string.Format("{0}: {1}", name, isFulfilled);
+        }
+
+        public override void Write(Body body)
+        {
+            
+        }
+
+        public override void Draw(Body body)
+        {
+            
+        }
+
+        public override void Clear()
+        {
+            drawing.ClearDrawings();
+        }
+
+        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Debug(Body body, PatientJoint jointJoint)
+        {
+            throw new NotImplementedException();
         }
     }
 }

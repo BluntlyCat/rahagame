@@ -9,16 +9,16 @@
     using FulFillables;
     using User;
     using Logging;
-    using UI.VisualExercise;
+    using UI = UI.VisualExercise;
 
-    public class RELManager
+    public class RGMLManager
     {
-        private static Logger<RELManager> logger = new Logger<RELManager>();
-        private Drawing drawing;
+        private static Logger<RGMLManager> logger = new Logger<RGMLManager>();
+        private UI.Drawing drawing;
         private Patient patient;
         private string rel;
 
-        public RELManager(Patient patient, Drawing drawing, string rel)
+        public RGMLManager(Patient patient, UI.Drawing drawing, string rel)
         {
             logger.AddLogAppender<ConsoleAppender>();
 
@@ -49,17 +49,17 @@
 
             if (actionName == "hold")
             {
-                action = new HoldAction(actionName, double.Parse(attributes["value"]), lastToDoAble);
+                action = new HoldAction(actionName, double.Parse(attributes["value"]), lastToDoAble, drawing);
             }
 
             else if (actionName == "repeat")
             {
-                action = new RepeatAction(actionName, double.Parse(attributes["value"]), lastToDoAble);
+                action = new RepeatAction(actionName, double.Parse(attributes["value"]), lastToDoAble, drawing);
             }
 
             else if (actionName == "wait")
             {
-                action = new WaitAction(actionName, double.Parse(attributes["value"]), lastToDoAble);
+                action = new WaitAction(actionName, double.Parse(attributes["value"]), lastToDoAble, drawing);
             }
 
             if (lastToDoAble != null)
@@ -121,7 +121,7 @@
         {
             var attributes = GetAttributes(reader);
 
-            Joint joint = new Joint(attributes["name"], lastToDoAble);
+            Joint joint = new Joint(attributes["name"], drawing, lastToDoAble);
 
             if (lastToDoAble != null)
                 lastToDoAble.AddNext(joint);
@@ -142,7 +142,7 @@
             return step;
         }
 
-        public BaseStep GetSteps()
+        public BaseStep ParseRGML()
         {
             IList<RelNodeTypes> nodeTypes = new List<RelNodeTypes>();
 
@@ -152,8 +152,8 @@
             BaseJointBehaviour lastBehaviour = null;
             BaseJointBehaviour firstBehaviour = null;
 
-            Informable lastToDoAble = null;
-            Informable firstToDoAble = null;
+            Drawable lastDrawable = null;
+            Drawable firstDrawable = null;
 
             using (XmlReader reader = XmlReader.Create(new StringReader(rel)))
             {
@@ -185,25 +185,25 @@
                                     break;
 
                                 case RelNodeTypes.joint:
-                                    var newJoint = CreateJoint(reader, lastToDoAble);
+                                    var newJoint = CreateJoint(reader, lastDrawable);
 
-                                    if (firstToDoAble == null)
-                                        firstToDoAble = newJoint;
+                                    if (firstDrawable == null)
+                                        firstDrawable = newJoint;
 
-                                    lastToDoAble = newJoint;
+                                    lastDrawable = newJoint;
                                     break;
 
                                 case RelNodeTypes.action:
-                                    var newAction = CreateAction(reader, lastToDoAble);
+                                    var newAction = CreateAction(reader, lastDrawable);
 
-                                    if (firstToDoAble == null)
-                                        firstToDoAble = newAction;
+                                    if (firstDrawable == null)
+                                        firstDrawable = newAction;
 
-                                    lastToDoAble = newAction;
+                                    lastDrawable = newAction;
                                     break;
 
                                 case RelNodeTypes.behaviour:
-                                    var newBehaviour = CreateJointBehaviour(reader, lastToDoAble, lastBehaviour);
+                                    var newBehaviour = CreateJointBehaviour(reader, lastDrawable, lastBehaviour);
 
                                     if (firstBehaviour == null)
                                         firstBehaviour = newBehaviour;
@@ -234,15 +234,15 @@
                                     break;
 
                                 case RelNodeTypes.step:
-                                    lastStep.SetFirstToDoAble(firstToDoAble);
-                                    firstToDoAble = lastToDoAble = null;
+                                    lastStep.SetFirstDrawable(firstDrawable as Drawable);
+                                    firstDrawable = lastDrawable = null;
                                     break;
 
                                 case RelNodeTypes.stepGroup:
                                     break;
 
                                 case RelNodeTypes.joint:
-                                    ((Joint)lastToDoAble).SetFirstBehaviour(firstBehaviour);
+                                    ((Joint)lastDrawable).SetFirstBehaviour(firstBehaviour);
                                     firstBehaviour = lastBehaviour = null;
                                     break;
                             }
