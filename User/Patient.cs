@@ -9,7 +9,7 @@
     public class Patient : DBObject
     {
         private string name;
-        private int age;
+        private long age;
         private Sex sex;
 
         private Dictionary<JointType, PatientJoint> joints;
@@ -55,7 +55,7 @@
             }
         }
 
-        public int Age
+        public long Age
         {
             get
             {
@@ -120,8 +120,8 @@
             {
                 var patientData = DBManager.Query("editor_patient", "SELECT age, sex FROM editor_patient WHERE name ='" + Name + "';").GetRow();
 
-                this.Age = patientData.GetInt("age");
-                this.Sex = (Sex)patientData.GetInt("sex");
+                this.Age = patientData.GetColumn<long>("age");
+                this.Sex = (Sex)patientData.GetColumn<int>("sex");
 
                 foreach(var joint in this.joints.Values)
                 {

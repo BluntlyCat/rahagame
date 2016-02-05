@@ -8,7 +8,6 @@
     using System.Collections.Generic;
 
     [RequireComponent(typeof(AudioSource))]
-
     public class PatientManager : MonoBehaviour
     {
         private Patient patient;

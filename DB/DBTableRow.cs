@@ -50,6 +50,11 @@
             return tableColumns[pk].GetValue();
         }
 
+        public T GetColumn<T>(string pk)
+        {
+            return tableColumns[pk].GetColumn<T>();
+        }
+
         public string GetValueFromLanguage(string pk)
         {
             return tableColumns[string.Format("{0}_{1}", pk, RGSettings.activeLanguage)].GetValue();

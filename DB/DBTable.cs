@@ -70,6 +70,11 @@
             return tableRows.First().GetValue(pk);
         }
 
+        public T GetColumn<T>(string pk)
+        {
+            return tableRows.First().GetColumn<T>(pk);
+        }
+
         public string GetValue(int row, string pk)
         {
             if (row < tableRows.Count)

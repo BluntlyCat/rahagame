@@ -57,6 +57,11 @@
             return this.Value.ToString();
         }
 
+        public T GetColumn<T>()
+        {
+            return (T)this.value;
+        }
+
         public T GetResource<T>(string mime) where T : UnityEngine.Object
         {
             string resource = this.Value.ToString().Replace(string.Format(".{0}", mime), "").Replace("Assets/Resources/", "");
