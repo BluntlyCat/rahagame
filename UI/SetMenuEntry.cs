@@ -9,13 +9,15 @@
 
     public class SetMenuEntry : MonoBehaviour
     {
+        public GameObject gameManager;
+
         private AudioSource audioSource;
 
         // Use this for initialization
         void Start()
         {
             var text = this.GetComponentInChildren<Text>();
-            var table = DBManager.Query("editor_menuentry", string.Format("SELECT * FROM editor_menuentry WHERE unityObjectName = '{0}'", this.name));
+            var table = gameManager.GetComponent<Database>().Query("editor_menuentry", string.Format("SELECT * FROM editor_menuentry WHERE unityObjectName = '{0}'", this.name));
 
             audioSource = this.GetComponent<AudioSource>();
             text.text = table.GetValueFromLanguage("entry");
@@ -24,7 +26,7 @@
 
         public void Reading()
         {
-            if (RGSettings.reading)
+            if (gameManager.GetComponent<Settings>().reading)
                 audioSource.Play();
         }
     }

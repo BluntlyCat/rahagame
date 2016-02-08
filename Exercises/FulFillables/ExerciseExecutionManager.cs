@@ -6,6 +6,8 @@
     using User;
     using Windows.Kinect;
     using System;
+    using DB;
+    using InGame;
 
     public class ExerciseExecutionManager : Drawable
     {
@@ -13,7 +15,7 @@
         private FulFillable currentFulFillable;
         private IDictionary<string, PatientJoint> stressedJoints;
 
-        public ExerciseExecutionManager(BaseStep firstFulFillable, IDictionary<string, PatientJoint> stressedJoints, Drawing drawing, FulFillable previous) : base(drawing, previous)
+        public ExerciseExecutionManager(BaseStep firstFulFillable, IDictionary<string, PatientJoint> stressedJoints, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(dbManager, settings, drawing, previous)
         {
             logger.AddLogAppender<ConsoleAppender>();
 

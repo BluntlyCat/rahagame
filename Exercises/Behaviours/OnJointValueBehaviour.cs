@@ -1,13 +1,15 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
     using FulFillables;
+    using DB;
+    using InGame;
     using UI.VisualExercise;
     using User;
     using Windows.Kinect;
 
     public class OnJointValueBehaviour : DistanceValueBehaviour
     {
-        public OnJointValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, drawing, previous)
+        public OnJointValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
         {
 
         }

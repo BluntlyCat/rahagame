@@ -6,12 +6,14 @@
     using User;
     using Windows.Kinect;
     using FulFillables;
+    using InGame;
+    using DB;
 
     public class AboveBehaviour : BaseJointBehaviour
     {
         private static Logger<AboveBehaviour> logger = new Logger<AboveBehaviour>();
 
-        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, drawing, previous)
+        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
         {
             logger.AddLogAppender<ConsoleAppender>();
         }

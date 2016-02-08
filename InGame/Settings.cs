@@ -4,30 +4,41 @@
     using Scene;
     using UnityEngine;
 
-    public class RGSettings : MonoBehaviour
+    [RequireComponent(typeof(SettingsAccessManager))]
+    public class Settings : MonoBehaviour
     {
+        public GameObject gameManager;
+
+        private SettingsAccessManager settingsAccessManager;
+        private SceneManager sceneManager;
         private static int languageIndex = -1;
 
+        void Start()
+        {
+            settingsAccessManager = this.GetComponent<SettingsAccessManager>();
+            sceneManager = gameManager.GetComponent<SceneManager>();
+        }
+
         [Setting()]
-        public static string[] languages
+        public string[] languages
         {
             get
             {
-                return SettingsManager.Get("languages") as string[];
+                return settingsAccessManager.Get("languages") as string[];
             }
 
             set
             {
-                SettingsManager.Set("languages", value);
+                settingsAccessManager.Set("languages", value);
             }
         }
 
         [Setting()]
-        public static string activeLanguage
+        public string activeLanguage
         {
             get
             {
-                var language = SettingsManager.Get("activeLanguage") as string;
+                var language = settingsAccessManager.Get("activeLanguage") as string;
 
                 if (languageIndex == -1)
                 {
@@ -46,55 +57,55 @@
 
             set
             {
-                SettingsManager.Set("activeLanguage", value);
+                settingsAccessManager.Set("activeLanguage", value);
             }
         }
 
         [Setting()]
-        public static bool reading
+        public bool reading
         {
             get
             {
-                var aloud = SettingsManager.Get("reading").ToString().ToLower();
+                var aloud = settingsAccessManager.Get("reading").ToString().ToLower();
                 return aloud == "true";
             }
 
             set
             {
-                SettingsManager.Set("reading", value);
+                settingsAccessManager.Set("reading", value);
             }
         }
 
         [Setting()]
-        public static bool music
+        public bool music
         {
             get
             {
-                var play = SettingsManager.Get("music").ToString().ToLower();
+                var play = settingsAccessManager.Get("music").ToString().ToLower();
                 return play == "true";
             }
 
             set
             {
-                SettingsManager.Set("music", value);
+                settingsAccessManager.Set("music", value);
             }
         }
 
         [Setting()]
-        public static double angleTolerance
+        public double angleTolerance
         {
             get
             {
-                return double.Parse(SettingsManager.Get("angleTolerance").ToString().ToLower());
+                return double.Parse(settingsAccessManager.Get("angleTolerance").ToString().ToLower());
             }
 
             set
             {
-                SettingsManager.Set("angleTolerance", value);
+                settingsAccessManager.Set("angleTolerance", value);
             }
         }
 
-        public static string GetByPropertyName(object caller, string name)
+        public string GetByPropertyName(object caller, string name)
         {
             var properties = Type.GetType("HSA.RehaGame.InGame.RGSettings").GetProperties();
 
@@ -123,7 +134,7 @@
             activeLanguage = languages[languageIndex];
             Save();
 
-            LoadScene.ReloadSettings();
+            sceneManager.ReloadSettings();
         }
 
         public void SwapReadingAloud()
@@ -131,7 +142,7 @@
             reading = !reading;
             Save();
 
-            LoadScene.ReloadSettings();
+            sceneManager.ReloadSettings();
         }
 
         public void SwapMusic()
@@ -139,12 +150,12 @@
             music = !music;
             Save();
 
-            LoadScene.ReloadSettings();
+            sceneManager.ReloadSettings();
         }
 
-        public static void Save()
+        public void Save()
         {
-            SettingsManager.Save();
+            settingsAccessManager.Save();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
     using FulFillables;
+    using DB;
     using InGame;
     using Math;
     using UI.VisualExercise;
@@ -16,9 +17,9 @@
         private double minAngle;
         private double maxAngle;
 
-        public AngleValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, drawing, previous)
+        public AngleValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
         {
-            this.tolerance = RGSettings.angleTolerance;
+            this.tolerance = settings.angleTolerance;
             this.angle = 0;
             this.minAngle = initialValue - tolerance;
             this.maxAngle = initialValue + tolerance;

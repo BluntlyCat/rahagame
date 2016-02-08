@@ -6,6 +6,7 @@
 
     public abstract class BaseStep : FulFillable
     {
+        protected Database dbManager;
         protected Drawable firstDrawable;
         protected Drawable currentDrawable;
 
@@ -14,12 +15,13 @@
 
         protected string unityObjectName;
 
-        public BaseStep(string unityObjectName, FulFillable previous) : base (previous)
+        public BaseStep(string unityObjectName, Database dbManager, FulFillable previous) : base (previous)
         {
             this.unityObjectName = unityObjectName;
+            this.dbManager = dbManager;
 
             if (unityObjectName != null)
-                DBManager.GetExerciseInformation(unityObjectName, "step").GetValueFromLanguage("order");
+                dbManager.GetExerciseInformation(unityObjectName, "step").GetValueFromLanguage("order");
         }
 
         private bool CheckCurrent(Body body)

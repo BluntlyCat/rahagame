@@ -6,6 +6,8 @@
     using User;
     using UI.VisualExercise;
     using Windows.Kinect;
+    using InGame;
+    using DB;
 
     public class Joint : Drawable
     {
@@ -14,7 +16,7 @@
 
         private string name;
 
-        public Joint(string name, Drawing drawing, FulFillable previous) : base (drawing, previous)
+        public Joint(string name, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base (dbManager, settings, drawing, previous)
         {
             this.name = name;
         }

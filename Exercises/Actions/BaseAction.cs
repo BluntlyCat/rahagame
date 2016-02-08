@@ -7,16 +7,17 @@
     using User;
     using Windows.Kinect;
     using System;
+    using InGame;
 
     public abstract class BaseAction : Drawable
     {
         protected double value;
         protected double initialValue;
 
-        public BaseAction(string unityObjectName, double value, FulFillable previous, UI.Drawing drawing) : base (drawing, previous)
+        public BaseAction(string unityObjectName, double value, FulFillable previous, Database dbManager, Settings settings, UI.Drawing drawing) : base (dbManager, settings, drawing, previous)
         {
             this.initialValue = this.value = value;
-            this.information = DBManager.GetExerciseInformation(unityObjectName, "action").GetValueFromLanguage("order");
+            this.information = dbManager.GetExerciseInformation(unityObjectName, "action").GetValueFromLanguage("order");
         }
 
         public override void Draw(Body body)

@@ -16,12 +16,17 @@
     [RequireComponent(typeof(AudioSource))]
     public class ExerciseManager : MonoBehaviour
     {
-        public GameObject DrawingPrefab;
-        public GameObject MenuPrefab;
+        public GameObject gameManager;
+        public GameObject drawingPrefab;
         public GameObject waitPanel;
 
         private MovieTexture movieTexture;
         private AudioSource audioSource;
+
+        private Database dbManager;
+        private Settings settings;
+        private SceneManager sceneManager;
+
         private Drawing drawing;
 
         private SwapCanvas swapCanvas;
@@ -42,10 +47,13 @@
         // Use this for initialization
         void Start()
         {
-            drawing = DrawingPrefab.GetComponent<Drawing>();
+            drawing = drawingPrefab.GetComponent<Drawing>();
+            swapCanvas = drawingPrefab.GetComponent<SwapCanvas>();
+            dbManager = gameManager.GetComponent<Database>();
+            settings = gameManager.GetComponent<Settings>();
+            sceneManager = gameManager.GetComponent<SceneManager>();
 
-            waitPanel.GetComponentInChildren<Text>().text = DBManager.GetTranslation("noUser").GetValueFromLanguage("translation");
-            swapCanvas = MenuPrefab.GetComponent<SwapCanvas>();
+            waitPanel.GetComponentInChildren<Text>().text = dbManager.GetTranslation("noUser").GetValueFromLanguage("translation");
 
             patient = GameState.ActivePatient;
             exercise = GameState.ActiveExercise;
@@ -81,7 +89,7 @@
                         GameState.ExecutionTime = now - startTime;
 
                         BodySourceManager.ShutdownKinect();
-                        LoadScene.LoadStatistics();
+                        sceneManager.LoadStatistics();
                     }
                     else
                     {
@@ -92,7 +100,7 @@
             else
             {
                 if (exerciseRuns)
-                    LoadScene.LoadExercise();
+                    sceneManager.LoadExercise();
 
                 waitPanel.SetActive(true);
                 hasUser = false;
@@ -108,8 +116,8 @@
 
                 if (relManager == null)
                 {
-                    this.relManager = new RGMLManager(patient, drawing, exercise.REL);
-                    this.executionManager = new ExerciseExecutionManager(this.relManager.ParseRGML(), exercise.StressedJoints, drawing, null);
+                    this.relManager = new RGMLManager(patient, dbManager, settings, drawing, exercise.REL);
+                    this.executionManager = new ExerciseExecutionManager(this.relManager.ParseRGML(), exercise.StressedJoints, dbManager, settings, drawing, null);
                 }
 
                 GameState.ExerciseIsActive = exerciseRuns = true;
@@ -146,7 +154,7 @@
                 justStopped = true;
             }
 
-            if (RGSettings.reading && (!justStopped || audioSource.clip != exercise.AuditiveDescription))
+            if (settings.reading && (!justStopped || audioSource.clip != exercise.AuditiveDescription))
             {
                 audioSource.clip = exercise.AuditiveDescription;
                 audioSource.Play();
@@ -163,7 +171,7 @@
                 justStopped = true;
             }
 
-            if (RGSettings.reading && (!justStopped || audioSource.clip != exercise.AuditiveInformation))
+            if (settings.reading && (!justStopped || audioSource.clip != exercise.AuditiveInformation))
             {
                 audioSource.clip = exercise.AuditiveInformation;
                 audioSource.Play();

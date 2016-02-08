@@ -2,14 +2,16 @@
 {
     using System;
     using FulFillables;
+    using DB;
     using UI.VisualExercise;
     using Windows.Kinect;
+    using InGame;
 
     public class HoldAction : BaseAction
     {
         protected double start = -1;
 
-        public HoldAction(string unityObjectName, double value, FulFillable previous, Drawing drawing) : base(unityObjectName, value, previous, drawing)
+        public HoldAction(string unityObjectName, double value, FulFillable previous, Database dbManager, Settings settings, Drawing drawing) : base(unityObjectName, value, previous, dbManager, settings, drawing)
         {
 
         }

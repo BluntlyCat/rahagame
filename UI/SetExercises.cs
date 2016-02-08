@@ -9,12 +9,14 @@
 
     public class SetExercises : MonoBehaviour
     {
+        public GameObject dbManagerPrefab;
         public Transform exerciseButton;
 
         // Use this for initialization
         void Start()
         {
-            var table = DBManager.Query("editor_exercise", "SELECT unityObjectName FROM editor_exercise");
+            Database dbManager = dbManagerPrefab.GetComponent<Database>();
+            var table = dbManager.Query("editor_exercise", "SELECT unityObjectName FROM editor_exercise");
             bool isFirst = true;
 
             foreach (var row in table.Rows)
@@ -24,7 +26,7 @@
                 var image = button.GetComponent<RawImage>();
 
                 GameState.ActivePatient.ResetJoints();
-                var exercise = new Exercise(row.GetValue("unityObjectName"));
+                var exercise = new Exercise(row.GetValue("unityObjectName"), dbManager);
                 GameState.AddExercise(exercise.Select() as Exercise);
 
                 button.SetParent(this.transform, false);

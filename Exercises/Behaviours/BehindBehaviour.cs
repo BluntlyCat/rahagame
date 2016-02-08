@@ -2,13 +2,15 @@
 {
     using System;
     using FulFillables;
+    using DB;
     using UI.VisualExercise;
     using User;
     using Windows.Kinect;
+    using InGame;
 
     public class BehindBehaviour : BaseJointBehaviour
     {
-        public BehindBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, drawing, previous)
+        public BehindBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
         {
 
         }

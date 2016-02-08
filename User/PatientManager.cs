@@ -6,10 +6,19 @@
     using DB;
     using UnityEngine.EventSystems;
     using System.Collections.Generic;
+    using Scene;
 
     [RequireComponent(typeof(AudioSource))]
     public class PatientManager : MonoBehaviour
     {
+        public GameObject dbManagerPrefab;
+        public GameObject settingsPrefab;
+        public GameObject sceneManagerPrefab;
+
+        private Database dbManager;
+        private Settings settings;
+        private SceneManager sceneManager;
+
         private Patient patient;
         private bool queryDone;
         private bool isReading = false;
@@ -33,13 +42,17 @@
         // Use this for initialization
         void Start()
         {
-            var name = DBManager.GetTranslation("name");
-            var age = DBManager.GetTranslation("age");
-            var sex = DBManager.GetTranslation("sex");
-            var save = DBManager.GetTranslation("save");
-            var delete = DBManager.GetTranslation("delete");
+            dbManager = dbManagerPrefab.GetComponent<Database>();
+            settings = settingsPrefab.GetComponent<Settings>();
+            sceneManager = sceneManagerPrefab.GetComponent<SceneManager>();
 
-            var genders = DBManager.GetTranslation(Logics.OR, Orders.desc, "male", "female");
+            var name = dbManager.GetTranslation("name");
+            var age = dbManager.GetTranslation("age");
+            var sex = dbManager.GetTranslation("sex");
+            var save = dbManager.GetTranslation("save");
+            var delete = dbManager.GetTranslation("delete");
+
+            var genders = dbManager.GetTranslation(Logics.OR, Orders.desc, "male", "female");
 
             options = new List<string>();
 
@@ -119,7 +132,7 @@
             }
             else
             {
-                patient = new Patient(nameInput.text, int.Parse(ageInput.text), (Sex)sexInput.value);
+                patient = new Patient(nameInput.text, int.Parse(ageInput.text), (Sex)sexInput.value, sceneManager, dbManager);
                 queryDone = patient.Insert() != null;
             }
 
@@ -142,7 +155,7 @@
 
         public void ReadName()
         {
-            if (GameState.ActivePatient == null && RGSettings.reading && !isReading)
+            if (GameState.ActivePatient == null && settings.reading && !isReading)
             {
                 audioSource.clip = nameClip;
 
@@ -152,7 +165,7 @@
         }
         public void ReadAge()
         {
-            if (RGSettings.reading && !isReading)
+            if (settings.reading && !isReading)
             {
                 audioSource.clip = ageClip;
 
@@ -162,7 +175,7 @@
         }
         public void ReadSex()
         {
-            if (RGSettings.reading && !isReading)
+            if (settings.reading && !isReading)
             {
                 audioSource.clip = sexClip;
 
@@ -172,7 +185,7 @@
         }
         public void ReadDelete()
         {
-            if (RGSettings.reading && !isReading)
+            if (settings.reading && !isReading)
             {
                 audioSource.clip = deleteClip;
 
@@ -182,7 +195,7 @@
         }
         public void ReadSave()
         {
-            if (RGSettings.reading && !isReading)
+            if (settings.reading && !isReading)
             {
                 audioSource.clip = saveClip;
 
@@ -195,7 +208,7 @@
         {
             sexInput.GetComponentInChildren<Text>().text = options[sexInput.value];
 
-            if (RGSettings.reading && !isReading)
+            if (settings.reading && !isReading)
             {
                 switch (sexInput.value)
                 {

@@ -1,6 +1,5 @@
 ﻿namespace HSA.RehaGame.Input.Kinect
 {
-    using System.Collections.Generic;
     using InGame;
     using Logging;
     using Math;

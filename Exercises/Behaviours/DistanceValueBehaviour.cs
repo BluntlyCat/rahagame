@@ -7,12 +7,14 @@
     using UnityEngine;
     using System;
     using FulFillables;
+    using InGame;
+    using DB;
 
     public class DistanceValueBehaviour : BaseJointValueBehaviour
     {
         private Vector3 distance;
 
-        public DistanceValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, drawing, previous)
+        public DistanceValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
         {
 
         }

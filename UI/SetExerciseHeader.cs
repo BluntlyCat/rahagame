@@ -7,12 +7,12 @@
 
     public class SetExerciseHeader : MonoBehaviour
     {
-
+        public GameObject dbManager;
         // Use this for initialization
         void Start()
         {
             var scene = SceneManager.GetActiveScene().name;
-            var list = DBManager.Query("editor_exercise", "SELECT name FROM editor_exercise WHERE unityObjectName = '" + scene + "'");
+            var list = dbManager.GetComponent<Database>().Query("editor_exercise", "SELECT name FROM editor_exercise WHERE unityObjectName = '" + scene + "'");
             var text = this.GetComponent<Text>();
             text.text = list.GetValue("name");
         }

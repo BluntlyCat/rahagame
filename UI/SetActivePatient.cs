@@ -8,12 +8,24 @@
 
     public class SetActivePatient : MonoBehaviour
     {
+        public GameObject sceneManagerPrefab;
+        public GameObject databaseManagerPrefab;
+
+        private SceneManager sceneManager;
+        private Database dbManager;
+
+        void Start()
+        {
+            sceneManager = sceneManagerPrefab.GetComponent<SceneManager>();
+            dbManager = databaseManagerPrefab.GetComponent<Database>();
+        }
+
         public void SetPatient()
         {
-            if (DBManager.Exists("editor_patient", this.name))
+            if (dbManager.Exists("editor_patient", this.name))
             {
-                GameState.ActivePatient = new Patient(this.name).Select() as Patient;
-                LoadScene.LoadMainMenu();
+                GameState.ActivePatient = new Patient(this.name, sceneManager, dbManager).Select() as Patient;
+                sceneManager.LoadMainMenu();
             }
         }
     }

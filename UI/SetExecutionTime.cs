@@ -7,11 +7,12 @@
 
     public class SetExecutionTime : MonoBehaviour
     {
+        public GameObject dbManagerPrefab;
 
         // Use this for initialization
         void Start()
         {
-            var information = DBManager.GetExerciseInformation("executionTime", "end").GetValueFromLanguage("order");
+            var information = dbManagerPrefab.GetComponent<Database>().GetExerciseInformation("executionTime", "end").GetValueFromLanguage("order");
             var time = GameState.ExecutionTime.ToString("00");
 
             if (time[0] == '0')

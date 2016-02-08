@@ -2,7 +2,8 @@
 {
     public enum Logics
     {
-        OR = 0,
-        AND = 1
+        NO = 0,
+        OR = 1,
+        AND = 2
     }
 }

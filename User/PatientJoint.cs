@@ -24,7 +24,7 @@
         private int zAxisPatientMinValue;
         private int zAxisPatientMaxValue;
 
-        public PatientJoint(string patientName, JointType type, string translation, bool xAxis, bool yAxis, bool zAxis, int xAxisMinValue, int xAxisMaxValue, int yAxisMinValue, int yAxisMaxValue, int zAxisMinValue, int zAxisMaxValue) : base(type, translation, xAxis, yAxis, zAxis, xAxisMinValue, xAxisMaxValue, yAxisMinValue, yAxisMaxValue, zAxisMinValue, zAxisMaxValue)
+        public PatientJoint(string patientName, JointType type, string translation, bool xAxis, bool yAxis, bool zAxis, int xAxisMinValue, int xAxisMaxValue, int yAxisMinValue, int yAxisMaxValue, int zAxisMinValue, int zAxisMaxValue, Database dbManager) : base(type, translation, xAxis, yAxis, zAxis, xAxisMinValue, xAxisMaxValue, yAxisMinValue, yAxisMaxValue, zAxisMinValue, zAxisMaxValue, dbManager)
         {
             this.patientName = patientName;
 
@@ -187,7 +187,7 @@
 
         public override object Insert()
         {
-            ID = int.Parse(DBManager.Insert("editor_patientjoint",
+            ID = int.Parse(dbManager.Insert("editor_patientjoint",
                     new KeyValuePair<string, object>("active", this.Active),
                     new KeyValuePair<string, object>("x_axis_min_value", this.XAxisMinValue),
                     new KeyValuePair<string, object>("x_axis_max_value", this.XAxisMaxValue),
@@ -198,7 +198,7 @@
                     new KeyValuePair<string, object>("kinectJoint_id", this.JointType.ToString())
                 ));
 
-            PatientJoint_ID = int.Parse(DBManager.Insert("editor_patient_joints",
+            PatientJoint_ID = int.Parse(dbManager.Insert("editor_patient_joints",
                 new KeyValuePair<string, object>("patient_id", patientName),
                 new KeyValuePair<string, object>("patientjoint_id", ID)
             ));
@@ -208,7 +208,7 @@
 
         public override IDBObject Select()
         {
-            var joint = DBManager.GetPatientJoint(JointType, patientName);
+            var joint = dbManager.GetPatientJoint(JointType, patientName);
 
             ID = joint.GetInt("id");
             Active = joint.GetBool("active");
@@ -227,7 +227,7 @@
 
         public override bool Update()
         {
-            DBManager.Update(ID.ToString(), "editor_patientjoint",
+            dbManager.UpdateTable(ID.ToString(), "editor_patientjoint",
                 new KeyValuePair<string, object>("active", Active),
                 new KeyValuePair<string, object>("x_axis_min_value", XAxisMinValue),
                 new KeyValuePair<string, object>("x_axis_max_value", XAxisMaxValue),
@@ -242,8 +242,8 @@
 
         public override void Delete()
         {
-            DBManager.Detete("editor_patientjoint", this.ID.ToString());
-            DBManager.Detete("editor_patient_joints", this.PatientJoint_ID.ToString());
+            dbManager.Detete("editor_patientjoint", this.ID.ToString());
+            dbManager.Detete("editor_patient_joints", this.PatientJoint_ID.ToString());
         }
 
         public override string ToString()

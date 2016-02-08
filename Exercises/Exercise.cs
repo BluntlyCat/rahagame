@@ -2,11 +2,12 @@
 {
     using System.Collections.Generic;
     using DB;
+    using DB.Entities;
     using InGame;
     using UnityEngine;
     using User;
 
-    public class Exercise : DBObject
+    public class Exercise : DBObject<int>
     {
         private int id;
         private string unityObjectName;
@@ -22,7 +23,7 @@
         
         private IDictionary<string, PatientJoint> stressedJoints = new Dictionary<string, PatientJoint>();
 
-        public Exercise(string unityObjectName)
+        public Exercise(string unityObjectName, IDatabase database) : base(database)
         {
             this.unityObjectName = unityObjectName;
         }
@@ -125,28 +126,30 @@
 
         public override void Delete() {}
 
-        public override object Insert() { return null; }
+        public override PrimaryKey<int> Insert() { return null; }
 
-        public override IDBObject Select()
+        public override IDBObject<int> Select()
         {
-            var table = DBManager.Query("editor_exercise", string.Format("SELECT * FROM editor_exercise WHERE unityObjectName = '{0}'", this.UnityObjectName));
+            var exercise = database.FindRow("editor_exercise", this.unityObjectName);
 
-            this.id = table.GetInt("id");
-            this.name = table.GetValueFromLanguage("name");
-            this.thumbnail = table.GetResource<Texture>("thumbnail", "jpg", false);
-            this.difficulty = (Difficulties)table.GetInt("difficulty");
-            this.video = table.GetResource<MovieTexture>("video", "mp4");
-            this.description = table.GetValueFromLanguage("description");
-            this.auditiveDescription = table.GetResource<AudioClip>("auditiveDescription", "mp3");
-            this.rel = table.GetValue("rel");
-            this.auditiveInformation = table.GetResource<AudioClip>("auditiveInformation", "mp3");
-            this.information = table.GetValueFromLanguage("information");
+            // ToDo: Informationen müssen noch aus Sprachfeldern geladen werden
 
-            var stressedJointsDB = DBManager.GetStressedJoints(this.id);
+            this.id = exercise.Column("id").GetValue<int>();
+            this.name = exercise.Column("name").GetValue<string>();
+            this.thumbnail = Resources.Load<Texture>(exercise.Column("thumbnail").GetValue<string>());
+            this.difficulty = (Difficulties)exercise.Column("difficulty").GetValue<int>();
+            this.video = Resources.Load<MovieTexture>(exercise.Column("video").GetValue<string>());
+            this.description = exercise.Column("description").GetValue<string>();
+            this.auditiveDescription = Resources.Load<AudioClip>(exercise.Column("auditiveDescription").GetValue<string>());
+            this.rel = exercise.Column("rel").GetValue<string>(); //ToDo: rel heißt in neuer DB reml
+            this.auditiveInformation = Resources.Load<AudioClip>(exercise.Column("auditiveInformation", "mp3").GetValue<string>());
+            this.information = exercise.Column("information").GetValue<string>();
 
-            foreach(var joint in stressedJointsDB.Rows)
+            var stressedJointsRows = database.Join(this.id, "editor_exercise_stressedjoints", "exercise_id", "joint_id", "editor_joint");
+
+            foreach(var joint in stressedJointsRows)
             {
-                var name = joint.GetValue("name");
+                var name = joint.Column("name").GetValue<string>();
                 var stressedJoint = GameState.ActivePatient.GetJoint(name);
 
                 stressedJoint.Stressed = true;

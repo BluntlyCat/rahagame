@@ -9,12 +9,13 @@
 
     public class SetPatients : MonoBehaviour
     {
+        public GameObject dbManager;
         public Transform patientButton;
 
         // Use this for initialization
         void Start()
         {
-            var patients = DBManager.Query("editor_patient", "SELECT name FROM editor_patient ORDER BY name");
+            var patients = dbManager.GetComponent<Database>().Query("editor_patient", "SELECT name FROM editor_patient ORDER BY name");
 
             if (patients.Rows.Count > 0)
             {
@@ -38,12 +39,6 @@
                     }
                 }
             }
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
         }
     }
 }

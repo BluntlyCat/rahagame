@@ -13,6 +13,7 @@
 
     public class Drawing : MonoBehaviour
     {
+        public GameObject dbManager;
         private static Logger<Drawing> logger = new Logger<Drawing>();
 
         private Text informationText;
@@ -31,7 +32,7 @@
 
         void Start()
         {
-            var joints = DBManager.Query("editor_joint", "SELECT name FROM editor_joint");
+            var joints = dbManager.GetComponent<Database>().Query("editor_joint", "SELECT name FROM editor_joint");
 
             logger.AddLogAppender<ConsoleAppender>();
 

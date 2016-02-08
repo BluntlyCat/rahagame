@@ -2,7 +2,8 @@
 {
     public enum Orders
     {
-        asc = 0,
-        desc = 1
+        no = 0,
+        asc = 1,
+        desc = 2
     }
 }

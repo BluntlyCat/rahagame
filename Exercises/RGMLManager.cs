@@ -10,19 +10,25 @@
     using User;
     using Logging;
     using UI = UI.VisualExercise;
+    using InGame;
+    using DB;
 
     public class RGMLManager
     {
         private static Logger<RGMLManager> logger = new Logger<RGMLManager>();
+        private Database dbManager;
+        private Settings settings;
         private UI.Drawing drawing;
         private Patient patient;
         private string rel;
 
-        public RGMLManager(Patient patient, UI.Drawing drawing, string rel)
+        public RGMLManager(Patient patient, Database dbManager, Settings settings, UI.Drawing drawing, string rel)
         {
             logger.AddLogAppender<ConsoleAppender>();
 
             this.patient = patient;
+            this.dbManager = dbManager;
+            this.settings = settings;
             this.drawing = drawing;
             this.rel = rel;
         }
@@ -49,17 +55,17 @@
 
             if (actionName == "hold")
             {
-                action = new HoldAction(actionName, double.Parse(attributes["value"]), lastToDoAble, drawing);
+                action = new HoldAction(actionName, double.Parse(attributes["value"]), lastToDoAble, dbManager, settings, drawing);
             }
 
             else if (actionName == "repeat")
             {
-                action = new RepeatAction(actionName, double.Parse(attributes["value"]), lastToDoAble, drawing);
+                action = new RepeatAction(actionName, double.Parse(attributes["value"]), lastToDoAble, dbManager, settings, drawing);
             }
 
             else if (actionName == "wait")
             {
-                action = new WaitAction(actionName, double.Parse(attributes["value"]), lastToDoAble, drawing);
+                action = new WaitAction(actionName, double.Parse(attributes["value"]), lastToDoAble, dbManager, settings, drawing);
             }
 
             if (lastToDoAble != null)
@@ -86,21 +92,21 @@
                     var value = double.Parse(attributes["value"]);
 
                     if (behaviourName == "distance")
-                        behaviour = new DistanceValueBehaviour(value, behaviourName, active, passive, drawing, lastToDoAble);
+                        behaviour = new DistanceValueBehaviour(value, behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
 
                     else if (behaviourName == "on")
-                        behaviour = new OnJointValueBehaviour(value, behaviourName, active, passive, drawing, lastToDoAble);
+                        behaviour = new OnJointValueBehaviour(value, behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
                 }
                 else
                 {
                     if (behaviourName == "above")
-                        behaviour = new AboveBehaviour(behaviourName, active, passive, drawing, lastToDoAble);
+                        behaviour = new AboveBehaviour(behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
                     else if (behaviourName == "below")
-                        behaviour = new BelowBehaviour(behaviourName, active, passive, drawing, lastToDoAble);
+                        behaviour = new BelowBehaviour(behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
                     else if (behaviourName == "behind")
-                        behaviour = new BehindBehaviour(behaviourName, active, passive, drawing, lastToDoAble);
+                        behaviour = new BehindBehaviour(behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
                     else if (behaviourName == "before")
-                        behaviour = new BeforeBehaviour(behaviourName, active, passive, drawing, lastToDoAble);
+                        behaviour = new BeforeBehaviour(behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
                 }
             }
             else if (attributes.ContainsKey("value"))
@@ -108,7 +114,7 @@
                 var value = double.Parse(attributes["value"]);
 
                 if (behaviourName == "angle")
-                    behaviour = new AngleValueBehaviour(value, behaviourName, active, null, drawing, lastToDoAble);
+                    behaviour = new AngleValueBehaviour(value, behaviourName, active, null, dbManager, settings, drawing, lastToDoAble);
             }
 
             if (lastBehaviour != null)
@@ -121,7 +127,7 @@
         {
             var attributes = GetAttributes(reader);
 
-            Joint joint = new Joint(attributes["name"], drawing, lastToDoAble);
+            Joint joint = new Joint(attributes["name"], dbManager, settings, drawing, lastToDoAble);
 
             if (lastToDoAble != null)
                 lastToDoAble.AddNext(joint);
@@ -134,7 +140,7 @@
             var attributes = GetAttributes(reader);
             var name = attributes.ContainsKey("unityObjectName") ? attributes["unityObjectName"] : null;
 
-            Step step = new Step(name, lastStep);
+            Step step = new Step(name, lastStep, dbManager);
 
             if (lastStep != null)
                 lastStep.AddNext(step);

@@ -2,13 +2,15 @@
 {
     using System;
     using FulFillables;
+    using DB;
+    using InGame;
     using UI.VisualExercise;
     using User;
     using Windows.Kinect;
 
     public class BelowBehaviour : BaseJointBehaviour
     {
-        public BelowBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Drawing drawing, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, drawing, previous)
+        public BelowBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
         {
 
         }

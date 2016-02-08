@@ -9,6 +9,7 @@
     [RequireComponent(typeof(AudioSource))]
     public class SetMenuHeader : MonoBehaviour
     {
+        public GameObject gameManager;
         private AudioSource audioSource;
 
         // Use this for initialization
@@ -17,7 +18,7 @@
             Text textComponent = this.GetComponent<Text>();
             AudioClip headerClip;
             string headerText;
-            var data = DBManager.GetMenuHeader(this.name);
+            var data = gameManager.GetComponent<Database>().GetMenuHeader(this.name);
 
             audioSource = this.GetComponent<AudioSource>();
             audioSource.playOnAwake = false;

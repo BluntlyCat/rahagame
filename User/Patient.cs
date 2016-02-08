@@ -5,28 +5,34 @@
     using DB;
     using Scene;
     using Kinect;
+    using DB.Entities;
+    using DB.Queries;
+    using System;
 
-    public class Patient : DBObject
+    public class Patient : DBObject<string>
     {
+        private SceneManager sceneManager;
         private string name;
         private long age;
         private Sex sex;
 
         private Dictionary<JointType, PatientJoint> joints;
 
-        public Patient(string name)
+        public Patient(string name, SceneManager sceneManager, Database dbManager) : base (dbManager)
         {
             this.name = name;
-            this.joints = new KinectJointManager(name).Joints;
+            this.sceneManager = sceneManager;
+            this.joints = new KinectJointManager(dbManager, name).Joints;
         }
 
-        public Patient(string name, int age, Sex sex)
+        public Patient(string name, int age, Sex sex, SceneManager sceneManager, Database dbManager) : base (dbManager)
         {
             this.name = name;
             this.age = age;
             this.sex = sex;
 
-            this.joints = new KinectJointManager(name).Joints;
+            this.sceneManager = sceneManager;
+            this.joints = new KinectJointManager(dbManager, name).Joints;
         }
 
         public string Name
@@ -95,16 +101,17 @@
             return this.joints[jt];
         }
 
-        public override object Insert()
+        public override PrimaryKey<string> Insert()
         {
-            if (DBManager.Exists("editor_patient", this.Name))
-                return false;
+            if (database.SelectWhere("editor_patient", "name", this.Name) != null)
+                return null;
 
-            var id = DBManager.Insert("editor_patient",
-                new KeyValuePair<string, object>("name", this.Name),
-                new KeyValuePair<string, object>("age", this.Age),
-                new KeyValuePair<string, object>("sex", (int)this.Sex)
-            );
+            var id = database.InsertInto(new InsertQuery<string>(
+                "editor_patient",
+                new PrimaryKey<string>("name", this.name),
+                new QueryColumns("name", "age", "sex"),
+                new QueryValues(this.name, this.age, this.sex)
+            ));
 
             foreach (var joint in this.joints.Values)
             {
@@ -116,9 +123,9 @@
 
         public override IDBObject Select()
         {
-            if (DBManager.Exists("editor_patient", name))
+            if (dbManager.Exists("editor_patient", name))
             {
-                var patientData = DBManager.Query("editor_patient", "SELECT age, sex FROM editor_patient WHERE name ='" + Name + "';").GetRow();
+                var patientData = dbManager.Query("editor_patient", "SELECT age, sex FROM editor_patient WHERE name ='" + Name + "';").GetRow();
 
                 this.Age = patientData.GetColumn<long>("age");
                 this.Sex = (Sex)patientData.GetColumn<int>("sex");
@@ -136,7 +143,7 @@
 
         public override bool Update()
         {
-            DBManager.Update(this.Name, "editor_patient",
+            dbManager.UpdateTable(this.Name, "editor_patient",
                     new KeyValuePair<string, object>("age", this.age),
                     new KeyValuePair<string, object>("sex", this.sex)
                 );
@@ -146,18 +153,18 @@
 
         public override void Delete()
         {
-            if (DBManager.Exists("editor_patient", this.Name))
+            if (dbManager.Exists("editor_patient", this.Name))
             {
-                var patientJointMap = DBManager.Query("editor_patient_joints", "SELECT * FROM editor_patient_joints WHERE patient_id ='" + this.Name + "';");
+                var patientJointMap = dbManager.Query("editor_patient_joints", "SELECT * FROM editor_patient_joints WHERE patient_id ='" + this.Name + "';");
 
                 foreach (var patientJointMapping in patientJointMap.Rows)
                 {
-                    DBManager.Detete("editor_patientjoint", patientJointMapping.GetValue("patientjoint_id"));
-                    DBManager.Detete("editor_patient_joints", patientJointMapping.GetValue("id"));
+                    dbManager.Detete("editor_patientjoint", patientJointMapping.GetValue("patientjoint_id"));
+                    dbManager.Detete("editor_patient_joints", patientJointMapping.GetValue("id"));
                 }
 
-                DBManager.Detete("editor_patient", this.Name);
-                LoadScene.LoadUsersSlection();
+                dbManager.Detete("editor_patient", this.Name);
+                sceneManager.LoadUsersSlection();
             }
         }
     }

@@ -7,18 +7,19 @@
     using UI = UI.VisualExercise;
     using User;
     using Windows.Kinect;
+    using InGame;
 
     public abstract class BaseJointBehaviour : Drawable
     {   
         protected PatientJoint activeJoint;
         protected PatientJoint passiveJoint;
 
-        public BaseJointBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, UI.Drawing drawing, FulFillable previous) : base(drawing, previous)
+        public BaseJointBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, UI.Drawing drawing, FulFillable previous) : base(dbManager, settings, drawing, previous)
         {
             this.activeJoint = activeJoint;
             this.passiveJoint = passiveJoint;
 
-            this.information = DBManager.GetExerciseInformation(unityObjectName, "behaviour").GetValueFromLanguage("order");
+            this.information = dbManager.GetExerciseInformation(unityObjectName, "behaviour").GetValueFromLanguage("order");
         }
 
         public abstract override bool IsFulfilled(Body body);

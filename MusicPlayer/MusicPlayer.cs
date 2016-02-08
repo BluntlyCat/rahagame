@@ -6,20 +6,22 @@
     using Logging;
     using InGame;
 
-    public class MusicPlayer
+    [RequireComponent(typeof(AudioSource))]
+    public class MusicPlayer : MonoBehaviour
     {
+        public GameObject settingsPrefab;
         private Logger<MusicPlayer> logger = new Logger<MusicPlayer>();
 
-        private AudioSource player;
-        private DefaultPlaylists playlists = new DefaultPlaylists();
+        private Settings settings;
+        private AudioSource audioSource;
         private string currentScene;
 
-        public MusicPlayer(AudioSource audioSource)
+        void Start()
         {
             logger.AddLogAppender<ConsoleAppender>();
 
-            this.player = audioSource;
-            this.currentScene = this.playlists.First().Key;
+            this.settings = settingsPrefab.GetComponent<Settings>();
+            this.audioSource = this.GetComponent<AudioSource>();
         }
 
         public void AddSong(string scene, string file)
@@ -29,36 +31,33 @@
 
         public void Play()
         {
-            if (RGSettings.music)
+            if (settings.music)
             {
-                this.player.Stop();
-                this.player.clip = this.playlists[currentScene].current.clip;
-                this.player.Play();
+                this.audioSource.Stop();
+                this.audioSource.Play();
             }
         }
 
         public void Pause()
         {
-            if(this.player.isPlaying)
-                this.player.Pause();
+            if(this.audioSource.isPlaying)
+                this.audioSource.Pause();
             else
-                this.player.UnPause();
+                this.audioSource.UnPause();
         }
 
         public void Stop()
         {
-            this.player.Stop();
+            this.audioSource.Stop();
         }
 
         public void Next()
         {
-            this.playlists[currentScene].Next();
             this.Play();
         }
 
         public void Prev()
         {
-            this.playlists[currentScene].Next();
             this.Play();
         }
 
@@ -66,7 +65,7 @@
         {
             get
             {
-                return this.player.isPlaying;
+                return this.audioSource.isPlaying;
             }
         }
 
@@ -74,8 +73,6 @@
         {
             set
             {
-                if (this.playlists.ContainsKey(value))
-                    this.currentScene = value;
             }
         }
     }

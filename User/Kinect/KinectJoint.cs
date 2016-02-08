@@ -3,10 +3,11 @@
     using System.Collections.Generic;
     using System.Linq;
     using DB;
+    using DB.Entities;
     using User;
     using Windows.Kinect;
 
-    public abstract class KinectJoint : DBObject
+    public abstract class KinectJoint : DBObject<string>
     {
         private PatientJoint parent;
         private Dictionary<JointType, PatientJoint> children = new Dictionary<JointType, PatientJoint>();
@@ -37,7 +38,8 @@
             int yAxisMinValue,
             int yAxisMaxValue,
             int zAxisMinValue,
-            int zAxisMaxValue)
+            int zAxisMaxValue,
+            Database database) : base (database)
         {
             this.type = type;
             this.translation = translation;
@@ -239,9 +241,9 @@
             };
         }
 
-        public abstract override object Insert();
+        public abstract override PrimaryKey<string> Insert();
 
-        public abstract override IDBObject Select();
+        public abstract override IDBObject<string> Select();
 
         public abstract override bool Update();
 
