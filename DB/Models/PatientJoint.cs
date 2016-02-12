@@ -4,42 +4,36 @@
 
     public class PatientJoint : Model
     {
-        private int id;
-
+        private string name;
         private bool active = true;
 
-        private long x_axis_min_value;
-        private long x_axis_max_value;
+        private long xyMinValue;
+        private long xyMaxValue;
 
-        private long y_axis_min_value;
-        private long y_axis_max_value;
+        private long yzMinValue;
+        private long yzMaxValue;
 
-        private long z_axis_min_value;
-        private long z_axis_max_value;
+        private long zxMinValue;
+        private long zxMaxValue;
 
-        private string kinectJoint_id;
+        private Joint joint;
 
-        public PatientJoint(int id, IDatabase database) : base(database)
+        public PatientJoint(string name)
         {
-            this.id = id;
+            this.name = name;
         }
 
-        public PatientJoint(IDatabase database) : base(database)
-        {
-        }
-
-        [TableColumn]
         [PrimaryKey]
-        public int ID
+        public string Name
         {
             get
             {
-                return id;
+                return this.name;
             }
 
             private set
             {
-                id = value;
+                this.name = value;
             }
         }
 
@@ -57,86 +51,106 @@
         }
 
         [TableColumn]
-        public long X_Axis_Min_Value
+        public long XYMinValue
         {
             get
             {
-                return this.x_axis_min_value;
+                return this.xyMinValue;
             }
 
             set
             {
-                this.x_axis_min_value = value;
+                this.xyMinValue = value;
             }
         }
 
         [TableColumn]
-        public long X_Axis_Max_Value
+        public long XYMaxValue
         {
             get
             {
-                return this.x_axis_max_value;
+                return this.xyMaxValue;
             }
 
             set
             {
-                this.x_axis_max_value = value;
+                this.xyMaxValue = value;
             }
         }
 
         [TableColumn]
-        public long Y_Axis_Min_Value
+        public long YZMinValue
         {
             get
             {
-                return this.y_axis_min_value;
+                return this.yzMinValue;
             }
 
             set
             {
-                this.y_axis_min_value = value;
+                this.yzMinValue = value;
             }
         }
 
         [TableColumn]
-        public long Y_Axis_Max_Value
+        public long YZMaxValue
         {
             get
             {
-                return this.y_axis_max_value;
+                return this.yzMaxValue;
             }
 
             set
             {
-                this.y_axis_max_value = value;
+                this.yzMaxValue = value;
             }
         }
 
         [TableColumn]
-        public long Z_Axis_Min_Value
+        public long ZXMinValue
         {
             get
             {
-                return this.z_axis_min_value;
+                return this.zxMinValue;
             }
 
             set
             {
-                this.z_axis_min_value = value;
+                this.zxMinValue = value;
             }
         }
 
         [TableColumn]
-        public long Z_Axis_Max_Value
+        public long ZXMaxValue
         {
             get
             {
-                return this.z_axis_max_value;
+                return this.zxMaxValue;
             }
 
             set
             {
-                this.z_axis_max_value = value;
+                this.zxMaxValue = value;
+            }
+        }
+
+        [ForeignKey("joint", "joint_id", true)]
+        public Joint Joint
+        {
+            get
+            {
+                if (joint == null)
+                    return null;
+
+                else if (!joint.IsInstance)
+                    joint.Get();
+
+                return this.joint;
+            }
+
+            set
+            {
+                this.joint = value;
             }
         }
     }

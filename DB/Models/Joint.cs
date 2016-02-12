@@ -1,49 +1,41 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
-    using System.Collections;
     using System.Collections.Generic;
-    using DB;
 
     public class Joint : Model
     {
         private string name;
+        private long value;
 
-        private long kinectValue;
+        private bool xyAxis;
+        private bool yzAxis;
+        private bool zxAxis;
 
-        private bool x_axis;
-        private bool y_axis;
-        private bool z_axis;
+        private long xyMinValue;
+        private long xyMaxValue;
 
-        private long x_axis_min_value;
-        private long x_axis_max_value;
+        private long yzMinValue;
+        private long yzMaxValue;
 
-        private long y_axis_min_value;
-        private long y_axis_max_value;
-
-        private long z_axis_min_value;
-        private long z_axis_max_value;
+        private long zxMinValue;
+        private long zxMaxValue;
 
         private string translation;
 
         private Joint parent;
         private Dictionary<string, Joint> children;
 
-        public Joint(string name, IDatabase database) : base(database)
+        public Joint(string name)
         {
             this.name = name;
         }
 
-        public Joint(IDatabase database) : base(database)
-        {
-        }
-
-        [TableColumn]
         [PrimaryKey]
         public string Name
         {
             get
             {
-                return name;
+                return this.name;
             }
 
             private set
@@ -52,141 +44,154 @@
             }
         }
 
-        [TableColumn("value")]
-        private long KinectValue
+        [TableColumn]
+        private long Value
         {
             get
             {
-                return kinectValue;
+                return this.value;
             }
             set
             {
-                kinectValue = value;
+                this.value = value;
             }
         }
+
+        /*public Kinect.JointType Type
+        {
+            get
+            {
+                return (Kinect.JointType)this.value;
+            }
+
+            set
+            {
+                this.value = (long)value;
+            }
+        }*/
 
         // ToDo public Kinect.JointType get...
 
-        [TableColumn]
-        public bool X_Axis
+        [TableColumn("xyAxis")]
+        public bool XYAxis
         {
             get
             {
-                return x_axis;
+                return xyAxis;
             }
             set
             {
-                x_axis = value;
+                xyAxis = value;
+            }
+        }
+
+        [TableColumn("yzAxis")]
+        public bool YZAxis
+        {
+            get
+            {
+                return yzAxis;
+            }
+            set
+            {
+                yzAxis = value;
+            }
+        }
+
+        [TableColumn("zxAxis")]
+        public bool ZXAxis
+        {
+            get
+            {
+                return zxAxis;
+            }
+            set
+            {
+                zxAxis = value;
             }
         }
 
         [TableColumn]
-        public bool Y_Axis
+        public long XYMinValue
         {
             get
             {
-                return y_axis;
+                return this.xyMinValue;
             }
+
             set
             {
-                y_axis = value;
+                this.xyMinValue = value;
             }
         }
 
         [TableColumn]
-        public bool Z_Axis
+        public long XYMaxValue
         {
             get
             {
-                return z_axis;
+                return this.xyMaxValue;
             }
+
             set
             {
-                z_axis = value;
+                this.xyMaxValue = value;
             }
         }
 
         [TableColumn]
-        public long X_Axis_Min_Value
+        public long YZMinValue
         {
             get
             {
-                return this.x_axis_min_value;
+                return this.yzMinValue;
             }
 
             set
             {
-                this.x_axis_min_value = value;
+                this.yzMinValue = value;
             }
         }
 
         [TableColumn]
-        public long X_Axis_Max_Value
+        public long YZMaxValue
         {
             get
             {
-                return this.x_axis_max_value;
+                return this.yzMaxValue;
             }
 
             set
             {
-                this.x_axis_max_value = value;
+                this.yzMaxValue = value;
             }
         }
 
         [TableColumn]
-        public long Y_Axis_Min_Value
+        public long ZXMinValue
         {
             get
             {
-                return this.y_axis_min_value;
+                return this.zxMinValue;
             }
 
             set
             {
-                this.y_axis_min_value = value;
+                this.zxMinValue = value;
             }
         }
 
         [TableColumn]
-        public long Y_Axis_Max_Value
+        public long ZXMaxValue
         {
             get
             {
-                return this.y_axis_max_value;
+                return this.zxMaxValue;
             }
 
             set
             {
-                this.y_axis_max_value = value;
-            }
-        }
-
-        [TableColumn]
-        public long Z_Axis_Min_Value
-        {
-            get
-            {
-                return this.z_axis_min_value;
-            }
-
-            set
-            {
-                this.z_axis_min_value = value;
-            }
-        }
-
-        [TableColumn]
-        public long Z_Axis_Max_Value
-        {
-            get
-            {
-                return this.z_axis_max_value;
-            }
-
-            set
-            {
-                this.z_axis_max_value = value;
+                this.zxMaxValue = value;
             }
         }
 
@@ -224,7 +229,15 @@
             }
         }
 
-        [ManyToManyRelation("from_joint_id", "joint_children", "to_joint_id", true)]
+        [ManyToManyRelation(
+            "name",
+            "joint",
+            "from_joint_id",
+            "joint_children",
+            "to_joint_id",
+            "joint",
+            "name"
+        )]
         public Dictionary<string, Joint> Children
         {
             get

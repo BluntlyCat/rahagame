@@ -5,15 +5,10 @@
 
     public class Modeltest : UE.MonoBehaviour
     {
-        public UE.GameObject database;
-
         // Use this for initialization
         void Start()
         {
-            IDatabase db = database.GetComponent<Database>();
-            Model model = new Joint("SpineShoulder", db);
-            model.Get();
-
+            var model = Model.GetModel<Exercise>("exercise1");
             UE.Debug.Log(model);
         }
     }

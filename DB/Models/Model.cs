@@ -8,18 +8,19 @@
 
     public abstract class Model : IModel
     {
-        private IList<PropertyInfo> columns;
+        protected IList<PropertyInfo> columns;
+
         private PropertyInfo primaryKey;
         private IDatabase database;
         private Type type;
         private bool isInstance;
 
-        public Model(IDatabase database)
+        public Model()
         {
-            this.database = database;
-            this.primaryKey = GetPrimaryKey();
-            this.columns = GetColumns();
+            this.database = Database.Instance();
+            this.primaryKey = GetFieldOfType(typeof(PrimaryKey));
             this.type = this.GetType();
+            this.columns = GetColumns(type);
             this.isInstance = false;
         }
 
@@ -39,20 +40,17 @@
             }
         }
 
-        private IList<PropertyInfo> GetColumns()
+        private IList<PropertyInfo> GetColumns(Type model)
         {
             IList<PropertyInfo> columns = new List<PropertyInfo>();
             BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
             foreach (PropertyInfo property in this.GetType().GetProperties(flags))
             {
-                if (property != primaryKey)
-                {
-                    var attr = property.GetCustomAttributes(typeof(TableColumn), true);
+                var attr = property.GetCustomAttributes(typeof(TableColumn), true);
 
-                    if (attr.Length == 1)
-                        columns.Add(property);
-                }
+                if (attr.Length == 1)
+                    columns.Add(property);
             }
 
             if (columns.Count == 0)
@@ -61,11 +59,11 @@
             return columns;
         }
 
-        private PropertyInfo GetPrimaryKey()
+        private PropertyInfo GetFieldOfType(Type type)
         {
             foreach (PropertyInfo property in this.GetType().GetProperties())
             {
-                var attr = property.GetCustomAttributes(typeof(PrimaryKey), true);
+                var attr = property.GetCustomAttributes(type, true);
 
                 if (attr.Length == 1)
                 {
@@ -73,7 +71,10 @@
                 }
             }
 
-            throw new Exception("No primary key found");
+            if(type.Equals(typeof(PrimaryKey)))
+                throw new Exception(string.Format("No Field of type ({0}) found", type.Name));
+
+            return null;
         }
 
         private IList<object> GetValues()
@@ -82,15 +83,36 @@
 
             foreach (var column in columns)
             {
+                if (column == primaryKey)
+                    continue;
+
                 var get = column.GetGetMethod(true);
                 values.Add(get.Invoke(this, null));
             }
 
             return values;
         }
-        private object GetPrimaryKeyValue()
+
+        private string GetFieldColumnName(PropertyInfo field)
         {
-            var get = primaryKey.GetGetMethod(true);
+            var attr = field.GetCustomAttributes(typeof(TableColumn), true);
+
+            if(attr.Length == 1)
+            {
+                var attribute = (TableColumn)attr[0];
+
+                if (attribute.NameInTable == null)
+                    return field.Name.ToLower();
+
+                return attribute.NameInTable;
+            }
+
+            throw new Exception(string.Format("Field ({0}) is not a table column", field.Name));
+        }
+
+        private object GetFieldValue(PropertyInfo field)
+        {
+            var get = field.GetGetMethod(true);
             return get.Invoke(this, null);
         }
 
@@ -117,9 +139,9 @@
                             throw new Exception(string.Format("Column '{0}' can not be null", column.Name));
 
                         if (this.isInstance)
-                            errorCode = database.UpdateTable(attribute, type, column, value, primaryKey.Name, GetPrimaryKeyValue());
+                            errorCode = database.UpdateTable(attribute, type, column, value, primaryKey.Name, GetFieldValue(primaryKey));
                         else
-                            errorCode = database.Save(type, GetPrimaryKeyValue(), GetValues());
+                            errorCode = database.Save(type, GetFieldValue(primaryKey), GetValues());
 
                         if(errorCode == SQLiteErrorCode.Ok)
                             this.isInstance = true;
@@ -140,9 +162,13 @@
         private object ManyToManyQuery(TableColumn attribute, PropertyInfo column)
         {
             var manyToMany = ((ManyToManyRelation)attribute);
-            var values = database.Get(manyToMany, column, GetPrimaryKeyValue());
             var genericDict = typeof(Dictionary<,>);
             var genericArgs = column.PropertyType.GetGenericArguments();
+
+            var keyType = genericArgs[0];
+            var valType = genericArgs[1];
+
+            var values = database.Join(manyToMany, GetFieldValue(primaryKey));
             var dict = genericDict.MakeGenericType(genericArgs);
             var dictInstance = Activator.CreateInstance(dict) as IDictionary;
 
@@ -152,7 +178,7 @@
 
                 if (value.ToString() != "" && value != null)
                 {
-                    var model = Activator.CreateInstance(genericArgs[1], value, database) as Model;
+                    var model = Activator.CreateInstance(valType, value) as Model;
 
                     if (model != null)
                         dictInstance.Add(model.PrimaryKeyValue, model);
@@ -164,11 +190,11 @@
 
         private object ForeignKeyQuery(TableColumn attribute, PropertyInfo column)
         {
-            var value = database.Get(attribute, column, type, primaryKey.Name, GetPrimaryKeyValue())[0];
+            var value = database.Get(attribute, column, type, primaryKey.Name, GetFieldValue(primaryKey))[0];
 
             if (value.ToString() != "" && value != null)
             {
-                var model = Activator.CreateInstance(column.PropertyType, value, database) as IModel;
+                var model = Activator.CreateInstance(column.PropertyType, value) as IModel;
 
                 if (model != null)
                     value = model;
@@ -179,12 +205,12 @@
             return value;
         }
 
-        public void Get()
+        public virtual void Get()
         {
             try
             {
                 if (primaryKey == null)
-                    throw new Exception(string.Format("Primary key '{0}' not set", primaryKey.Name));
+                    throw new Exception("Primary key not set");
 
                 foreach (var column in this.columns)
                 {
@@ -206,7 +232,7 @@
                             value = ForeignKeyQuery(attribute, column);
 
                         else
-                            value = database.Get(attribute, column, type, primaryKey.Name, GetPrimaryKeyValue())[0];
+                            value = database.Get(attribute, column, type, primaryKey.Name, PrimaryKeyValue)[0];
 
                         set.Invoke(this, new object[] { value });
                     }
@@ -234,6 +260,16 @@
             }
 
             return values;
+        }
+
+        public static T GetModel<T>(object primaryKey) where T : Model
+        {
+            IModel model = Activator.CreateInstance(typeof(T), primaryKey) as IModel;
+
+            if (model != null)
+                model.Get();
+
+            return model as T;
         }
     }
 }

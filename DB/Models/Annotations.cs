@@ -7,11 +7,13 @@
     {
         private string nameInTable;
         public readonly bool NotNull;
+        public readonly bool unique;
 
-        public TableColumn(string nameInTable = null, bool notNull = true)
+        public TableColumn(string nameInTable = null, bool notNull = true, bool unique = false)
         {
             this.nameInTable = nameInTable;
             this.NotNull = notNull;
+            this.unique = unique;
         }
 
         public string NameInTable
@@ -29,11 +31,11 @@
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class PrimaryKey : Attribute
+    public class PrimaryKey : TableColumn
     {
-        public readonly string NameInTable;
+        
 
-        public PrimaryKey(string nameInTable = null)
+        public PrimaryKey(string nameInTable = null) : base(nameInTable, true)
         {
             this.NameInTable = nameInTable;
         }
@@ -51,15 +53,25 @@
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class ManyToManyRelation : ForeignKey
+    public class ManyToManyRelation : TableColumn
     {
-        public readonly string FromID;
-        public readonly string ToID;
+        public readonly string SourceID;
+        public readonly string SourceTable;
+        public readonly string JoinSourceId;
+        public readonly string JoinTable;
+        public readonly string JoinTargetId;
+        public readonly string TargetTable;
+        public readonly string TargetID;
 
-        public ManyToManyRelation(string fromId, string relationTable, string toId, bool notNull = true) : base(relationTable, null, notNull)
+        public ManyToManyRelation(string sourceId, string sourceTable, string joinSourceId, string joinTable, string joinTargetId, string targetTable, string targetId) : base(notNull: false)
         {
-            this.FromID = fromId;
-            this.ToID = toId;
+            this.SourceID = sourceId;
+            this.SourceTable = sourceTable;
+            this.JoinSourceId = joinSourceId;
+            this.JoinTable = joinTable;
+            this.JoinTargetId = joinTargetId;
+            this.TargetTable = targetTable;
+            this.TargetID = targetId;
         }
     }
 
@@ -75,5 +87,11 @@
             else
                 this.NameInTable = string.Format("{0}_{1}", NameInTable, language);
         }
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public class ResourceColumn : TableColumn
+    {
+        public ResourceColumn(string nameInTable = null, bool notNull = true) : base(nameInTable, notNull) {}
     }
 }

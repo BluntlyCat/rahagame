@@ -14,6 +14,6 @@
 
         object[] Get(TableColumn attribute, PropertyInfo column, Type model, string primaryKeyName, object primaryKeyValue);
 
-        object[] Get(ManyToManyRelation attribute, PropertyInfo column, object primaryKeyValue);
+        object[] Join(ManyToManyRelation attribute, object primaryKeyValue);
     }
 }
