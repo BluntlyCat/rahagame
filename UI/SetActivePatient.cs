@@ -1,10 +1,9 @@
 ﻿namespace HSA.RehaGame.UI
 {
-    using User;
-    using Scene;
-    using InGame;
-    using UnityEngine;
     using DB;
+    using DB.Models;
+    using Manager;
+    using UnityEngine;
 
     public class SetActivePatient : MonoBehaviour
     {
@@ -22,11 +21,8 @@
 
         public void SetPatient()
         {
-            if (dbManager.Exists("editor_patient", this.name))
-            {
-                GameState.ActivePatient = new Patient(this.name, sceneManager, dbManager).Select() as Patient;
-                sceneManager.LoadMainMenu();
-            }
+            GameManager.ActivePatient = Model.GetModel<Patient>(this.name);
+            sceneManager.LoadMainMenu();
         }
     }
 }

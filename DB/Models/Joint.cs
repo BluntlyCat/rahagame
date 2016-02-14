@@ -1,6 +1,7 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
     using System.Collections.Generic;
+    using Kinect = Windows.Kinect;
 
     public class Joint : Model
     {
@@ -57,7 +58,7 @@
             }
         }
 
-        /*public Kinect.JointType Type
+        public Kinect.JointType Type
         {
             get
             {
@@ -68,9 +69,7 @@
             {
                 this.value = (long)value;
             }
-        }*/
-
-        // ToDo public Kinect.JointType get...
+        }
 
         [TableColumn("xyAxis")]
         public bool XYAxis
@@ -218,7 +217,7 @@
                     return null;
 
                 else if(!parent.IsInstance)
-                    parent.Get();
+                    parent.SetData();
 
                 return this.parent;
             }

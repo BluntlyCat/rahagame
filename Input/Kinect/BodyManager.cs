@@ -1,8 +1,8 @@
 ﻿namespace HSA.RehaGame.Input.Kinect
 {
     using System.Collections.Generic;
-    using Exercises;
     using Logging;
+    using Manager;
     using UnityEngine;
     using Kinect = Windows.Kinect;
 

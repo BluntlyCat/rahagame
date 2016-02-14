@@ -1,10 +1,8 @@
 ﻿namespace HSA.RehaGame.MusicPlayer
 {
-    using System.Collections.Generic;
-    using UnityEngine;
-    using System.Linq;
+    using DB.Models;
     using Logging;
-    using InGame;
+    using UnityEngine;
 
     [RequireComponent(typeof(AudioSource))]
     public class MusicPlayer : MonoBehaviour
@@ -31,7 +29,7 @@
 
         public void Play()
         {
-            if (settings.music)
+            if (settings.GetValue<bool>("music"))
             {
                 this.audioSource.Stop();
                 this.audioSource.Play();

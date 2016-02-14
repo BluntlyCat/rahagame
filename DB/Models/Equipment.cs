@@ -1,11 +1,13 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
+    using UnityEngine;
+
     public class Equipment : UnityModel
     {
         private string name;
         private string description;
-        private string auditiveDescription;
-        private string image;
+        private AudioClip auditiveDescription;
+        private Texture2D image;
 
         public Equipment(string unityObjectName) : base (unityObjectName)
         {
@@ -42,7 +44,7 @@
 
         [TranslationColumn]
         [ResourceColumn]
-        public string AuditiveDescription
+        public AudioClip AuditiveDescription
         {
             get
             {
@@ -56,7 +58,7 @@
         }
 
         [ResourceColumn]
-        public string Image
+        public Texture2D Image
         {
             get
             {

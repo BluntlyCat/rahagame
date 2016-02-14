@@ -4,6 +4,7 @@
     using UnityEngine.UI;
     using UnityEngine.SceneManagement;
     using DB;
+    using DB.Models;
 
     public class SetExerciseHeader : MonoBehaviour
     {
@@ -12,9 +13,8 @@
         void Start()
         {
             var scene = SceneManager.GetActiveScene().name;
-            var list = dbManager.GetComponent<Database>().Query("editor_exercise", "SELECT name FROM editor_exercise WHERE unityObjectName = '" + scene + "'");
             var text = this.GetComponent<Text>();
-            text.text = list.GetValue("name");
+            text.text = Model.GetModel<Exercise>(scene).Name;
         }
 
         // Update is called once per frame

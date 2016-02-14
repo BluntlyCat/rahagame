@@ -230,6 +230,13 @@
             return this.WriteQuery(query);
         }
 
+        public object[] All(string primaryKeyField, string modelName)
+        {
+            var query = string.Format("SELECT {0} FROM {1}", primaryKeyField, modelName);
+
+            return ReadQuery(query);
+        }
+
         public object[] Get(TableColumn attribute, PropertyInfo column, Type model, string primaryKeyName, object primaryKeyValue)
         {
             var query = string.Format("SELECT `{0}` FROM {1} WHERE `{2}` = '{3}'",

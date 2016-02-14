@@ -1,7 +1,6 @@
 ﻿namespace HSA.RehaGame.UI
 {
     using Input;
-    using InGame;
     using UnityEngine;
     using UnityEngine.UI;
 

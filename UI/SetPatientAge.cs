@@ -1,6 +1,6 @@
 ﻿namespace HSA.RehaGame.UI
 {
-    using InGame;
+    using Manager;
     using UnityEngine;
     using UnityEngine.UI;
 
@@ -11,7 +11,7 @@
         void Start()
         {
             var input = this.GetComponent<Text>();
-            input.text = GameState.ActivePatient == null ? "1" : GameState.ActivePatient.Age.ToString();
+            input.text = GameManager.ActivePatient == null ? "1" : GameManager.ActivePatient.Age.ToString();
         }
     }
 }

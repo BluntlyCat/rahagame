@@ -5,7 +5,6 @@
 
     public class Timeout : MonoBehaviour
     {
-        public GameObject dependLoaderObject;
         public double seconds;
 
         private double now;

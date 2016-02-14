@@ -1,14 +1,12 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using UI.VisualExercise;
-    using User;
-    using Windows.Kinect;
-    using Math;
-    using UnityEngine;
-    using System;
-    using FulFillables;
-    using InGame;
     using DB;
+    using DB.Models;
+    using FulFillables;
+    using Math;
+    using UI.VisualExercise;
+    using UnityEngine;
+    using Windows.Kinect;
 
     public class DistanceValueBehaviour : BaseJointValueBehaviour
     {
@@ -21,8 +19,8 @@
 
         public override bool IsFulfilled(Body body)
         {
-            var active = body.Joints[activeJoint.JointType];
-            var passive = body.Joints[passiveJoint.JointType];
+            var active = body.Joints[activeJoint.Type];
+            var passive = body.Joints[passiveJoint.Type];
 
             distance = Calculations.GetDistance(active, passive);
 
@@ -38,7 +36,7 @@
 
         public override void Draw(Body body)
         {
-            drawing.DrawLine(body.Joints[activeJoint.JointType], body.Joints[passiveJoint.JointType], 1f);
+            drawing.DrawLine(body.Joints[activeJoint.Type], body.Joints[passiveJoint.Type], 1f);
         }
 
         public override void Clear()

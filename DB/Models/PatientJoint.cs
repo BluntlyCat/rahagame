@@ -1,6 +1,6 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
-    using DB;
+    using Kinect = Windows.Kinect;
 
     public class PatientJoint : Model
     {
@@ -135,7 +135,7 @@
         }
 
         [ForeignKey("joint", "joint_id", true)]
-        public Joint Joint
+        public Joint KinectJoint
         {
             get
             {
@@ -143,7 +143,7 @@
                     return null;
 
                 else if (!joint.IsInstance)
-                    joint.Get();
+                    joint.SetData();
 
                 return this.joint;
             }
@@ -152,6 +152,28 @@
             {
                 this.joint = value;
             }
+        }
+
+        public Kinect.JointType Type
+        {
+            get
+            {
+                return this.joint.Type;
+            }
+        }
+
+        public string Translation
+        {
+            get
+            {
+                return this.joint.Translation;
+            }
+        }
+
+        public void SetActive(bool active)
+        {
+            // ToDo Von Joint erben
+            this.Active = active;
         }
     }
 }

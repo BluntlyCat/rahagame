@@ -181,7 +181,10 @@
                     var model = Activator.CreateInstance(valType, value) as Model;
 
                     if (model != null)
+                    {
+                        model.SetData();
                         dictInstance.Add(model.PrimaryKeyValue, model);
+                    }
                 }
             }
 
@@ -205,38 +208,49 @@
             return value;
         }
 
-        public virtual void Get()
+        protected IDictionary<PropertyInfo, object> GetData()
+        {
+            IDictionary<PropertyInfo, object> data = new Dictionary<PropertyInfo, object>();
+
+            foreach (var column in this.columns)
+            {
+                var attr = column.GetCustomAttributes(typeof(TableColumn), true);
+                var attribute = ((TableColumn)attr[0]);
+
+                if (attr.Length == 1)
+                {
+                    object value;
+
+                    if (attribute.GetType() == typeof(TranslationColumn))
+                        ((TranslationColumn)attribute).SetColumn(column.Name, "de_de"); //ToDo: Sprache aus Settings dynamisch setzen
+
+                    if (attribute.GetType() == typeof(ManyToManyRelation))
+                        value = ManyToManyQuery(attribute, column);
+
+                    else if (attribute.GetType() == typeof(ForeignKey))
+                        value = ForeignKeyQuery(attribute, column);
+
+                    else
+                        value = database.Get(attribute, column, type, primaryKey.Name, PrimaryKeyValue)[0];
+
+                    data.Add(column, value);
+                }
+            }
+
+            return data;
+        }
+
+        public virtual void SetData()
         {
             try
             {
                 if (primaryKey == null)
                     throw new Exception("Primary key not set");
 
-                foreach (var column in this.columns)
-                {
-                    var attr = column.GetCustomAttributes(typeof(TableColumn), true);
+                var data = GetData();
 
-                    if (attr.Length == 1)
-                    {
-                        object value;
-                        var attribute = ((TableColumn)attr[0]);
-                        var set = column.GetSetMethod(true);
-
-                        if (attribute.GetType() == typeof(TranslationColumn))
-                            ((TranslationColumn)attribute).SetColumn(column.Name, "de_de"); //ToDo: Sprache aus Settings dynamisch setzen
-
-                        if (attribute.GetType() == typeof(ManyToManyRelation))
-                            value = ManyToManyQuery(attribute, column);
-
-                        else if (attribute.GetType() == typeof(ForeignKey))
-                            value = ForeignKeyQuery(attribute, column);
-
-                        else
-                            value = database.Get(attribute, column, type, primaryKey.Name, PrimaryKeyValue)[0];
-
-                        set.Invoke(this, new object[] { value });
-                    }
-                }
+                foreach(var d in data)
+                    d.Key.GetSetMethod(true).Invoke(this, new object[] { d.Value });
 
                 this.isInstance = true;
             }
@@ -262,12 +276,47 @@
             return values;
         }
 
+        private static object[] GetPrimaryKeys(Type type)
+        {
+            var columns = type.GetProperties();
+
+            foreach (var column in columns)
+            {
+                var attr = column.GetCustomAttributes(typeof(PrimaryKey), true);
+
+                if (attr.Length == 1)
+                {
+                    return Database.Instance().All(column.Name, type.Name);
+                }
+            }
+
+            throw new Exception(string.Format("No primary key found in model of type {0}", type.Name));
+        }
+
+        public static IDictionary<object, T> All<T>() where T : Model
+        {
+            Type type = typeof(T);
+            IDictionary<object, T> models = new Dictionary<object, T>();
+
+            var primaryKeys = GetPrimaryKeys(typeof(T));
+
+            foreach(var primaryKey in primaryKeys)
+            {
+                var model = GetModel<T>(primaryKey);
+
+                model.SetData();
+                models.Add(model.PrimaryKeyValue, model);
+            }
+
+            return models;
+        }
+
         public static T GetModel<T>(object primaryKey) where T : Model
         {
             IModel model = Activator.CreateInstance(typeof(T), primaryKey) as IModel;
 
             if (model != null)
-                model.Get();
+                model.SetData();
 
             return model as T;
         }

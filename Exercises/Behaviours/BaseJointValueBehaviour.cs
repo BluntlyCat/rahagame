@@ -1,11 +1,10 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using FulFillables;
     using DB;
+    using DB.Models;
+    using FulFillables;
     using UI.VisualExercise;
-    using User;
     using Windows.Kinect;
-    using InGame;
 
     public abstract class BaseJointValueBehaviour : BaseJointBehaviour
     {

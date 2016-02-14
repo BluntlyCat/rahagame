@@ -1,8 +1,6 @@
 ﻿namespace HSA.RehaGame.UI
 {
-    using DB;
-    using Exercises;
-    using InGame;
+    using DB.Models;
     using UnityEngine;
     using UnityEngine.EventSystems;
     using UnityEngine.UI;
@@ -15,19 +13,17 @@
         // Use this for initialization
         void Start()
         {
-            Database dbManager = dbManagerPrefab.GetComponent<Database>();
-            var table = dbManager.Query("editor_exercise", "SELECT unityObjectName FROM editor_exercise");
+            var exercises = Model.All<Exercise>();
             bool isFirst = true;
 
-            foreach (var row in table.Rows)
+            foreach (var name in exercises)
             {
                 var button = Instantiate(exerciseButton) as Transform;
                 var textComponent = button.GetComponentInChildren<Text>();
                 var image = button.GetComponent<RawImage>();
 
-                GameState.ActivePatient.ResetJoints();
-                var exercise = new Exercise(row.GetValue("unityObjectName"), dbManager);
-                GameState.AddExercise(exercise.Select() as Exercise);
+                var exercise = Model.GetModel<Exercise>(name);
+                // ToDo GameManager.AddExercise(exercise);
 
                 button.SetParent(this.transform, false);
                 button.name = exercise.UnityObjectName;

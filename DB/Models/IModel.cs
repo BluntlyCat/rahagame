@@ -6,6 +6,6 @@
     {
         SQLiteErrorCode Save();
 
-        void Get();
+        void SetData();
     }
 }

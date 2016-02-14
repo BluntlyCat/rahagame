@@ -1,12 +1,16 @@
 ﻿namespace HSA.RehaGame.User
 {
-    using UnityEngine;
-    using InGame;
     using System.Collections.Generic;
+    using DB.Models;
+    using Manager;
+    using UnityEngine;
     using UnityEngine.UI;
 
     public class PatientJointManager : MonoBehaviour
     {
+        public GameObject parent;
+        public GameObject[] children;
+
         private Button button;
         private PatientJoint joint;
         private ColorBlock buttonColors;
@@ -29,12 +33,12 @@
 
         void OnEnable()
         {
-            if (GameState.ActivePatient != null)
+            if (GameManager.ActivePatient != null)
             {
                 this.button = GetComponent<Button>();
                 this.buttonColors = this.button.colors;
 
-                this.joint = GameState.ActivePatient.GetJoint(this.name);
+                this.joint = GameManager.ActivePatient.Joints[this.name];
                 states state = joint.Active ? states.active : states.inactive;
                 this.buttonColors.normalColor = colors[state];
                 this.buttonColors.pressedColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
@@ -49,27 +53,20 @@
             if (joint != null)
             {
                 bool active = !joint.Active;
-                var children = joint.Activate(active);
-                var list = GameObject.Find("jointList");
 
+                joint.SetActive(active);
                 states state = active ? states.active : states.inactive;
 
                 foreach (var child in children)
                 {
-                    foreach(Transform transform in list.transform)
-                    {
-                        if (transform.name == child.JointType.ToString())
-                        {
-                            var childButton = transform.GetComponent<Button>();
-                            var childColors = childButton.colors;
+                    var childButton = child.transform.GetComponent<Button>();
+                    var childColors = childButton.colors;
 
-                            childColors.normalColor = colors[state];
-                            childColors.pressedColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
-                            childColors.highlightedColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
-                            childColors.disabledColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
-                            childButton.colors = childColors;
-                        }
-                    }
+                    childColors.normalColor = colors[state];
+                    childColors.pressedColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
+                    childColors.highlightedColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
+                    childColors.disabledColor = state == states.active ? colors[states.specialActive] : colors[states.specialInactive];
+                    childButton.colors = childColors;
                 }
 
                 this.buttonColors.normalColor = colors[state];

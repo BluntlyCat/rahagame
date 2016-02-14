@@ -2,6 +2,7 @@
 {
     using Actions;
     using DB;
+    using Models = DB.Models;
     using Windows.Kinect;
 
     public abstract class BaseStep : FulFillable
@@ -19,9 +20,6 @@
         {
             this.unityObjectName = unityObjectName;
             this.dbManager = dbManager;
-
-            if (unityObjectName != null)
-                dbManager.GetExerciseInformation(unityObjectName, "step").GetValueFromLanguage("order");
         }
 
         private bool CheckCurrent(Body body)

@@ -1,18 +1,19 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
     using System.Collections.Generic;
+    using UnityEngine;
 
     public class Exercise : UnityModel
     {
         private string name;
-        private string auditiveName;
-        private string thumbnail;
+        private AudioClip auditiveName;
+        private Texture2D thumbnail;
         private long difficulty;
-        private string video;
+        private MovieTexture video;
         private string description;
-        private string auditiveDescription;
+        private AudioClip auditiveDescription;
         private string information;
-        private string auditiveInformation;
+        private AudioClip auditiveInformation;
         private string reml;
 
         private Dictionary<string, Exercise> similarExercises;
@@ -41,7 +42,7 @@
 
         [TranslationColumn]
         [ResourceColumn]
-        public string AuditiveName
+        public AudioClip AuditiveName
         {
             get
             {
@@ -55,7 +56,7 @@
         }
 
         [ResourceColumn]
-        public string Thumbnail
+        public Texture2D Thumbnail
         {
             get
             {
@@ -84,7 +85,7 @@
 
         [TranslationColumn]
         [ResourceColumn]
-        public string Video
+        public MovieTexture Video
         {
             get
             {
@@ -113,7 +114,7 @@
 
         [TranslationColumn]
         [ResourceColumn]
-        public string AuditiveDescription
+        public AudioClip AuditiveDescription
         {
             get
             {
@@ -142,7 +143,7 @@
 
         [TranslationColumn]
         [ResourceColumn]
-        public string AuditiveInformation
+        public AudioClip AuditiveInformation
         {
             get
             {

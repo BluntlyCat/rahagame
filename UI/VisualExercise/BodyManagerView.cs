@@ -1,10 +1,10 @@
 ﻿namespace HSA.RehaGame.Input.Kinect
 {
-    using InGame;
+    using DB.Models;
     using Logging;
+    using Manager;
     using Math;
     using UnityEngine;
-    using User;
     using Kinect = Windows.Kinect;
 
     public class BodyManagerView : MonoBehaviour
@@ -23,19 +23,19 @@
 
         public GameObject CreateBodyObject(ulong id)
         {
-            GameObject body = new GameObject(GameState.ActivePatient.Name);
+            GameObject body = new GameObject(GameManager.ActivePatient.Name);
 
             for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
             {
                 GameObject jointObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                PatientJoint patientJoint = GameState.ActivePatient.GetJoint(jt);
+                PatientJoint patientJoint = GameManager.ActivePatient.Joints[jt.ToString()];
                 LineRenderer lr = jointObj.AddComponent<LineRenderer>();
                 Renderer jointRenderer = jointObj.GetComponent<Renderer>();
 
                 if (patientJoint.Active == false)
                     jointRenderer.material = disabledJointMaterial;
-                else if (patientJoint.Stressed)
-                    jointRenderer.material = stressedJointMaterial;
+                // ToDo else if (patientJoint.Stressed)
+                    //jointRenderer.material = stressedJointMaterial;
                 else
                     jointRenderer.material = jointMaterial;
 
@@ -53,19 +53,19 @@
 
         public void RefreshBodyObject(Kinect.Body body, GameObject bodyObject)
         {
-            if (GameState.ExerciseIsActive)
+            if (GameManager.ExerciseIsActive)
             {
                 for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
                 {
-                    var joint = GameState.ActivePatient.GetJoint(jt);
+                    var joint = GameManager.ActivePatient.Joints[jt.ToString()];
 
                     Kinect.Joint sourceJoint = body.Joints[jt];
                     Kinect.Joint? targetJoint = null;
 
-                    if (joint.Parent != null)
-                        targetJoint = body.Joints[joint.Parent.JointType];
+                    if (joint.KinectJoint.Parent != null)
+                        targetJoint = body.Joints[joint.KinectJoint.Parent.Type];
                     else
-                        targetJoint = body.Joints[joint.JointType];
+                        targetJoint = body.Joints[joint.Type];
 
                     Transform jointObject = bodyObject.transform.FindChild(jt.ToString());
                     jointObject.localPosition = Calculations.GetVector3FromJoint(sourceJoint);

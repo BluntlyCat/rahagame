@@ -1,9 +1,9 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
-    using FulFillables;
     using DB;
+    using DB.Models;
+    using FulFillables;
     using UI.VisualExercise;
-    using InGame;
 
     public class WaitAction : HoldAction
     {

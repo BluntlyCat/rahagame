@@ -1,5 +1,6 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
+    using System;
     using System.Collections.Generic;
 
     public class Settings : Model
@@ -46,6 +47,14 @@
             {
                 this.keyValue = value;
             }
+        }
+
+        public T GetValue<T>(string key)
+        {
+            if (keyValue.ContainsKey(key))
+                return (T)keyValue[key].Value;
+
+            throw new Exception(string.Format("Setting with key '{0}' not found", key));
         }
     }
 }

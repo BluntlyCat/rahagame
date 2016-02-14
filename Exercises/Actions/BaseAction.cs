@@ -3,21 +3,19 @@
     using System.Collections.Generic;
     using DB;
     using FulFillables;
-    using UI = UI.VisualExercise;
-    using User;
     using Windows.Kinect;
-    using System;
-    using InGame;
+    using Models = DB.Models;
+    using UI = UI.VisualExercise;
 
     public abstract class BaseAction : Drawable
     {
         protected double value;
         protected double initialValue;
 
-        public BaseAction(string unityObjectName, double value, FulFillable previous, Database dbManager, Settings settings, UI.Drawing drawing) : base (dbManager, settings, drawing, previous)
+        public BaseAction(string unityObjectName, double value, FulFillable previous, Database dbManager, Models.Settings settings, UI.Drawing drawing) : base (dbManager, settings, drawing, previous)
         {
             this.initialValue = this.value = value;
-            this.information = dbManager.GetExerciseInformation(unityObjectName, "action").GetValueFromLanguage("order");
+            this.information = Models.Model.GetModel<Models.ExerciseInformation>(unityObjectName).Order;
         }
 
         public override void Draw(Body body)
@@ -35,12 +33,12 @@
             drawing.ShowInformation(string.Format(information, value.ToString("0")));
         }
 
-        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
+        public override void Debug(Body body, IDictionary<string, Models.Joint> stressedJoints)
         {
             return;
         }
 
-        public override void Debug(Body body, PatientJoint jointJoint)
+        public override void Debug(Body body, Models.Joint joint)
         {
             return;
         }

@@ -3,11 +3,10 @@
     using System;
     using System.Collections.Generic;
     using Behaviours;
-    using User;
+    using DB;
     using UI.VisualExercise;
     using Windows.Kinect;
-    using InGame;
-    using DB;
+    using Models = DB.Models;
 
     public class Joint : Drawable
     {
@@ -16,7 +15,7 @@
 
         private string name;
 
-        public Joint(string name, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base (dbManager, settings, drawing, previous)
+        public Joint(string name, Database dbManager, Models.Settings settings, Drawing drawing, FulFillable previous) : base (dbManager, settings, drawing, previous)
         {
             this.name = name;
         }
@@ -82,12 +81,12 @@
             drawing.ClearDrawings();
         }
 
-        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
+        public override void Debug(Body body, IDictionary<string, Models.Joint> stressedJoints)
         {
             throw new NotImplementedException();
         }
 
-        public override void Debug(Body body, PatientJoint jointJoint)
+        public override void Debug(Body body, Models.Joint joint)
         {
             throw new NotImplementedException();
         }

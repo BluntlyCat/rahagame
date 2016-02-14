@@ -1,9 +1,8 @@
 ﻿namespace HSA.RehaGame.UI
 {
+    using DB.Models;
     using UnityEngine;
     using UnityEngine.UI;
-    using DB;
-    using InGame;
 
     [RequireComponent(typeof(AudioSource))]
 
@@ -17,16 +16,16 @@
         void Start()
         {
             var text = this.GetComponentInChildren<Text>();
-            var table = gameManager.GetComponent<Database>().Query("editor_menuentry", string.Format("SELECT * FROM editor_menuentry WHERE unityObjectName = '{0}'", this.name));
+            var entry = Model.GetModel<MenuEntry>(this.name);
 
             audioSource = this.GetComponent<AudioSource>();
-            text.text = table.GetValueFromLanguage("entry");
-            audioSource.clip = table.GetResource<AudioClip>("auditiveEntry", "mp3");
+            text.text = entry.Entry;
+            audioSource.clip = entry.AuditiveEntry;
         }
 
         public void Reading()
         {
-            if (gameManager.GetComponent<Settings>().reading)
+            if (gameManager.GetComponent<Settings>().GetValue<bool>("reading"))
                 audioSource.Play();
         }
     }

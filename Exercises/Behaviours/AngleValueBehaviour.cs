@@ -1,12 +1,10 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using FulFillables;
     using DB;
-    using InGame;
+    using DB.Models;
+    using FulFillables;
     using Math;
     using UI.VisualExercise;
-    using User;
-    using User.Kinect;
     using Windows.Kinect;
 
     public class AngleValueBehaviour : BaseJointValueBehaviour
@@ -19,7 +17,7 @@
 
         public AngleValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
         {
-            this.tolerance = settings.angleTolerance;
+            this.tolerance = settings.GetValue<int>("angleTolerance");
             this.angle = 0;
             this.minAngle = initialValue - tolerance;
             this.maxAngle = initialValue + tolerance;
@@ -27,7 +25,7 @@
 
         public override bool IsFulfilled(Body body)
         {
-            angle = Calculations.GetAngle(KinectJoint.GetJoints(body, activeJoint));
+            angle = Calculations.GetAngle(null); // ToDo Winkelberechnung
 
             isFulfilled = minAngle <= angle && angle <= maxAngle;
 

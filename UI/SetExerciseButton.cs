@@ -1,9 +1,7 @@
 ﻿namespace HSA.RehaGame.UI
 {
-    using DB;
-    using Exercises;
-    using Scene;
-    using InGame;
+    using DB.Models;
+    using Manager;
     using UnityEngine;
 
     [RequireComponent(typeof(AudioSource))]
@@ -16,15 +14,15 @@
 
         void Start()
         {
-            var table = dbManager.GetComponent<Database>().Query("editor_exercise", "SELECT * FROM editor_exercise WHERE unityObjectName = '" + this.name + "';");
+            var exercise = Model.GetModel<Exercise>(this.name);
 
             audioSource = this.GetComponent<AudioSource>();
-            audioSource.clip = table.GetResource<AudioClip>("auditiveName", "mp3");
+            audioSource.clip = exercise.AuditiveName;
         }
 
         public void LoadExrcise()
         {
-            GameState.SetActiveExercise(this.name);
+            // ToDO GameManager.SetActiveExercise(this.name);
             sceneManager.GetComponent<SceneManager>().LoadExercise();
         }
     }

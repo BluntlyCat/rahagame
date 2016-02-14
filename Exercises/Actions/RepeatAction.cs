@@ -1,11 +1,10 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
-    using System;
-    using FulFillables;
     using DB;
+    using DB.Models;
+    using FulFillables;
     using UI.VisualExercise;
     using Windows.Kinect;
-    using InGame;
 
     public class RepeatAction : BaseAction
     {

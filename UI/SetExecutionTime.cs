@@ -1,7 +1,7 @@
 ﻿namespace HSA.RehaGame.UI
 {
-    using DB;
-    using InGame;
+    using DB.Models;
+    using Manager;
     using UnityEngine;
     using UnityEngine.UI;
 
@@ -12,8 +12,8 @@
         // Use this for initialization
         void Start()
         {
-            var information = dbManagerPrefab.GetComponent<Database>().GetExerciseInformation("executionTime", "end").GetValueFromLanguage("order");
-            var time = GameState.ExecutionTime.ToString("00");
+            var information = Model.GetModel<ExerciseInformation>("end").Order;
+            var time = GameManager.ExecutionTime.ToString("00");
 
             if (time[0] == '0')
                 time = time.Substring(1);

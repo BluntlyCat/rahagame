@@ -1,28 +1,28 @@
-﻿namespace HSA.RehaGame.Exercises
+﻿namespace HSA.RehaGame.Manager
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Xml;
-    using Actions;
-    using Behaviours;
-    using FulFillables;
-    using User;
-    using Logging;
-    using UI = UI.VisualExercise;
-    using InGame;
     using DB;
+    using Exercises;
+    using Exercises.Actions;
+    using Exercises.Behaviours;
+    using Exercises.FulFillables;
+    using Logging;
+    using Models = DB.Models;
+    using UI = UI.VisualExercise;
 
-    public class RGMLManager
+    public class REMLManager
     {
-        private static Logger<RGMLManager> logger = new Logger<RGMLManager>();
+        private static Logger<REMLManager> logger = new Logger<REMLManager>();
         private Database dbManager;
-        private Settings settings;
+        private Models.Settings settings;
         private UI.Drawing drawing;
-        private Patient patient;
+        private Models.Patient patient;
         private string rel;
 
-        public RGMLManager(Patient patient, Database dbManager, Settings settings, UI.Drawing drawing, string rel)
+        public REMLManager(Models.Patient patient, Database dbManager, Models.Settings settings, UI.Drawing drawing, string rel)
         {
             logger.AddLogAppender<ConsoleAppender>();
 
@@ -81,11 +81,11 @@
             var attributes = GetAttributes(reader);
             var behaviourName = attributes["is"];
 
-            var active = patient.GetJoint(((Joint)lastToDoAble).Name);
+            var active = patient.Joints[((Joint)lastToDoAble).Name];
 
             if (attributes.ContainsKey("joint"))
             {
-                var passive = patient.GetJoint(attributes["joint"]);
+                var passive = patient.Joints[attributes["joint"]];
 
                 if (attributes.ContainsKey("value"))
                 {

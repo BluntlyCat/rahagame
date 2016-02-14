@@ -1,9 +1,8 @@
-﻿namespace HSA.RehaGame.Exercises
+﻿namespace HSA.RehaGame.Manager
 {
     using System;
     using DB;
     using DB.Models;
-    using Manager;
     using Input.Kinect;
     using UI;
     using UI.VisualExercise;
@@ -12,7 +11,7 @@
     using Kinect = Windows.Kinect;
 
     [RequireComponent(typeof(AudioSource))]
-    public class ExerciseManager : MonoBehaviour
+    public class ExerciseManager : BaseModelManager<Exercise>
     {
         public GameObject gameManager;
         public GameObject drawingPrefab;
@@ -32,7 +31,7 @@
         private Kinect.Body body;
         private Exercise exercise;
         private Patient patient;
-        private REMLManager remlManager;
+        private REMLManager relManager;
         private ExerciseExecutionManager executionManager;
 
         private bool hasUser;
@@ -112,10 +111,10 @@
                 swapCanvas.SwapVidibility();
                 this.StopMedia();
 
-                if (remlManager == null)
+                if (relManager == null)
                 {
-                    this.remlManager = new REMLManager(patient, dbManager, settings, drawing, exercise.Reml);
-                    this.executionManager = new ExerciseExecutionManager(this.remlManager.ParseRGML(), exercise.StressedJoints, dbManager, settings, drawing, null);
+                    this.relManager = new REMLManager(patient, dbManager, settings, drawing, exercise.Reml);
+                    this.executionManager = new ExerciseExecutionManager(this.relManager.ParseRGML(), exercise.StressedJoints, dbManager, settings, drawing, null);
                 }
 
                 GameManager.ExerciseIsActive = exerciseRuns = true;

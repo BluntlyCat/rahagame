@@ -92,6 +92,11 @@
     [AttributeUsage(AttributeTargets.Property)]
     public class ResourceColumn : TableColumn
     {
-        public ResourceColumn(string nameInTable = null, bool notNull = true) : base(nameInTable, notNull) {}
+        public readonly Type Type;
+
+        public ResourceColumn(Type type = null, string nameInTable = null, bool notNull = true) : base(nameInTable, notNull)
+        {
+            this.Type = type;
+        }
     }
 }

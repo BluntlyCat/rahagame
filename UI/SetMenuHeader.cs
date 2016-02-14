@@ -1,9 +1,9 @@
 ﻿namespace HSA.RehaGame.UI
 {
-    using DB;
-    using InGame;
+    using Models = DB.Models;
+    using Manager;
     using UnityEngine;
-    using UnityEngine.SceneManagement;
+    using UE = UnityEngine.SceneManagement;
     using UnityEngine.UI;
 
     [RequireComponent(typeof(AudioSource))]
@@ -18,19 +18,19 @@
             Text textComponent = this.GetComponent<Text>();
             AudioClip headerClip;
             string headerText;
-            var data = gameManager.GetComponent<Database>().GetMenuHeader(this.name);
+            var menu = Models.Model.GetModel<Models.Menu>(this.name);
 
             audioSource = this.GetComponent<AudioSource>();
             audioSource.playOnAwake = false;
-            headerText = data.GetValueFromLanguage("name");
-            headerClip = data.GetResource<AudioClip>("auditiveName", "mp3");
+            headerText = menu.Name;
+            headerClip = menu.AuditiveName;
             audioSource.clip = headerClip;
 
-            if (SceneManager.GetActiveScene().name == "NewUser" && GameState.ActivePatient != null)
+            if (UE.SceneManager.GetActiveScene().name == "NewUser" && GameManager.ActivePatient != null)
             {
                 audioSource.Play();   
             }
-            else if (SceneManager.GetActiveScene().name != "NewUser")
+            else if (UE.SceneManager.GetActiveScene().name != "NewUser")
             {
                 audioSource.Play();
             }

@@ -1,11 +1,9 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using System;
-    using FulFillables;
     using DB;
-    using InGame;
+    using DB.Models;
+    using FulFillables;
     using UI.VisualExercise;
-    using User;
     using Windows.Kinect;
 
     public class BelowBehaviour : BaseJointBehaviour
@@ -17,7 +15,7 @@
 
         public override bool IsFulfilled(Body body)
         {
-            isFulfilled = body.Joints[activeJoint.JointType].Position.Y < body.Joints[passiveJoint.JointType].Position.Y;
+            isFulfilled = body.Joints[activeJoint.Type].Position.Y < body.Joints[passiveJoint.Type].Position.Y;
             return isFulfilled;
         }
 

@@ -1,7 +1,6 @@
 ﻿namespace HSA.RehaGame.UI
 {
-    using DB;
-    using InGame;
+    using Manager;
     using UnityEngine;
     using UnityEngine.UI;
 
@@ -14,10 +13,10 @@
         // Use this for initialization
         void Start()
         {
-            if (GameState.ActivePatient != null)
+            if (GameManager.ActivePatient != null)
             {
                 Text textComponent = this.GetComponent<Text>();
-                textComponent.text = GameState.ActivePatient.Name;
+                textComponent.text = GameManager.ActivePatient.Name;
             }
         }
     }

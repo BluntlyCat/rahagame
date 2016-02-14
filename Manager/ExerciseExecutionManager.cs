@@ -1,21 +1,20 @@
-﻿namespace HSA.RehaGame.Exercises.FulFillables
+﻿namespace HSA.RehaGame.Manager
 {
     using System.Collections.Generic;
-    using UI.VisualExercise;
-    using Logging;
-    using User;
-    using Windows.Kinect;
-    using System;
     using DB;
-    using InGame;
+    using Exercises.FulFillables;
+    using Logging;
+    using UI = UI.VisualExercise;
+    using Windows.Kinect;
+    using Models = DB.Models;
 
     public class ExerciseExecutionManager : Drawable
     {
         private static Logger<ExerciseExecutionManager> logger = new Logger<ExerciseExecutionManager>();
         private FulFillable currentFulFillable;
-        private IDictionary<string, PatientJoint> stressedJoints;
+        private IDictionary<string, Models.Joint> stressedJoints;
 
-        public ExerciseExecutionManager(BaseStep firstFulFillable, IDictionary<string, PatientJoint> stressedJoints, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(dbManager, settings, drawing, previous)
+        public ExerciseExecutionManager(BaseStep firstFulFillable, IDictionary<string, Models.Joint> stressedJoints, Database dbManager, Models.Settings settings, UI.Drawing drawing, FulFillable previous) : base(dbManager, settings, drawing, previous)
         {
             logger.AddLogAppender<ConsoleAppender>();
 
@@ -61,12 +60,12 @@
             
         }
 
-        public override void Debug(Body body, PatientJoint jointJoint)
+        public override void Debug(Body body, Models.Joint joint)
         {
             
         }
 
-        public override void Debug(Body body, IDictionary<string, PatientJoint> stressedJoints)
+        public override void Debug(Body body, IDictionary<string, Models.Joint> stressedJoints)
         {
             
         }

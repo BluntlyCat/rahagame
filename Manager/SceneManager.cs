@@ -1,8 +1,7 @@
-﻿namespace HSA.RehaGame.Scene
+﻿namespace HSA.RehaGame.Manager
 {
     using System.Collections.Generic;
     using System.Linq;
-    using InGame;
     using Logging;
     using UnityEngine;
     using USM = UnityEngine.SceneManagement;
@@ -41,8 +40,8 @@
 
         public void LoadExercise()
         {
-            if (GameState.ActiveExercise != null)
-                this.LoadNewScene(GameState.ActiveExercise.UnityObjectName);
+            if (GameManager.ActiveExercise != null)
+                this.LoadNewScene(GameManager.ActiveExercise.UnityObjectName);
         }
 
         public void ReloadSettings()

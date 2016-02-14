@@ -1,7 +1,7 @@
 ﻿namespace HSA.RehaGame.Scene
 {
-    using DB;
-    using InGame;
+    using DB.Models;
+    using Manager;
     using UnityEngine;
 
     public class LoadSceneDependOnUserCount : MonoBehaviour
@@ -15,7 +15,7 @@
         void Start()
         {
             sceneManager = gameManager.GetComponent<SceneManager>();
-            userCount = gameManager.GetComponent<Database>().Query("editor_patient", "SELECT name FROM editor_patient;").RowCount;
+            userCount = Model.All<Patient>().Count;
         }
 
         // Update is called once per frame

@@ -1,11 +1,9 @@
 ﻿namespace HSA.RehaGame.UI
 {
+    using DB.Models;
     using UnityEngine;
-    using UnityEngine.UI;
-    using InGame;
-    using Scene;
-    using DB;
     using UnityEngine.EventSystems;
+    using UnityEngine.UI;
 
     public class SetPatients : MonoBehaviour
     {
@@ -15,17 +13,17 @@
         // Use this for initialization
         void Start()
         {
-            var patients = dbManager.GetComponent<Database>().Query("editor_patient", "SELECT name FROM editor_patient ORDER BY name");
+            var patients = Model.All<Patient>();
 
-            if (patients.Rows.Count > 0)
+            if (patients.Count > 0)
             {
                 bool isFirst = true;
 
-                foreach (var patient in patients.Rows)
+                foreach (var patient in patients.Values)
                 {
                     var button = Instantiate(patientButton) as Transform;
                     var text = button.GetComponentInChildren<Text>();
-                    var name = patient.GetValue("name");
+                    var name = patient.Name;
 
                     button.SetParent(this.transform, false);
                     button.name = name;

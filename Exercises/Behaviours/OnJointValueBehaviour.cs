@@ -1,10 +1,9 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using FulFillables;
     using DB;
-    using InGame;
+    using DB.Models;
+    using FulFillables;
     using UI.VisualExercise;
-    using User;
     using Windows.Kinect;
 
     public class OnJointValueBehaviour : DistanceValueBehaviour
@@ -21,7 +20,7 @@
 
         public override void Draw(Body body)
         {
-            drawing.DrawLine(body.Joints[activeJoint.JointType], body.Joints[passiveJoint.JointType], .25f);
+            drawing.DrawLine(body.Joints[activeJoint.Type], body.Joints[passiveJoint.Type], .25f);
         }
     }
 }

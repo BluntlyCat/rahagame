@@ -1,15 +1,13 @@
 ﻿namespace HSA.RehaGame.UI.VisualExercise
 {
     using System.Collections.Generic;
-    using DB;
-    using InGame;
     using Logging;
+    using Manager;
     using Math;
     using UnityEngine;
     using UnityEngine.UI;
-    using User;
-    using User.Kinect;
     using Kinect = Windows.Kinect;
+    using Models = DB.Models;
 
     public class Drawing : MonoBehaviour
     {
@@ -32,22 +30,21 @@
 
         void Start()
         {
-            var joints = dbManager.GetComponent<Database>().Query("editor_joint", "SELECT name FROM editor_joint");
+            var joints = Models.Model.All<Models.Joint>();
 
             logger.AddLogAppender<ConsoleAppender>();
 
-            patient = GameObject.Find(GameState.ActivePatient.Name);
+            patient = GameObject.Find(GameManager.ActivePatient.Name);
 
-            foreach (var joint in joints.Rows)
+            foreach (var joint in joints)
             {
                 Text debugText;
-                string name = joint.GetValue("name");
 
                 debugTextPrefab = Instantiate(debugTextPrefab);
                 debugText = debugTextPrefab.GetComponent<Text>();
-                debugText.name = string.Format("{0}_debugText", name);
+                debugText.name = string.Format("{0}_debugText", joint);
                 debugText.transform.SetParent(patient.transform, true);
-                debugTexts.Add(name, debugText);
+                debugTexts.Add(joint.ToString(), debugText);
             }
 
             circlePrefab = Instantiate(circlePrefab);
@@ -71,9 +68,9 @@
                 informationText.text = information;
         }
 
-        public void DrawCircle(Kinect.Body body, PatientJoint patientJoint, double initialAngle, double currentAngle)
+        public void DrawCircle(Kinect.Body body, Models.PatientJoint patientJoint, double initialAngle, double currentAngle)
         {
-            var joint = body.Joints[patientJoint.JointType];
+            var joint = body.Joints[patientJoint.Type];
 
             showCircle.Active = true;
             showCircle.Redraw(initialAngle, currentAngle, joint, initialAngle >= currentAngle);
@@ -91,14 +88,14 @@
                 drawable.Clear();
         }
 
-        public void DrawDebug(Kinect.Body body, IDictionary<string, PatientJoint> stressedJoints)
+        public void DrawDebug(Kinect.Body body, IDictionary<string, Models.Joint> stressedJoints)
         {
             foreach (var patientJoint in stressedJoints.Values)
             {
-                var name = patientJoint.JointType.ToString();
+                var name = patientJoint.Name;
                 var debugText = debugTexts[name];
-                var joint = body.Joints[patientJoint.JointType];
-                var angle = Calculations.GetAngle(KinectJoint.GetJoints(body, patientJoint));
+                var joint = body.Joints[patientJoint.Type];
+                var angle = Calculations.GetAngle(null); // TODO Winkelberechnung
                 var position = Calculations.GetVector3FromJoint(joint);
 
                 position.Set(position.x, position.y, position.z - 1);
@@ -107,11 +104,11 @@
                 debugText.text = string.Format("Angle: {0}°\nX: {1}\nY: {2}\nZ: {3}", angle.ToString("0"), joint.Position.X.ToString("0.000"), joint.Position.Y.ToString("0.000"), joint.Position.Z.ToString("0.000"));
             }
         }
-        public void DrawDebug(Kinect.Body body, PatientJoint patientJoint)
+        public void DrawDebug(Kinect.Body body, Models.Joint patientJoint)
         {
-            var debugText = debugTexts[patientJoint.JointType.ToString()];
-            var joint = body.Joints[patientJoint.JointType];
-            var angle = Calculations.GetAngle(KinectJoint.GetJoints(body, patientJoint));
+            var debugText = debugTexts[patientJoint.Name];
+            var joint = body.Joints[patientJoint.Type];
+            var angle = Calculations.GetAngle(null); // TODO Winkelberechnung
             var position = Calculations.GetVector3FromJoint(joint);
 
             position.Set(position.x, position.y, position.z - 1);

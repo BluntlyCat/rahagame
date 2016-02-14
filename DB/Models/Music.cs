@@ -1,8 +1,10 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
+    using UnityEngine;
+
     public class Music : UnityModel
     {
-        private string title;
+        private AudioClip title;
 
         public Music(string unityObjectName) : base(unityObjectName)
         {
@@ -11,7 +13,7 @@
 
         [TableColumn]
         [ResourceColumn]
-        public string Title
+        public AudioClip Title
         {
             get
             {

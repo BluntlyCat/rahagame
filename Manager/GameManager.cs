@@ -1,16 +1,14 @@
-﻿namespace HSA.RehaGame.InGame
+﻿namespace HSA.RehaGame.Manager
 {
-    using System.Collections.Generic;
-    using Exercises;
+    using DB.Models;
     using UnityEngine;
-    using User;
 
-    public class GameState : MonoBehaviour
+    [RequireComponent(typeof(SettingsManager))]
+    [RequireComponent(typeof(SceneManager))]
+    public class GameManager : MonoBehaviour
     {
         private static Patient activePatient;
         private static Exercise activeExercise;
-
-        private static IDictionary<string, Exercise> exercises = new Dictionary<string, Exercise>();
 
         private static bool exerciseIsActive;
         private static bool hasKinectUser;
@@ -79,19 +77,6 @@
             {
                 executionTime = value;
             }
-        }
-
-        public static void AddExercise(Exercise exercise)
-        {
-            if (exercises.ContainsKey(exercise.UnityObjectName))
-                exercises.Remove(exercise.UnityObjectName);
-
-            exercises.Add(exercise.UnityObjectName, exercise);
-        }
-
-        public static void SetActiveExercise(string unityObjectName)
-        {
-            activeExercise = exercises[unityObjectName];
         }
     }
 }
