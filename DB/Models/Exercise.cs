@@ -41,7 +41,7 @@
         }
 
         [TranslationColumn]
-        [ResourceColumn]
+        [Resource]
         public AudioClip AuditiveName
         {
             get
@@ -55,7 +55,8 @@
             }
         }
 
-        [ResourceColumn]
+        [TableColumn]
+        [Resource]
         public Texture2D Thumbnail
         {
             get
@@ -84,7 +85,7 @@
         }
 
         [TranslationColumn]
-        [ResourceColumn]
+        [Resource]
         public MovieTexture Video
         {
             get
@@ -113,7 +114,7 @@
         }
 
         [TranslationColumn]
-        [ResourceColumn]
+        [Resource]
         public AudioClip AuditiveDescription
         {
             get
@@ -142,7 +143,7 @@
         }
 
         [TranslationColumn]
-        [ResourceColumn]
+        [Resource]
         public AudioClip AuditiveInformation
         {
             get

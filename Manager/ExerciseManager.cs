@@ -20,7 +20,7 @@
         private MovieTexture movieTexture;
         private AudioSource audioSource;
 
-        private Database dbManager;
+        private Database database; // ToDo Datanbank entfernen
         private Settings settings;
         private SceneManager sceneManager;
 
@@ -30,7 +30,7 @@
 
         private Kinect.Body body;
         private Exercise exercise;
-        private Patient patient;
+        private PatientManager patientManager;
         private REMLManager relManager;
         private ExerciseExecutionManager executionManager;
 
@@ -46,13 +46,13 @@
         {
             drawing = drawingPrefab.GetComponent<Drawing>();
             swapCanvas = drawingPrefab.GetComponent<SwapCanvas>();
-            dbManager = gameManager.GetComponent<Database>();
+            database = gameManager.GetComponent<Database>();
             settings = gameManager.GetComponent<Settings>();
+            patientManager = gameManager.GetComponent<PatientManager>();
             sceneManager = gameManager.GetComponent<SceneManager>();
 
             waitPanel.GetComponentInChildren<Text>().text = Model.GetModel<ValueTranslation>("noUser").Translation;
 
-            patient = GameManager.ActivePatient;
             exercise = GameManager.ActiveExercise;
 
             movieTexture = exercise.Video;
@@ -70,7 +70,7 @@
 
         void Update()
         {
-            if (body != null && GameObject.Find(GameManager.ActivePatient.Name) != null)
+            if (body != null && GameObject.Find(patientManager.ActivePatient.Name) != null)
             {
                 GameManager.HasKinectUser = hasUser = true;
                 waitPanel.SetActive(false);
@@ -113,8 +113,8 @@
 
                 if (relManager == null)
                 {
-                    this.relManager = new REMLManager(patient, dbManager, settings, drawing, exercise.Reml);
-                    this.executionManager = new ExerciseExecutionManager(this.relManager.ParseRGML(), exercise.StressedJoints, dbManager, settings, drawing, null);
+                    this.relManager = new REMLManager(patientManager.ActivePatient, database, settings, drawing, exercise.Reml);
+                    this.executionManager = new ExerciseExecutionManager(this.relManager.ParseRGML(), exercise.StressedJoints, database, settings, drawing, null);
                 }
 
                 GameManager.ExerciseIsActive = exerciseRuns = true;

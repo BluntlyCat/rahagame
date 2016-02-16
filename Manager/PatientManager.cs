@@ -1,38 +1,56 @@
 ﻿namespace HSA.RehaGame.Manager
 {
+    using System;
     using System.Collections.Generic;
-    using DB.Models;
+    using Models = DB.Models;
+    using Mono.Data.Sqlite;
     using UnityEngine;
-    using UnityEngine.EventSystems;
-    using UnityEngine.UI;
 
-    [RequireComponent(typeof(AudioSource))]
-    public class PatientManager : BaseModelManager<Patient>
+    public class PatientManager : BaseModelManager<Models.Patient>
     {
-        public GameObject gameManager;
-
         private SettingsManager settingsManager;
         private SceneManager sceneManager;
-
-        private Patient patient;
-        private bool queryDone;
-        private bool isReading = false;
-
-        private InputField nameInput;
-        private InputField ageInput;
-        private Dropdown sexInput;
-        private Button saveButton;
-
-        private AudioSource audioSource;
+        private Models.Patient activePatient;
 
         // Use this for initialization
         void Start()
         {
-            settingsManager = gameManager.GetComponent<SettingsManager>();
-            sceneManager = gameManager.GetComponent<SceneManager>();
+            settingsManager = this.GetComponent<SettingsManager>();
+            sceneManager = this.GetComponent<SceneManager>();
         }
 
-        private void ActivateJoints()
+        public void SetActivePatient(string name)
+        {
+            if (models.ContainsKey(name))
+                activePatient = models[name];
+
+            throw new Exception(string.Format("There is no patient with name {0}", name));
+        }
+
+        public void AddPatient(string name, string age, int sex)
+        {
+            Models.Patient patient = new Models.Patient(name, int.Parse(age), (Models.Sex)sex);
+
+            var errorCode = patient.Save();
+
+            if (errorCode == SQLiteErrorCode.Ok)
+            {
+                // ToDo Ebenso ExercisesToDo erstellen, aus QRCode
+                // Patient aus QRCode erstellen
+                if (CreatePatientJoints(patient) == SQLiteErrorCode.Ok)
+                {
+                    models.Add(patient.Name, patient);
+                    activePatient = patient;
+                }
+            }
+        }
+
+        public void DeletePatient()
+        {
+
+        }
+
+        public void ActivateJoints()
         {
             var jointPanel = GameObject.Find("jointList");
 
@@ -42,36 +60,38 @@
             }
         }
 
-        public void Save()
+        public Models.Patient ActivePatient
         {
-            if (patient != null)
+            get
             {
-                patient.Age = int.Parse(ageInput.text);
-                patient.Sex = (Sex)sexInput.value;
-
-                patient.Save();
-            }
-            else
-            {
-                patient = new Patient(nameInput.text, int.Parse(ageInput.text), (Sex)sexInput.value);
-                patient.Save();
+                return activePatient;
             }
 
-            if (queryDone)
+            set
             {
-                GameManager.ActivePatient = patient;
-
-                ActivateJoints();
+                activePatient = value;
             }
         }
 
-        public void Delete()
+        private SQLiteErrorCode CreatePatientJoints(Models.Patient patient)
         {
-            if (patient != null)
+            SQLiteErrorCode errorCode = SQLiteErrorCode.Ok;
+            Dictionary<string, Models.PatientJoint> patientJoints = new Dictionary<string, Models.PatientJoint>();
+
+            var joints = Models.Model.All<Models.Joint>();
+
+            foreach(var joint in joints.Values)
             {
-                // ToDo patient.Delete();
-                queryDone = false;
+                var patientJoint = new Models.PatientJoint(joint.Name);
+
+                patientJoint.SetData();
+                errorCode = patientJoint.Save();
+
+                if (errorCode == SQLiteErrorCode.Ok)
+                    patientJoints.Add(joint.Name, patientJoint);
             }
+
+            return errorCode;
         }
     }
 }

@@ -11,8 +11,13 @@
 
     public class Drawing : MonoBehaviour
     {
-        public GameObject dbManager;
         private static Logger<Drawing> logger = new Logger<Drawing>();
+
+        public GameObject gameManager;
+        public GameObject debugTextPrefab;
+        public GameObject infoTextPrefab;
+        public GameObject circlePrefab;
+        public GameObject linePrefab;
 
         private Text informationText;
         private ShowCircle showCircle;
@@ -21,11 +26,7 @@
         private IList<IDrawable> drawables = new List<IDrawable>();
         private IDictionary<string, Text> debugTexts = new Dictionary<string, Text>();
 
-        public GameObject debugTextPrefab;
-        public GameObject infoTextPrefab;
-        public GameObject circlePrefab;
-        public GameObject linePrefab;
-
+        private PatientManager patientManager;
         private GameObject patient;
 
         void Start()
@@ -34,7 +35,8 @@
 
             logger.AddLogAppender<ConsoleAppender>();
 
-            patient = GameObject.Find(GameManager.ActivePatient.Name);
+            patientManager = gameManager.GetComponent<PatientManager>();
+            patient = GameObject.Find(patientManager.ActivePatient.Name);
 
             foreach (var joint in joints)
             {

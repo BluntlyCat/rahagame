@@ -37,6 +37,20 @@
             }
         }
 
+        [TableColumn]
+        public long Age
+        {
+            get
+            {
+                return this.age;
+            }
+
+            set
+            {
+                this.age = value;
+            }
+        }
+
         [TableColumn("sex")]
         private long LongSex
         {
@@ -63,21 +77,7 @@
                 this.sex = (long)value;
             }
         }
-
-        [TableColumn]
-        public long Age
-        {
-            get
-            {
-                return this.age;
-            }
-
-            set
-            {
-                this.age = value;
-            }
-        }
-
+        
         [ManyToManyRelation(
             "name",
             "patient",

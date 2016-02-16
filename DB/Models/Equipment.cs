@@ -43,7 +43,7 @@
         }
 
         [TranslationColumn]
-        [ResourceColumn]
+        [Resource]
         public AudioClip AuditiveDescription
         {
             get
@@ -57,7 +57,8 @@
             }
         }
 
-        [ResourceColumn]
+        [TableColumn]
+        [Resource]
         public Texture2D Image
         {
             get

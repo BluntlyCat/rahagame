@@ -25,7 +25,8 @@
 
         public void Enqueue(AudioClip clip)
         {
-            clips.Enqueue(clip);
+            if (clips.Contains(clip) == false)
+                clips.Enqueue(clip);
         }
     }
 }

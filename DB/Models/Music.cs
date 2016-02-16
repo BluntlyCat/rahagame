@@ -12,7 +12,7 @@
         }
 
         [TableColumn]
-        [ResourceColumn]
+        [Resource]
         public AudioClip Title
         {
             get

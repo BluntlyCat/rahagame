@@ -25,7 +25,7 @@
         }
 
         [TranslationColumn]
-        [ResourceColumn]
+        [Resource]
         public AudioClip AuditiveEntry
         {
             get

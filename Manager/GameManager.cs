@@ -5,9 +5,9 @@
 
     [RequireComponent(typeof(SettingsManager))]
     [RequireComponent(typeof(SceneManager))]
+    [RequireComponent(typeof(PatientManager))]
     public class GameManager : MonoBehaviour
     {
-        private static Patient activePatient;
         private static Exercise activeExercise;
 
         private static bool exerciseIsActive;
@@ -15,18 +15,6 @@
 
         private static double executionTime;
 
-        public static Patient ActivePatient
-        {
-            get
-            {
-                return activePatient;
-            }
-
-            set
-            {
-                activePatient = value;
-            }
-        }
         public static Exercise ActiveExercise
         {
             get

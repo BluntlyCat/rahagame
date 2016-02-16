@@ -10,8 +10,7 @@
     public class NewPatientMenu : MonoBehaviour
     {
         public GameObject gameManager;
-
-        public SoundManager soundManager;
+        private SoundManager soundManager;
 
         public GameObject menuTitleObject;
         public GameObject nameInputObject;
@@ -44,7 +43,7 @@
 
         private List<string> options;
 
-        private Patient patient;
+        private PatientManager patientManager;
 
         void Start()
         {
@@ -53,6 +52,7 @@
             var female = Model.GetModel<ValueTranslation>("female");
 
             soundManager = gameManager.transform.Find("SoundManager").GetComponent<SoundManager>();
+            patientManager = gameManager.GetComponent<PatientManager>();
 
             menuTitleObject.GetComponent<Text>().text = menu.Name;
             nameLabelObject.GetComponent<Text>().text = string.Format("{0}: ", menu.Entries["name"].Entry);
@@ -80,14 +80,14 @@
             maleClip = male.AuditiveTranslation;
             femaleClip = female.AuditiveTranslation;
 
-            if (GameManager.ActivePatient != null)
-            {
-                patient = GameManager.ActivePatient;
+            soundManager.Enqueue(menu.AuditiveName);
 
-                nameText.text = patient.Name;
-                ageText.text = patient.Age.ToString();
-                sexInput.value = (int)patient.Sex;
-                sexInput.GetComponentInChildren<Text>().text = options[(int)patient.Sex];
+            if (patientManager.ActivePatient != null)
+            {
+                nameText.text = patientManager.ActivePatient.Name;
+                ageText.text = patientManager.ActivePatient.Age.ToString();
+                sexInput.value = (int)patientManager.ActivePatient.Sex;
+                sexInput.GetComponentInChildren<Text>().text = options[(int)patientManager.ActivePatient.Sex];
 
                 sexInput.RefreshShownValue();
 
@@ -95,6 +95,24 @@
             }
             else
                 sexInput.GetComponentInChildren<Text>().text = options[0];
+        }
+
+        public void Save()
+        {
+            if (patientManager.ActivePatient != null)
+            {
+                patientManager.ActivePatient.Age = int.Parse(ageText.text);
+                patientManager.ActivePatient.Sex = (Sex)sexInput.value;
+
+                patientManager.ActivePatient.Save();
+            }
+            else
+                patientManager.AddPatient(nameText.text, ageText.text, sexInput.value);
+        }
+
+        public void Delete()
+        {
+            patientManager.DeletePatient();
         }
 
         public void ReadName()

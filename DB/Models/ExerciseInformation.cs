@@ -43,7 +43,7 @@
         }
 
         [TranslationColumn]
-        [ResourceColumn]
+        [Resource]
         public AudioClip AuditiveOrder
         {
             get

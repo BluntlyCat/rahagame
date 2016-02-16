@@ -27,11 +27,15 @@
                     var attribute = attr[0];
                     var set = d.Key.GetSetMethod(true);
 
-                    if (attribute.GetType() == typeof(ResourceColumn))
+                    if (d.Key.GetCustomAttributes(typeof(Resource), true).Length == 1)
                     {
-                        var resource = Resources.Load(d.Value.ToString(), d.Key.PropertyType);
+                        string relativePath = d.Value.ToString();
+                        string resourcePath = relativePath.Replace("Assets/Resources/", "");
+                        string resourceName = resourcePath.Substring(0, resourcePath.Length - 4);
 
-                        set.Invoke(this, new object[] {  });
+                        var resource = Resources.Load(resourceName, d.Key.PropertyType);
+
+                        set.Invoke(this, new object[] { resource });
                     }
                     else
                     {
