@@ -6,10 +6,7 @@
     {
         private AudioClip title;
 
-        public Music(string unityObjectName) : base(unityObjectName)
-        {
-
-        }
+        public Music(string unityObjectName) : base(unityObjectName) {}
 
         [TableColumn]
         [Resource]

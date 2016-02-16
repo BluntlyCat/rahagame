@@ -2,9 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
-    using Models = DB.Models;
     using Mono.Data.Sqlite;
     using UnityEngine;
+    using Models = DB.Models;
 
     public class PatientManager : BaseModelManager<Models.Patient>
     {
