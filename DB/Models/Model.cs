@@ -71,7 +71,7 @@
                     columns.Add(property);
                 }
             }
-            
+
             return columns;
         }
 
@@ -128,9 +128,11 @@
             return null;
         }
 
-        private IList<object> GetValues()
+        private List<object> GetValues()
         {
-            IList<object> values = new List<object>();
+            List<object> values = new List<object>();
+
+            values.Add(PrimaryKeyValue);
 
             foreach (var column in tableColumns)
             {
@@ -143,7 +145,46 @@
                 values.Add(get.Invoke(this, null));
             }
 
+            foreach (var column in foreignKeyRelations)
+            {
+                if (column == primaryKey)
+                    continue;
+
+                var get = column.GetGetMethod(true);
+                var model = get.Invoke(this, null) as Model;
+                values.Add(model.PrimaryKeyValue);
+            }
+
             return values;
+        }
+
+        private List<PropertyInfo> GetFields()
+        {
+            List<PropertyInfo> fields = new List<PropertyInfo>();
+
+            fields.Add(primaryKey);
+
+            foreach (var column in tableColumns)
+            {
+                var attributes = column.GetCustomAttributes(typeof(TableColumn), true);
+
+                if (attributes.Length == 0)
+                    continue;
+
+                fields.Add(column);
+            }
+
+            foreach (var column in foreignKeyRelations)
+            {
+                var attributes = column.GetCustomAttributes(typeof(TableColumn), true);
+
+                if (attributes.Length == 0)
+                    continue;
+
+                fields.Add(column);
+            }
+
+            return fields;
         }
 
         private string GetFieldColumnName(PropertyInfo field)
@@ -245,13 +286,35 @@
 
             else
             {
-                errorCode = database.Save(type, GetFieldValue(primaryKey), GetValues());
+                errorCode = database.Save(type, GetFields(), GetValues());
 
                 if (errorCode == SQLiteErrorCode.Ok)
                     this.isInstance = true;
             }
 
             return errorCode;
+        }
+
+        public SQLiteErrorCode AddManyToManyRelations()
+        {
+            SQLiteErrorCode errorCode = SQLiteErrorCode.Ok;
+
+            foreach (var column in this.manyToManyRelations)
+            {
+                var attribute = column.GetCustomAttributes(typeof(ManyToManyRelation), true)[0] as ManyToManyRelation;
+
+                var genericArgs = column.PropertyType.GetGenericArguments();
+                var genericDict = column.GetGetMethod().Invoke(this, null) as IDictionary;
+
+                errorCode = database.AddManyToManyRelation(attribute, this.PrimaryKeyValue, genericDict);
+            }
+
+            return errorCode;
+        }
+
+        public SQLiteErrorCode Delete()
+        {
+            return database.Delete(this.type, this.primaryKey.Name, this.PrimaryKeyValue);
         }
 
         private object ManyToManyQuery(TableColumn attribute, PropertyInfo column)
@@ -263,7 +326,7 @@
             var keyType = genericArgs[0];
             var valType = genericArgs[1];
 
-            var values = database.Join(manyToMany, GetFieldValue(primaryKey));
+            var values = database.Join(manyToMany, PrimaryKeyValue);
             var dict = genericDict.MakeGenericType(genericArgs);
             var dictInstance = Activator.CreateInstance(dict) as IDictionary;
 

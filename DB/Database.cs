@@ -1,16 +1,20 @@
 ﻿namespace HSA.RehaGame.DB
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Data;
     using System.Reflection;
     using System.Threading;
+    using Logging;
     using Models;
     using Mono.Data.Sqlite;
     using UnityEngine;
 
     public class Database : IDatabase
     {
+        private static Logger<Database> logger = new Logger<Database>();
+
         private static IDatabase database;
         private static Mutex mutex = new Mutex();
 
@@ -20,6 +24,8 @@
 
         private Database(string tablePrefix)
         {
+            logger.AddLogAppender<ConsoleAppender>();
+
             var dbFile = "Data Source=" + Application.dataPath + "/StreamingAssets/db/rgdbe.db";
 
             this.tablePrefix = tablePrefix;
@@ -55,7 +61,7 @@
                 dbConnection.Close();
         }
 
-        private SQLiteErrorCode WriteQuery(string query)
+        private SQLiteErrorCode WriteQuery(string query, IList<FieldValuePair> fieldValuePairs = null)
         {
             try
             {
@@ -64,6 +70,18 @@
                     IDbCommand dbCommand = OpenConnection();
 
                     dbCommand.CommandText = query;
+
+                    if (fieldValuePairs != null)
+                    {
+                        foreach (var fieldValuePair in fieldValuePairs)
+                        {
+                            dbCommand.Parameters.Add(new SqliteParameter(
+                                fieldValuePair.Name,
+                                fieldValuePair.Value
+                            ));
+                        }
+                    }
+
                     dbCommand.ExecuteNonQuery();
                     dbCommand.Dispose();
 
@@ -76,11 +94,13 @@
             catch (SqliteException sqle)
             {
                 dbConnection.Close();
+                logger.Error(sqle);
                 return sqle.ErrorCode;
             }
 
             catch (Exception e)
             {
+                logger.Fatal(e);
                 throw e;
             }
         }
@@ -117,11 +137,13 @@
             catch (SqliteException sqle)
             {
                 dbConnection.Close();
+                logger.Error(sqle);
                 throw sqle;
             }
 
             catch (Exception e)
             {
+                logger.Fatal(e);
                 throw e;
             }
         }
@@ -151,19 +173,40 @@
                 return attribute.NameInTable;
         }
 
-        private string GetInsertValues(object primaryKeyValue, IList<object> values)
+        private string GetInsertValues(IList<PropertyInfo> fields)
         {
-            var valuesString = string.Format("'{0}', ", primaryKeyValue);
+            var valuesString = "VALUES(";
 
-            for (int i = 0; i < values.Count; i++)
+            for (int i = 0; i < fields.Count; i++)
             {
-                if (i < values.Count - 1)
-                    valuesString += string.Format("'{0}', ", values[i]);
+                var attribute = fields[i].GetCustomAttributes(typeof(TableColumn), true)[0] as TableColumn;
+                var name = attribute.NameInTable == null ? fields[i].Name.ToLower() : attribute.NameInTable;
+
+                if (i < fields.Count - 1)
+                    valuesString += string.Format("@{0}, ", name);
                 else
-                    valuesString += string.Format("'{0}'", values[i]);
+                    valuesString += string.Format("@{0})", name);
             }
 
             return valuesString;
+        }
+
+        private IList<FieldValuePair> GetFieldValues(IList<PropertyInfo> fields, IList<object> values)
+        {
+            List<FieldValuePair> fieldValuePairs = new List<FieldValuePair>();
+
+            if (fields.Count != values.Count)
+                throw new Exception("Amount of fields and values has to be equal");
+
+            for (int i = 0; i < fields.Count; i++)
+            {
+                var attribute = fields[i].GetCustomAttributes(typeof(TableColumn), true)[0] as TableColumn;
+                var name = attribute.NameInTable == null ? fields[i].Name.ToLower() : attribute.NameInTable;
+
+                fieldValuePairs.Add(new FieldValuePair(name, values[i]));
+            }
+
+            return fieldValuePairs;
         }
 
         private string GetJoinValues(string alias, IList<PropertyInfo> columns)
@@ -207,11 +250,42 @@
             return string.Format("{0}{1}", tablePrefix, column.RelationTable.ToLower());
         }
 
-        public SQLiteErrorCode Save(Type model, object primaryKeyValue, IList<object> values)
+        public SQLiteErrorCode Save(Type model, List<PropertyInfo> fields, List<object> values)
         {
-            var query = string.Format("INSERT INTO {0} VALUES ({1})",
+            var query = string.Format("INSERT INTO {0} {1}",
                 GetTableName(model),
-                GetInsertValues(primaryKeyValue, values)
+                GetInsertValues(fields)
+            );
+
+            return this.WriteQuery(query, GetFieldValues(fields, values));
+        }
+
+        public SQLiteErrorCode AddManyToManyRelation(ManyToManyRelation attribute, object sourceId, IDictionary models)
+        {
+            SQLiteErrorCode errorCode = SQLiteErrorCode.Ok;
+
+            foreach (object targetId in models.Keys)
+            {
+                var query = string.Format("INSERT INTO {0} ({1}, {2}) VALUES('{3}', '{4}')",
+                    attribute.JoinTable,
+                    attribute.JoinSourceId,
+                    attribute.JoinTargetId,
+                    sourceId,
+                    targetId
+                );
+
+                errorCode = this.WriteQuery(query);
+            }
+
+            return errorCode;
+        }
+
+        public SQLiteErrorCode Delete(Type model, string primaryKeyName, object primaryKeyValue)
+        {
+            var query = string.Format("DELETE FROM {0} WHERE {1} = '{2}'",
+                GetTableName(model),
+                primaryKeyName.ToLower(),
+                primaryKeyValue
             );
 
             return this.WriteQuery(query);

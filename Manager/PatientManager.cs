@@ -33,15 +33,43 @@
 
             var errorCode = patient.Save();
 
-            if (errorCode == SQLiteErrorCode.Ok)
+            switch(errorCode)
             {
-                // ToDo Ebenso ExercisesToDo erstellen, aus QRCode
-                // Patient aus QRCode erstellen
-                if (CreatePatientJoints(patient) == SQLiteErrorCode.Ok)
-                {
-                    models.Add(patient.Name, patient);
-                    activePatient = patient;
-                }
+                case SQLiteErrorCode.Ok:
+                    errorCode = CreatePatientJoints(patient);
+
+                    switch(errorCode)
+                    {
+                        case SQLiteErrorCode.Ok:
+                            // ToDo Ebenso ExercisesToDo erstellen, aus QRCode
+                            // Patient aus QRCode erstellen
+                            errorCode = patient.AddManyToManyRelations();
+
+                            switch(errorCode)
+                            {
+                                case SQLiteErrorCode.Ok:
+                                    models.Add(patient.Name, patient);
+                                    activePatient = patient;
+                                    break;
+
+                                default:
+                                    patient.Delete();
+                                    // ToDo Bei Fehler aufräumen und alles entfernen
+                                    break;
+                            }
+                            
+                            break;
+
+                        default:
+                            patient.Delete();
+                            break;
+                    }
+
+                    break;
+
+                case SQLiteErrorCode.Constraint:
+                    // Todo Fehler anzeigen, dass Benutzer existiert
+                    break;
             }
         }
 
@@ -82,14 +110,27 @@
 
             foreach(var joint in joints.Values)
             {
-                var patientJoint = new Models.PatientJoint(joint.Name);
-
-                patientJoint.SetData();
+                var patientJoint = new Models.PatientJoint(joint);
                 errorCode = patientJoint.Save();
 
-                if (errorCode == SQLiteErrorCode.Ok)
-                    patientJoints.Add(joint.Name, patientJoint);
+                switch(errorCode)
+                {
+                    case SQLiteErrorCode.Ok:
+                        patientJoints.Add(joint.Name, patientJoint);
+                        break;
+
+                    default:
+                        foreach (var addedPatientJoint in patientJoints.Values)
+                        {
+                            addedPatientJoint.Delete();
+                        }
+
+                        return SQLiteErrorCode.Error;
+                }
             }
+
+            if (errorCode == SQLiteErrorCode.Ok)
+                patient.Joints = patientJoints;
 
             return errorCode;
         }

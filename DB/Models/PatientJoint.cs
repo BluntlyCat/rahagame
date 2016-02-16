@@ -23,6 +23,12 @@
             this.name = name;
         }
 
+        public PatientJoint(Joint joint)
+        {
+            this.name = joint.Name;
+            this.joint = joint;
+        }
+
         [PrimaryKey]
         public string Name
         {

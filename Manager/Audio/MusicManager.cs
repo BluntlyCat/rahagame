@@ -26,11 +26,18 @@
 
         void Update()
         {
-            // ToDo Musik nur abspielen wenn Musik an
-            if(audioSource.isPlaying == false)
+            if (current != null)
             {
-                current = current.Next;
-                this.Play();
+                // ToDo Musik nur abspielen wenn Musik an
+                if (audioSource.isPlaying == false)
+                {
+                    if (current.Next != null)
+                        current = current.Next;
+                    else
+                        current = playlist.First;
+
+                    this.Play();
+                }
             }
         }
 

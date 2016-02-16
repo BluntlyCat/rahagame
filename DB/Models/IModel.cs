@@ -6,6 +6,10 @@
     {
         SQLiteErrorCode Save();
 
+        SQLiteErrorCode AddManyToManyRelations();
+
+        SQLiteErrorCode Delete();
+
         void SetData();
     }
 }

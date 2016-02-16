@@ -1,6 +1,7 @@
 ﻿namespace HSA.RehaGame.DB
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
     using Models;
@@ -8,7 +9,11 @@
 
     public interface IDatabase
     {
-        SQLiteErrorCode Save(Type model, object primaryKeyValue, IList<object> values);
+        SQLiteErrorCode Save(Type model, List<PropertyInfo> fields, List<object> values);
+
+        SQLiteErrorCode AddManyToManyRelation(ManyToManyRelation attribute, object sourceId, IDictionary models);
+
+        SQLiteErrorCode Delete(Type model, string primaryKeyName, object primaryKeyValue);
 
         SQLiteErrorCode UpdateTable(TableColumn attribute, Type model, PropertyInfo column, object value, string primaryKeyName, object primaryKeyValue);
 
