@@ -13,7 +13,7 @@
         private SettingsManager settingsManager;
         private AudioSource audioSource;
 
-        private LinkedList<Music> playlist;
+        private LinkedList<Music> playlist = new LinkedList<Music>();
         private LinkedListNode<Music> current;
 
         void Start()
@@ -41,10 +41,26 @@
             }
         }
 
+        public void AddMusic(Music music)
+        {
+            if (playlist.First == null)
+            {
+                playlist.AddFirst(music);
+                current = playlist.First;
+            }
+            else
+            {
+                playlist.AddLast(music);
+            }
+
+            if (audioSource.isPlaying == false)
+                Play();
+        }
+
         public void Play()
         {
-            if (this.audioSource.clip == null)
-                current = playlist.First;
+            if (this.playlist.First == null)
+                return;
 
             this.audioSource.clip = current.Value.Title;
             this.audioSource.Play();

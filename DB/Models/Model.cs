@@ -358,7 +358,10 @@
                 var model = Activator.CreateInstance(column.PropertyType, value) as IModel;
 
                 if (model != null)
+                {
+                    model.SetData();
                     value = model;
+                }
             }
             else
                 value = null;

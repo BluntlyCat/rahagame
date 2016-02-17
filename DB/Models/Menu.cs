@@ -7,6 +7,7 @@
     {
         private string name;
         private AudioClip auditiveName;
+        private Music music;
         private Dictionary<string, MenuEntry> entries;
 
         public Menu (string unityObjectName) : base (unityObjectName) { }
@@ -37,6 +38,20 @@
             set
             {
                 this.auditiveName = value;
+            }
+        }
+
+        [ForeignKey("music", "music_id", false)]
+        public Music Music
+        {
+            get
+            {
+                return this.music;
+            }
+
+            set
+            {
+                this.music = value;
             }
         }
 

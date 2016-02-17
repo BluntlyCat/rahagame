@@ -29,11 +29,18 @@
 
                     if (d.Key.GetCustomAttributes(typeof(Resource), true).Length == 1)
                     {
-                        string relativePath = d.Value.ToString();
-                        string resourcePath = relativePath.Replace("Assets/Resources/", "");
-                        string resourceName = resourcePath.Substring(0, resourcePath.Length - 4);
+                        Object resource;
 
-                        var resource = Resources.Load(resourceName, d.Key.PropertyType);
+                        if (d.Value == null)
+                            resource = null;
+                        else
+                        {
+                            string relativePath = d.Value.ToString();
+                            string resourcePath = relativePath.Replace("Assets/Resources/", "");
+                            string resourceName = resourcePath.Substring(0, resourcePath.Length - 4);
+
+                            resource = Resources.Load(resourceName, d.Key.PropertyType);
+                        }
 
                         set.Invoke(this, new object[] { resource });
                     }

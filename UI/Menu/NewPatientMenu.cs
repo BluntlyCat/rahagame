@@ -11,8 +11,7 @@
     public class NewPatientMenu : MonoBehaviour
     {
         public GameObject gameManager;
-        private SoundManager soundManager;
-
+        
         public GameObject menuTitleObject;
         public GameObject nameInputObject;
         public GameObject nameLabelObject;
@@ -45,6 +44,8 @@
         private List<string> options;
 
         private PatientManager patientManager;
+        private SoundManager soundManager;
+        private MusicManager musicManager;
 
         void Start()
         {
@@ -52,7 +53,8 @@
             var male = Model.GetModel<ValueTranslation>("male");
             var female = Model.GetModel<ValueTranslation>("female");
 
-            soundManager = gameManager.transform.Find("SoundManager").GetComponent<SoundManager>();
+            soundManager = gameManager.GetComponentInChildren<SoundManager>();
+            musicManager = gameManager.GetComponentInChildren<MusicManager>();
             patientManager = gameManager.GetComponent<PatientManager>();
 
             menuTitleObject.GetComponent<Text>().text = menu.Name;
@@ -82,6 +84,8 @@
             femaleClip = female.AuditiveTranslation;
 
             soundManager.Enqueue(menu.AuditiveName);
+            musicManager.AddMusic(menu.Music);
+
 
             if (patientManager.ActivePatient != null)
             {
