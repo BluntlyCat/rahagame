@@ -78,12 +78,17 @@
 
         public void LoadMainMenu()
         {
-            this.LoadNewScene("MainMenu");
+            this.LoadNewScene("TitleMenu");
         }
 
         public void LoadUsersSlection()
         {
             this.LoadNewScene("UserSelection");
+        }
+
+        public void LoadScene(GameObject gameObject)
+        {
+            this.LoadNewScene(gameObject.name, true);
         }
 
         public void PreviousScene()

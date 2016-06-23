@@ -19,17 +19,19 @@
         private static Mutex mutex = new Mutex();
 
         private string tablePrefix;
-        private IList<Type> knownModels;
         private IDbConnection dbConnection;
+        private IDictionary<string, Dictionary<object, IModel>> cache = new Dictionary<string, Dictionary<object, IModel>>();
 
         private Database(string tablePrefix)
         {
             logger.AddLogAppender<ConsoleAppender>();
+#if UNITY_EDITOR
+            logger.AddLogAppender<FileAppender>();
+#endif
 
             var dbFile = "Data Source=" + Application.dataPath + "/StreamingAssets/db/rgdbe.db";
 
             this.tablePrefix = tablePrefix;
-            knownModels = new List<Type>();
             dbConnection = new SqliteConnection(dbFile);
         }
 
@@ -61,7 +63,7 @@
                 dbConnection.Close();
         }
 
-        private SQLiteErrorCode WriteQuery(string query, IList<FieldValuePair> fieldValuePairs = null)
+        private TransactionResult WriteQuery(string query, IList<FieldValuePair> fieldValuePairs = null)
         {
             try
             {
@@ -83,19 +85,20 @@
                     }
 
                     dbCommand.ExecuteNonQuery();
+
                     dbCommand.Dispose();
 
                     mutex.ReleaseMutex();
                 }
 
-                return SQLiteErrorCode.Ok;
+                return new TransactionResult(SQLiteErrorCode.Ok, null);
             }
 
             catch (SqliteException sqle)
             {
                 dbConnection.Close();
-                logger.Error(sqle);
-                return sqle.ErrorCode;
+                logger.Error(sqle + " Query: " + query);
+                return new TransactionResult(sqle.ErrorCode, null);
             }
 
             catch (Exception e)
@@ -104,6 +107,53 @@
                 throw e;
             }
         }
+
+        private TransactionResult WriteQuery(string columnName, string tableName, string query, IList<FieldValuePair> fieldValuePairs = null)
+        {
+            try
+            {
+                object rowId = null;
+                object primaryKeyValue = null;
+
+                var result = this.WriteQuery(query, fieldValuePairs);
+
+                if (result.ErrorCode == SQLiteErrorCode.Ok)
+                {
+                    if (mutex.WaitOne())
+                    {
+                        IDbCommand dbCommand = OpenConnection();
+
+                        dbCommand.CommandText = @"select last_insert_rowid()";
+                        rowId = dbCommand.ExecuteScalar();
+
+                        dbCommand.CommandText = "SELECT " + columnName + " FROM " + tableName + " WHERE rowid=" + rowId;
+                        primaryKeyValue = dbCommand.ExecuteScalar();
+
+                        dbCommand.Dispose();
+
+                        mutex.ReleaseMutex();
+                    }
+
+                    return new TransactionResult(SQLiteErrorCode.Ok, primaryKeyValue);
+                }
+
+                return result;
+            }
+
+            catch (SqliteException sqle)
+            {
+                dbConnection.Close();
+                logger.Error(sqle + " Query: " + query);
+                return new TransactionResult(sqle.ErrorCode, null);
+            }
+
+            catch (Exception e)
+            {
+                logger.Fatal(e);
+                throw e;
+            }
+        }
+
         private object[] ReadQuery(string query)
         {
             try
@@ -191,6 +241,24 @@
             return valuesString;
         }
 
+        private string GetInsertColumns(IList<PropertyInfo> fields)
+        {
+            var valuesString = "(";
+
+            for (int i = 0; i < fields.Count; i++)
+            {
+                var attribute = fields[i].GetCustomAttributes(typeof(TableColumn), true)[0] as TableColumn;
+                var name = attribute.NameInTable == null ? fields[i].Name.ToLower() : attribute.NameInTable;
+
+                if (i < fields.Count - 1)
+                    valuesString += string.Format("{0}, ", name);
+                else
+                    valuesString += string.Format("{0})", name);
+            }
+
+            return valuesString;
+        }
+
         private IList<FieldValuePair> GetFieldValues(IList<PropertyInfo> fields, IList<object> values)
         {
             List<FieldValuePair> fieldValuePairs = new List<FieldValuePair>();
@@ -250,37 +318,67 @@
             return string.Format("{0}{1}", tablePrefix, column.RelationTable.ToLower());
         }
 
-        public SQLiteErrorCode Save(Type model, List<PropertyInfo> fields, List<object> values)
+        public void SetCachedModel(Type modelType, object primaryKeyValue, IModel model)
         {
-            var query = string.Format("INSERT INTO {0} {1}",
-                GetTableName(model),
+            var tableName = GetTableName(modelType);
+
+            if (this.cache.ContainsKey(tableName) == false)
+                this.cache.Add(tableName, new Dictionary<object, IModel>());
+
+            if (this.cache[tableName].ContainsKey(primaryKeyValue))
+                this.cache[tableName][primaryKeyValue] = model;
+
+            else
+                this.cache[tableName].Add(primaryKeyValue, model);
+        }
+
+        public IModel GetCachedModel(Type modelType, object primaryKeyValue)
+        {
+            var tableName = GetTableName(modelType);
+
+            if (this.cache.ContainsKey(tableName) && this.cache[tableName].ContainsKey(primaryKeyValue))
+                return this.cache[tableName][primaryKeyValue];
+
+            return null;
+        }
+
+        public TransactionResult Save(string primaryKeyName, Type model, List<PropertyInfo> fields, List<object> values)
+        {
+            var tableName = GetTableName(model);
+
+            var query = string.Format("INSERT INTO {0} {1} {2}",
+                tableName,
+                GetInsertColumns(fields),
                 GetInsertValues(fields)
             );
 
-            return this.WriteQuery(query, GetFieldValues(fields, values));
+            return this.WriteQuery(primaryKeyName.ToLower(), tableName, query, GetFieldValues(fields, values));
         }
 
-        public SQLiteErrorCode AddManyToManyRelation(ManyToManyRelation attribute, object sourceId, IDictionary models)
+        public TransactionResult AddManyToManyRelation(ManyToManyRelation attribute, object sourceId, IDictionary models)
         {
-            SQLiteErrorCode errorCode = SQLiteErrorCode.Ok;
+            TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
 
-            foreach (object targetId in models.Keys)
+            if (models != null)
             {
-                var query = string.Format("INSERT INTO {0} ({1}, {2}) VALUES('{3}', '{4}')",
-                    attribute.JoinTable,
-                    attribute.JoinSourceId,
-                    attribute.JoinTargetId,
-                    sourceId,
-                    targetId
-                );
+                foreach (object targetId in models.Keys)
+                {
+                    var query = string.Format("INSERT INTO {0} ({1}, {2}) VALUES('{3}', '{4}')",
+                        attribute.JoinTable,
+                        attribute.JoinSourceId,
+                        attribute.JoinTargetId,
+                        sourceId,
+                        targetId
+                    );
 
-                errorCode = this.WriteQuery(query);
+                    result = this.WriteQuery(query);
+                }
             }
 
-            return errorCode;
+            return result;
         }
 
-        public SQLiteErrorCode Delete(Type model, string primaryKeyName, object primaryKeyValue)
+        public TransactionResult Delete(Type model, string primaryKeyName, object primaryKeyValue)
         {
             var query = string.Format("DELETE FROM {0} WHERE {1} = '{2}'",
                 GetTableName(model),
@@ -291,7 +389,7 @@
             return this.WriteQuery(query);
         }
 
-        public SQLiteErrorCode UpdateTable(TableColumn attribute, Type model, PropertyInfo column, object value, string primaryKeyName, object primaryKeyValue)
+        public TransactionResult UpdateTable(TableColumn attribute, Type model, PropertyInfo column, object value, string primaryKeyName, object primaryKeyValue)
         {
             var query = string.Format("UPDATE {0} SET {1}='{2}' WHERE {3}='{4}'",
                 GetTableName(model),
@@ -306,21 +404,27 @@
 
         public object[] All(string primaryKeyField, string modelName)
         {
-            var query = string.Format("SELECT {0} FROM {1}", primaryKeyField, modelName);
+            var tableName = GetTableName(modelName);
+            var query = string.Format("SELECT `{0}` FROM {1}", primaryKeyField.ToLower(), tableName);
 
-            return ReadQuery(query);
+            var data = ReadQuery(query);
+
+            return data;
         }
 
-        public object[] Get(TableColumn attribute, PropertyInfo column, Type model, string primaryKeyName, object primaryKeyValue)
+        public object[] Get(TableColumn attribute, PropertyInfo column, Type model, PrimaryKey pkAttribute, PropertyInfo primaryKey, object primaryKeyValue)
         {
+            var tableName = GetTableName(model);
             var query = string.Format("SELECT `{0}` FROM {1} WHERE `{2}` = '{3}'",
                 GetColumnName(attribute, column),
-                GetTableName(model),
-                primaryKeyName,
+                tableName,
+                GetColumnName(pkAttribute, primaryKey),
                 primaryKeyValue
             );
 
-            return ReadQuery(query);
+            var data = ReadQuery(query);
+
+            return data;
         }
 
         public object[] Join(ManyToManyRelation manyToMany, object primaryKeyValue)

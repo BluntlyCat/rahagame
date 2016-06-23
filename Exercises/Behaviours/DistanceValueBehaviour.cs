@@ -1,27 +1,32 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using DB;
     using DB.Models;
     using FulFillables;
+    using Logging;
+    using Manager;
+    using Manager.Audio;
     using Math;
-    using UI.VisualExercise;
+    using UI.Feedback;
     using UnityEngine;
     using Windows.Kinect;
-
     public class DistanceValueBehaviour : BaseJointValueBehaviour
     {
+        private static Logger<BelowBehaviour> logger = new Logger<BelowBehaviour>();
+
+        private Vector3 maxDistance;
         private Vector3 distance;
 
-        public DistanceValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
+        public DistanceValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous)
         {
-
+            logger.AddLogAppender<ConsoleAppender>();
         }
 
         public override bool IsFulfilled(Body body)
         {
-            var active = body.Joints[activeJoint.Type];
-            var passive = body.Joints[passiveJoint.Type];
+            var active = body.Joints[activeJoint.KinectJoint.Type];
+            var passive = body.Joints[passiveJoint.KinectJoint.Type];
 
+            maxDistance = Calculations.GetDistance(body.Joints[JointType.Head], body.Joints[JointType.FootLeft]);
             distance = Calculations.GetDistance(active, passive);
 
             isFulfilled = distance.x <= value && distance.y <= value && distance.z <= value;
@@ -31,17 +36,23 @@
 
         public override void Write(Body body)
         {
-            drawing.ShowInformation(string.Format(information, activeJoint.Translation, passiveJoint.Translation, value));
+            feedback.ShowInformation(string.Format(information, activeJoint.KinectJoint.Translation, passiveJoint.KinectJoint.Translation, value));
         }
 
         public override void Draw(Body body)
         {
-            drawing.DrawLine(body.Joints[activeJoint.Type], body.Joints[passiveJoint.Type], 1f);
+            base.Draw(body);
+            feedback.DrawLine(body.Joints[activeJoint.KinectJoint.Type], body.Joints[passiveJoint.KinectJoint.Type], 1f);
+        }
+
+        public override void PlayValue()
+        {
+            feedback.PitchValue(base.pitchType, maxDistance, distance);
         }
 
         public override void Clear()
         {
-            drawing.ClearDrawings();
+            feedback.ClearDrawings();
         }
     }
 }

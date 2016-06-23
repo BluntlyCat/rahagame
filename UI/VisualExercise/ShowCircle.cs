@@ -1,21 +1,27 @@
 ﻿namespace HSA.RehaGame.UI.VisualExercise
 {
-    using Math;
+    using DB.Models;
     using UnityEngine;
-    using Kinect = Windows.Kinect;
+    using UnityEngine.UI;
 
     public class ShowCircle : Drawable
     {
         public GameObject referenceCircleObject;
         public GameObject currentCircleObject;
+        public GameObject angleTextObject;
+        public GameObject jointNameObject;
 
         private Circle referenceCircle;
         private Circle currentCircle;
+        private Text angleText;
+        private Text jointName;
 
-        void Start()
+        void Awake()
         {
             this.referenceCircle = referenceCircleObject.GetComponent<Circle>();
             this.currentCircle = currentCircleObject.GetComponent<Circle>();
+            this.angleText = angleTextObject.GetComponent<Text>();
+            this.jointName = jointNameObject.GetComponent<Text>();
         }
 
         public override void Redraw(params object[] args)
@@ -23,14 +29,13 @@
             if (active)
             {
                 object initialAngle = args[0];
-                object currentAngle = args[1];
-                Kinect.Joint joint = (Kinect.Joint)args[2];
-                bool behind = (bool)args[3];
+                double currentAngle = (double)args[1];
+                KinectJoint activeJoint = (KinectJoint)args[2];
 
-                this.transform.position = Calculations.GetVector3FromJoint(joint);
-
-                referenceCircle.Redraw(initialAngle, joint, behind ? 1 : 0);
-                currentCircle.Redraw(currentAngle, joint, !behind ? 0 : 1);
+                angleText.text = string.Format("{0} °", currentAngle.ToString("0"));
+                jointName.text = activeJoint.Translation;
+                referenceCircle.Redraw(initialAngle);
+                currentCircle.Redraw(currentAngle);
             }
         }
 

@@ -1,38 +1,45 @@
 ﻿namespace HSA.RehaGame.Manager
 {
-    using System;
-    using DB;
+    using Audio;
     using DB.Models;
+    using Exercises.FulFillables;
     using Input.Kinect;
+    using System.Collections.Generic;
     using UI;
-    using UI.VisualExercise;
+    using UI.AuditiveExercise.PitchSounds;
+    using UI.Feedback;
     using UnityEngine;
     using UnityEngine.UI;
-    using Kinect = Windows.Kinect;
+    using Windows.Kinect;
 
-    [RequireComponent(typeof(AudioSource))]
-    public class ExerciseManager : BaseModelManager<Exercise>
+    public class ExerciseManager : MonoBehaviour
     {
         public GameObject gameManager;
         public GameObject drawingPrefab;
         public GameObject waitPanel;
+        public GameObject menuTitle;
+        public GameObject menuContainer;
+
+        private IDictionary<object, Exercise> models;
 
         private MovieTexture movieTexture;
-        private AudioSource audioSource;
 
-        private Database database; // ToDo Datanbank entfernen
-        private Settings settings;
+        private SettingsManager settingsManager;
+        private SoundManager soundManager;
         private SceneManager sceneManager;
+        private BodyManager bodyManager;
 
-        private Drawing drawing;
+        private Feedback feedback;
 
         private SwapCanvas swapCanvas;
 
-        private Kinect.Body body;
+        private Body body;
         private Exercise exercise;
         private PatientManager patientManager;
         private REMLManager relManager;
         private ExerciseExecutionManager executionManager;
+
+        private FulFillable firstFulFillable;
 
         private bool hasUser;
         private bool exerciseRuns;
@@ -44,63 +51,86 @@
         // Use this for initialization
         void Start()
         {
-            drawing = drawingPrefab.GetComponent<Drawing>();
+            feedback = drawingPrefab.GetComponent<Feedback>();
             swapCanvas = drawingPrefab.GetComponent<SwapCanvas>();
-            database = gameManager.GetComponent<Database>();
-            settings = gameManager.GetComponent<Settings>();
+            settingsManager = gameManager.GetComponent<SettingsManager>();
             patientManager = gameManager.GetComponent<PatientManager>();
             sceneManager = gameManager.GetComponent<SceneManager>();
+            soundManager = gameManager.GetComponentInChildren<SoundManager>();
+            bodyManager = this.GetComponentInChildren<BodyManager>();
+
+            bodyManager.BodyDetected += BodyManager_BodyDetected;
+            bodyManager.BodyLost += BodyManager_BodyLost;
 
             waitPanel.GetComponentInChildren<Text>().text = Model.GetModel<ValueTranslation>("noUser").Translation;
 
             exercise = GameManager.ActiveExercise;
+            patientManager.SetStressedJoints(exercise);
 
             movieTexture = exercise.Video;
             movieTexture.loop = true;
 
-            audioSource = this.GetComponent<AudioSource>();
-            audioSource.clip = exercise.AuditiveDescription;
-
-            GameObject.Find("ExerciseHeader").GetComponent<Text>().text = exercise.Name;
+            menuTitle.GetComponentInChildren<Text>().text = exercise.Name;
 
             GameObject.Find("Video").GetComponent<RawImage>().texture = movieTexture;
             GameObject.Find("Description").GetComponentInChildren<Text>().text = exercise.Description;
             GameObject.Find("Information").GetComponent<Text>().text = exercise.Information;
+
+        }
+
+        private void BodyManager_BodyLost()
+        {
+            if (this.body != null)
+            {
+                this.body = null;
+
+                if (exerciseRuns)
+                    sceneManager.LoadExercise();
+
+                waitPanel.SetActive(true);
+                GameManager.HasKinectUser = hasUser = false;
+            }
+        }
+
+        private void BodyManager_BodyDetected(Body body)
+        {
+            if (this.body == null)
+            {
+                this.body = body;
+
+                waitPanel.SetActive(false);
+                GameManager.HasKinectUser = hasUser = true;
+                feedback.VisualizePatient();
+            }
         }
 
         void Update()
         {
             if (body != null && GameObject.Find(patientManager.ActivePatient.Name) != null)
             {
-                GameManager.HasKinectUser = hasUser = true;
-                waitPanel.SetActive(false);
-
                 if (exerciseRuns)
                 {
-                    now = DateTime.Now.TimeOfDay.TotalSeconds;
                     isFullfilled = executionManager.IsFulfilled(body);
+
+                    executionManager.Clear();
+                    executionManager.Draw(body);
+                    executionManager.Write(body);
+                    executionManager.PlayValue();
+
+#if UNITY_EDITOR
+                    executionManager.Debug(body, exercise.StressedJoints);
+#endif
 
                     if (isFullfilled)
                     {
                         exerciseRuns = false;
-                        GameManager.ExecutionTime = now - startTime;
+                        firstFulFillable.SetEndTime();
 
+                        GameManager.ExecutionTimes = executionManager.GetExecutionTimes();
                         BodySourceManager.ShutdownKinect();
                         sceneManager.LoadStatistics();
                     }
-                    else
-                    {
-                        executionManager.Write(body);
-                    }
                 }
-            }
-            else
-            {
-                if (exerciseRuns)
-                    sceneManager.LoadExercise();
-
-                waitPanel.SetActive(true);
-                hasUser = false;
             }
         }
 
@@ -108,17 +138,18 @@
         {
             if (hasUser)
             {
-                swapCanvas.SwapVidibility();
+                swapCanvas.SwapVisibility();
                 this.StopMedia();
 
                 if (relManager == null)
                 {
-                    this.relManager = new REMLManager(patientManager.ActivePatient, database, settings, drawing, exercise.Reml);
-                    this.executionManager = new ExerciseExecutionManager(this.relManager.ParseRGML(), exercise.StressedJoints, database, settings, drawing, null);
+                    this.relManager = new REMLManager(patientManager.ActivePatient, settingsManager, feedback, exercise.Reml);
+                    this.firstFulFillable = this.relManager.ParseRGML();
+                    this.executionManager = new ExerciseExecutionManager(this.firstFulFillable as BaseStep, settingsManager, feedback, PitchType.pitchDefault, relManager.Name, null);
                 }
 
                 GameManager.ExerciseIsActive = exerciseRuns = true;
-                startTime = DateTime.Now.TimeOfDay.TotalSeconds;
+                firstFulFillable.SetStartTime();
             }
         }
 
@@ -138,23 +169,22 @@
         public void StopMedia()
         {
             movieTexture.Stop();
-            audioSource.Stop();
+            soundManager.Stop();
         }
 
         public void ReadDescription()
         {
             bool justStopped = false;
 
-            if (audioSource.isPlaying)
+            if (soundManager.isPlaying)
             {
-                audioSource.Stop();
+                soundManager.Stop();
                 justStopped = true;
             }
 
-            if (settings.GetValue<bool>("reading") && (!justStopped || audioSource.clip != exercise.AuditiveDescription))
+            if (settingsManager.GetValue<bool>("ingame", "reading") && (!justStopped || exercise.AuditiveDescription))
             {
-                audioSource.clip = exercise.AuditiveDescription;
-                audioSource.Play();
+                soundManager.Enqueue(exercise.AuditiveDescription);
             }
         }
 
@@ -162,29 +192,15 @@
         {
             bool justStopped = false;
 
-            if (audioSource.isPlaying)
+            if (soundManager.isPlaying)
             {
-                audioSource.Stop();
+                soundManager.Stop();
                 justStopped = true;
             }
 
-            if (settings.GetValue<bool>("reading") && (!justStopped || exercise.AuditiveInformation))
+            if (settingsManager.GetValue<bool>("ingame", "reading") && (!justStopped || exercise.AuditiveInformation))
             {
-                audioSource.clip = exercise.AuditiveInformation;
-                audioSource.Play();
-            }
-        }
-
-        public Kinect.Body Body
-        {
-            get
-            {
-                return body;
-            }
-
-            set
-            {
-                body = value;
+                soundManager.Enqueue(exercise.AuditiveInformation);
             }
         }
     }

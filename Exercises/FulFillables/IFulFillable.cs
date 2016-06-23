@@ -8,6 +8,8 @@
 
         T GetAttribute<T>(string name) where T : class;
 
+        T Convert<T>() where T : FulFillable;
+
         void AddAttribute<T>(string key, T attribute) where T : class;
     }
 }

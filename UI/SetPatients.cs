@@ -7,7 +7,6 @@
 
     public class SetPatients : MonoBehaviour
     {
-        public GameObject dbManager;
         public Transform patientButton;
 
         // Use this for initialization

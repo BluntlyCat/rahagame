@@ -12,13 +12,25 @@
         // Use this for initialization
         void Start()
         {
+            string timeTable = "";
             var information = Model.GetModel<ExerciseInformation>("end").Order;
-            var time = GameManager.ExecutionTime.ToString("00");
 
-            if (time[0] == '0')
-                time = time.Substring(1);
+            var times = GameManager.ExecutionTimes;
 
-            this.GetComponent<Text>().text = string.Format(information, time);
+            if (times != null)
+            {
+                foreach (var time in times)
+                {
+                    var executionTime = time.Value.TotalSeconds.ToString("00");
+
+                    if (executionTime[0] == '0')
+                        executionTime = executionTime.Substring(1);
+
+                    timeTable += string.Format("{0}: {1} seconds\n", time.Key, executionTime);
+                }
+
+                this.GetComponent<Text>().text = string.Format(information, GameManager.ActiveExercise.Name, timeTable);
+            }
         }
     }
 }

@@ -7,14 +7,10 @@
 
     class Calculations
     {
-        public static double GetAngle(Dictionary<string, Kinect.Joint> joints)
+        public static double GetAngle(Kinect.Joint baseJoint, Kinect.Joint parentJoint, Kinect.Joint childJoint)
         {
-            var b = GetVector3FromJoint(joints["base"]);
-            var p = GetVector3FromJoint(joints["parent"]);
-            var c = GetVector3FromJoint(joints["child"]);
-
-            var pDelta = Substract(b, p);
-            var cDelta = Substract(b, c);
+            var pDelta = Substract(baseJoint, parentJoint);
+            var cDelta = Substract(baseJoint, childJoint);
 
             var scalar = CalculateVectorScalar(pDelta, cDelta);
             var length_u = CalculateVectorLength(pDelta);

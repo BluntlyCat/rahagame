@@ -1,18 +1,26 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
+    using System;
     using Windows.Kinect;
 
     public abstract class FulFillable : IFulFillable
     {
         protected Attributes attributes = new Attributes();
+        protected string name;
 
         protected bool isFulfilled = false;
 
         protected FulFillable previous;
         protected FulFillable next;
 
-        public FulFillable(FulFillable previous)
+        protected TimeSpan startTime;
+        protected TimeSpan endTime;
+
+        protected Types type = Types.fullfillable;
+
+        public FulFillable(string name, FulFillable previous)
         {
+            this.name = name;
             this.previous = previous;
         }
 
@@ -21,7 +29,7 @@
             this.next = next;
         }
 
-        public FulFillable First
+        public virtual FulFillable First
         {
             get
             {
@@ -47,7 +55,7 @@
             }
         }
 
-        public FulFillable Previous
+        public virtual FulFillable Previous
         {
             get
             {
@@ -55,7 +63,7 @@
             }
         }
 
-        public FulFillable Next
+        public virtual FulFillable Next
         {
             get
             {
@@ -71,9 +79,30 @@
             }
         }
 
+        public string Name
+        {
+            get
+            {
+                return this.name;
+            }
+        }
+
+        public Types Type
+        {
+            get
+            {
+                return this.type;
+            }
+        }
+
         public T GetAttribute<T>(string key) where T : class
         {
             return attributes.GetAttribute<T>(key);
+        }
+
+        public T Convert<T>() where T : FulFillable
+        {
+            return this as T;
         }
 
         public void AddAttribute<T>(string key, T attribute) where T : class
@@ -83,7 +112,33 @@
 
         public override string ToString()
         {
-            return string.Format("{0}: {1}", this.GetType().Name, isFulfilled);
+            return string.Format("{0}: {1} ({2})", this.GetType().Name, this.Name, isFulfilled);
+        }
+
+        public TimeSpan StartTime
+        {
+            get
+            {
+                return this.startTime;
+            }
+        }
+
+        public TimeSpan EndTime
+        {
+            get
+            {
+                return this.endTime;
+            }
+        }
+
+        public void SetStartTime()
+        {
+            this.startTime = DateTime.Now.TimeOfDay;
+        }
+
+        public void SetEndTime()
+        {
+            this.endTime = DateTime.Now.TimeOfDay;
         }
 
         public abstract bool IsFulfilled(Body body);

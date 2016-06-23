@@ -11,16 +11,22 @@
         private Logger<MusicManager> logger = new Logger<MusicManager>();
 
         private SettingsManager settingsManager;
+        private SceneManager sceneManager;
         private AudioSource audioSource;
 
         private LinkedList<Music> playlist = new LinkedList<Music>();
         private LinkedListNode<Music> current;
+
+        private SettingsKeyValue musicOn;
 
         void Start()
         {
             logger.AddLogAppender<ConsoleAppender>();
 
             this.settingsManager = this.GetComponentInParent<SettingsManager>();
+            this.sceneManager = this.GetComponentInParent<SceneManager>();
+
+            this.musicOn = settingsManager.GetKeyValue("ingame", "music");
             this.audioSource = this.GetComponent<AudioSource>();
         }
 
@@ -29,7 +35,7 @@
             if (current != null)
             {
                 // ToDo Musik nur abspielen wenn Musik an
-                if (audioSource.isPlaying == false)
+                if (musicOn.GetValue<bool>() && audioSource.isPlaying == false)
                 {
                     if (current.Next != null)
                         current = current.Next;
@@ -41,8 +47,17 @@
             }
         }
 
+        public void MusicOnOff()
+        {
+            this.musicOn.SetValue<bool>(!musicOn.GetValue<bool>());
+            this.sceneManager.ReloadSettings();
+        }
+
         public void AddMusic(Music music)
         {
+            if (music == null)
+                return;
+
             if (playlist.First == null)
             {
                 playlist.AddFirst(music);

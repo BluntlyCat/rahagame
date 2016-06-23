@@ -1,19 +1,20 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
-    using System.Collections.Generic;
-    using DB;
     using FulFillables;
+    using Manager;
+    using Manager.Audio;
+    using System.Collections.Generic;
+    using UI.Feedback;
     using Windows.Kinect;
     using Models = DB.Models;
-    using UI = UI.VisualExercise;
-
-    public abstract class BaseAction : Drawable
+    public abstract class BaseAction : Informable
     {
         protected double value;
         protected double initialValue;
 
-        public BaseAction(string unityObjectName, double value, FulFillable previous, Database dbManager, Models.Settings settings, UI.Drawing drawing) : base (dbManager, settings, drawing, previous)
+        public BaseAction(string unityObjectName, double value, FulFillable previous, SettingsManager settingsManager, Feedback feedback, PitchType pitchType) : base (settingsManager, feedback, pitchType, unityObjectName, previous)
         {
+            this.type = Types.action;
             this.initialValue = this.value = value;
             this.information = Models.Model.GetModel<Models.ExerciseInformation>(unityObjectName).Order;
         }
@@ -23,22 +24,32 @@
             
         }
 
+        public override void PlayFullfilledSound()
+        {
+            feedback.PitchFullfilledSound();
+        }
+
         public override void Clear()
         {
-            drawing.ClearDrawings();
+            feedback.ClearDrawings();
         }
 
         public override void Write(Body body)
         {
-            drawing.ShowInformation(string.Format(information, value.ToString("0")));
+            feedback.ShowInformation(string.Format(information, value.ToString("0")));
         }
 
-        public override void Debug(Body body, IDictionary<string, Models.Joint> stressedJoints)
+        public override void PlayValue()
+        {
+            feedback.PitchValue(base.pitchType, value);
+        }
+
+        public override void Debug(Body body, IDictionary<string, Models.KinectJoint> stressedJoints)
         {
             return;
         }
 
-        public override void Debug(Body body, Models.Joint joint)
+        public override void Debug(Body body, Models.KinectJoint joint)
         {
             return;
         }

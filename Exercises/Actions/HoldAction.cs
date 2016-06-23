@@ -1,17 +1,16 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
-    using System;
-    using DB;
-    using DB.Models;
     using FulFillables;
-    using UI.VisualExercise;
+    using Manager;
+    using Manager.Audio;
+    using System;
+    using UI.Feedback;
     using Windows.Kinect;
-
     public class HoldAction : BaseAction
     {
         protected double start = -1;
 
-        public HoldAction(string unityObjectName, double value, FulFillable previous, Database dbManager, Settings settings, Drawing drawing) : base(unityObjectName, value, previous, dbManager, settings, drawing)
+        public HoldAction(string unityObjectName, double value, FulFillable previous, SettingsManager settingsManager, Feedback feedback, PitchType pitchType) : base(unityObjectName, value, previous, settingsManager, feedback, pitchType)
         {
 
         }
@@ -32,6 +31,11 @@
             }
 
             return isFulfilled;
+        }
+
+        public override void PlayValue()
+        {
+            feedback.PitchValue(base.pitchType, value);
         }
 
         public override void Reset()

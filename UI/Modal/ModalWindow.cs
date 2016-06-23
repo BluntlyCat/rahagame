@@ -11,18 +11,10 @@
         private ModalPanel modalPanel;
         private DisplayManager displayManager;
 
-        private UnityAction myYesAction;
-        private UnityAction myNoAction;
-        private UnityAction myCancelAction;
-
         void Awake()
         {
             modalPanel = ModalPanel.Instance();
             displayManager = DisplayManager.Instance();
-
-            myYesAction = new UnityAction(TestYesFunction);
-            myNoAction = new UnityAction(TestNoFunction);
-            myCancelAction = new UnityAction(TestCancelFunction);
         }
 
         //  Send to the Modal Panel to set up the Buttons and Functions to call

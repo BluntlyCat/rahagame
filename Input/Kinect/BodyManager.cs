@@ -6,8 +6,14 @@
     using UnityEngine;
     using Kinect = Windows.Kinect;
 
+    public delegate void BodyDetectedEventHandler(Kinect.Body body);
+    public delegate void BodyLostEventHandler();
+
     public class BodyManager : MonoBehaviour
     {
+        public event BodyDetectedEventHandler BodyDetected;
+        public event BodyLostEventHandler BodyLost;
+
         public GameObject bodySourceManager;
         public GameObject bodyViewManager;
         public GameObject exerciseManagerObject;
@@ -16,7 +22,7 @@
 
         private BodySourceManager bodyManager;
         private BodyManagerView viewManager;
-        private ExerciseManager exerciseManager;
+        //private ExerciseManager exerciseManager;
 
         private List<ulong> trackedIds = new List<ulong>();
         private Dictionary<ulong, GameObject> kinectBodies = new Dictionary<ulong, GameObject>();
@@ -26,7 +32,7 @@
             logger.AddLogAppender<ConsoleAppender>();
             bodyManager = bodySourceManager.GetComponent<BodySourceManager>();
             viewManager = bodyViewManager.GetComponent<BodyManagerView>();
-            exerciseManager = exerciseManagerObject.GetComponent<ExerciseManager>();
+            //exerciseManager = exerciseManagerObject.GetComponent<ExerciseManager>();
         }
 
         private Kinect.Body[] GetBodies()
@@ -69,7 +75,12 @@
             Kinect.Body[] bodies = GetBodies();
 
             if (bodies == null)
+            {
+                if (this.BodyLost != null)
+                    this.BodyLost();
+
                 return;
+            }
 
             DeleteUntrackedBodies();
 
@@ -84,7 +95,9 @@
                         kinectBodies[body.TrackingId] = viewManager.CreateBodyObject(body.TrackingId);
 
                     viewManager.RefreshBodyObject(body, kinectBodies[body.TrackingId]);
-                    exerciseManager.Body = body;
+
+                    if (this.BodyDetected != null)
+                        this.BodyDetected(body);
 
                     return;
                 }

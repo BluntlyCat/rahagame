@@ -29,7 +29,6 @@
         private Text namePlaceholder;
 
         private Text ageText;
-        private Text agePlaceholder;
 
         private Dropdown sexInput;
 
@@ -47,11 +46,16 @@
         private SoundManager soundManager;
         private MusicManager musicManager;
 
+        private ValueTranslation male;
+        private ValueTranslation female;
+
+        private bool valueChanged = false;
+
         void Start()
         {
             var menu = Model.GetModel<Menu>(this.name);
-            var male = Model.GetModel<ValueTranslation>("male");
-            var female = Model.GetModel<ValueTranslation>("female");
+            male = Model.GetModel<ValueTranslation>("male");
+            female = Model.GetModel<ValueTranslation>("female");
 
             soundManager = gameManager.GetComponentInChildren<SoundManager>();
             musicManager = gameManager.GetComponentInChildren<MusicManager>();
@@ -67,7 +71,6 @@
             namePlaceholder.text = menu.Entries["name"].Placeholder;
 
             ageText = ageInputObject.transform.Find("ageText").GetComponent<Text>();
-            agePlaceholder = ageInputObject.transform.Find("agePlaceholder").GetComponent<Text>();
 
             sexInput = sexInputObject.GetComponent<Dropdown>();
             options = new List<string>();
@@ -132,7 +135,14 @@
 
         public void ReadSex()
         {
+            if (valueChanged)
+            {
+                valueChanged = false;
+                return;
+            }
+
             soundManager.Enqueue(sexClip);
+            SetAndReadSexValue();
         }
 
         public void ReadDelete()
@@ -147,7 +157,16 @@
 
         public void SetAndReadSexValue()
         {
+            var sex = ((Sex)sexInput.value);
+
+            sexInput.transform.FindChild("Label").GetComponent<Text>().text = sex == Sex.male ? male.Translation : female.Translation;
             
+            if (sex == Sex.male)
+                soundManager.Enqueue(maleClip);
+            else
+                soundManager.Enqueue(femaleClip);
+
+            valueChanged = true;
         }
     }
 }

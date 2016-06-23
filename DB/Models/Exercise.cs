@@ -18,7 +18,7 @@
 
         private Dictionary<string, Exercise> similarExercises;
         private Dictionary<string, Equipment> requiredEquipments;
-        private Dictionary<string, Joint> stressedJoints;
+        private Dictionary<string, KinectJoint> stressedJoints;
         private Dictionary<string, Music> playlist;
 
         public Exercise(string unityObjectName) : base(unityObjectName)
@@ -220,11 +220,11 @@
             "exercise",
             "exercise_id",
             "exercise_stressedJoints",
-            "joint_id",
-            "joint",
+            "kinectjoint_id",
+            "kinectjoint",
             "name"
         )]
-        public Dictionary<string, Joint> StressedJoints
+        public Dictionary<string, KinectJoint> StressedJoints
         {
             get
             {
@@ -259,6 +259,10 @@
             }
         }
 
-        // ToDo Equipment
+        public void SetStressedJoints()
+        {
+            foreach (var joint in this.stressedJoints.Values)
+                joint.Stressed = true;
+        }
     }
 }

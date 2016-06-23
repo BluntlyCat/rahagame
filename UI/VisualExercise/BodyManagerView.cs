@@ -13,10 +13,12 @@
 
         public GameManager gameManager;
 
-        public Material boneMaterial;
+        public Material defaultBoneMaterial;
+        public Material activeBoneInExerciseMaterial;
         public Material jointMaterial;
         public Material stressedJointMaterial;
         public Material disabledJointMaterial;
+        public Material activeInExerciseMaterial;
 
         private PatientManager patientManager;
 
@@ -29,18 +31,19 @@
         public GameObject CreateBodyObject(ulong id)
         {
             GameObject body = new GameObject(patientManager.ActivePatient.Name);
+            Material boneMaterial = defaultBoneMaterial;
 
             for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
             {
                 GameObject jointObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                PatientJoint patientJoint = patientManager.ActivePatient.Joints[jt.ToString()];
+                PatientJoint patientJoint = patientManager.ActivePatient.GetJointByName(jt.ToString());
                 LineRenderer lr = jointObj.AddComponent<LineRenderer>();
                 Renderer jointRenderer = jointObj.GetComponent<Renderer>();
 
-                if (patientJoint.Active == false)
+                if(patientJoint.Active == false)
                     jointRenderer.material = disabledJointMaterial;
-                // ToDo else if (patientJoint.Stressed)
-                    //jointRenderer.material = stressedJointMaterial;
+                else if (patientJoint.KinectJoint.Stressed)
+                    jointRenderer.material = stressedJointMaterial;
                 else
                     jointRenderer.material = jointMaterial;
 
@@ -62,7 +65,7 @@
             {
                 for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
                 {
-                    var joint = patientManager.ActivePatient.Joints[jt.ToString()];
+                    var joint = patientManager.ActivePatient.GetJointByName(jt.ToString());
 
                     Kinect.Joint sourceJoint = body.Joints[jt];
                     Kinect.Joint? targetJoint = null;
@@ -70,12 +73,33 @@
                     if (joint.KinectJoint.Parent != null)
                         targetJoint = body.Joints[joint.KinectJoint.Parent.Type];
                     else
-                        targetJoint = body.Joints[joint.Type];
+                        targetJoint = body.Joints[joint.KinectJoint.Type];
 
                     Transform jointObject = bodyObject.transform.FindChild(jt.ToString());
+                    Renderer jointRenderer = jointObject.GetComponent<Renderer>();
+
                     jointObject.localPosition = Calculations.GetVector3FromJoint(sourceJoint);
 
                     LineRenderer lr = jointObject.GetComponent<LineRenderer>();
+
+                    if (joint.KinectJoint.ActiveInExercise || (joint.KinectJoint.Parent != null && joint.KinectJoint.Parent.ActiveInExercise))
+                    {
+                        lr.material = activeInExerciseMaterial;
+                    }
+                    else
+                    {
+                        lr.material = defaultBoneMaterial;
+
+                        if (joint.Active == false)
+                            jointRenderer.material = disabledJointMaterial;
+                        else if (joint.KinectJoint.Stressed)
+                            jointRenderer.material = stressedJointMaterial;
+                        else
+                            jointRenderer.material = jointMaterial;
+                    }
+
+                    if (joint.KinectJoint.ActiveInExercise)
+                        jointRenderer.material = activeInExerciseMaterial;
 
                     if (targetJoint.HasValue)
                     {

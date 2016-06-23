@@ -1,35 +1,35 @@
 ﻿namespace HSA.RehaGame.Manager
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Xml;
-    using DB;
+    using Audio;
+    using DB.Models;
     using Exercises;
     using Exercises.Actions;
     using Exercises.Behaviours;
     using Exercises.FulFillables;
     using Logging;
-    using Models = DB.Models;
-    using UI = UI.VisualExercise;
-
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Xml;
+    using UI.AuditiveExercise.PitchSounds;
+    using UI.Feedback;
     public class REMLManager
     {
         private static Logger<REMLManager> logger = new Logger<REMLManager>();
-        private Database dbManager;
-        private Models.Settings settings;
-        private UI.Drawing drawing;
-        private Models.Patient patient;
+        private SettingsManager settingsManager;
+        private Feedback feedback;
+        private Patient patient;
         private string rel;
+        private string name;
 
-        public REMLManager(Models.Patient patient, Database dbManager, Models.Settings settings, UI.Drawing drawing, string rel)
+        public REMLManager(Patient patient, SettingsManager settingsManager, Feedback feedback, string rel)
         {
             logger.AddLogAppender<ConsoleAppender>();
 
             this.patient = patient;
-            this.dbManager = dbManager;
-            this.settings = settings;
-            this.drawing = drawing;
+            this.settingsManager = settingsManager;
+            this.feedback = feedback;
             this.rel = rel;
         }
 
@@ -55,17 +55,17 @@
 
             if (actionName == "hold")
             {
-                action = new HoldAction(actionName, double.Parse(attributes["value"]), lastToDoAble, dbManager, settings, drawing);
+                action = new HoldAction(actionName, double.Parse(attributes["value"]), lastToDoAble, settingsManager, feedback, PitchType.pitchDefault);
             }
 
             else if (actionName == "repeat")
             {
-                action = new RepeatAction(actionName, double.Parse(attributes["value"]), lastToDoAble, dbManager, settings, drawing);
+                action = new RepeatAction(actionName, double.Parse(attributes["value"]), lastToDoAble, settingsManager, feedback, PitchType.pitchDefault);
             }
 
             else if (actionName == "wait")
             {
-                action = new WaitAction(actionName, double.Parse(attributes["value"]), lastToDoAble, dbManager, settings, drawing);
+                action = new WaitAction(actionName, double.Parse(attributes["value"]), lastToDoAble, settingsManager, feedback, PitchType.pitchDefault);
             }
 
             if (lastToDoAble != null)
@@ -81,40 +81,46 @@
             var attributes = GetAttributes(reader);
             var behaviourName = attributes["is"];
 
-            var active = patient.Joints[((Joint)lastToDoAble).Name];
+            var active = patient.GetJointByName(((Joint)lastToDoAble).Name);
 
             if (attributes.ContainsKey("joint"))
             {
-                var passive = patient.Joints[attributes["joint"]];
+                var passive = patient.GetJointByName(attributes["joint"]);
 
                 if (attributes.ContainsKey("value"))
                 {
                     var value = double.Parse(attributes["value"]);
 
                     if (behaviourName == "distance")
-                        behaviour = new DistanceValueBehaviour(value, behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
+                        behaviour = new DistanceValueBehaviour(value, behaviourName, active, passive, settingsManager, feedback, PitchType.pitchDistance, lastToDoAble);
 
                     else if (behaviourName == "on")
-                        behaviour = new OnJointValueBehaviour(value, behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
+                        behaviour = new OnJointValueBehaviour(value, behaviourName, active, passive, settingsManager, feedback, PitchType.pitchOnJoint, lastToDoAble);
                 }
                 else
                 {
                     if (behaviourName == "above")
-                        behaviour = new AboveBehaviour(behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
+                        behaviour = new AboveBehaviour(behaviourName, active, passive, settingsManager, feedback, PitchType.pitchHeight, lastToDoAble);
                     else if (behaviourName == "below")
-                        behaviour = new BelowBehaviour(behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
+                        behaviour = new BelowBehaviour(behaviourName, active, passive, settingsManager, feedback, PitchType.pitchHeight, lastToDoAble);
                     else if (behaviourName == "behind")
-                        behaviour = new BehindBehaviour(behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
+                        behaviour = new BehindBehaviour(behaviourName, active, passive, settingsManager, feedback, PitchType.pitchDepth, lastToDoAble);
                     else if (behaviourName == "before")
-                        behaviour = new BeforeBehaviour(behaviourName, active, passive, dbManager, settings, drawing, lastToDoAble);
+                        behaviour = new BeforeBehaviour(behaviourName, active, passive, settingsManager, feedback, PitchType.pitchDepth, lastToDoAble);
                 }
             }
             else if (attributes.ContainsKey("value"))
             {
+                PatientJoint childJoint = null;
                 var value = double.Parse(attributes["value"]);
 
+                if (attributes.ContainsKey("toChild"))
+                    childJoint = patient.GetJointByName(attributes["toChild"]);
+                else
+                    childJoint = patient.GetJointByName(active.KinectJoint.Children.First().Value.Name);
+
                 if (behaviourName == "angle")
-                    behaviour = new AngleValueBehaviour(value, behaviourName, active, null, dbManager, settings, drawing, lastToDoAble);
+                    behaviour = new AngleValueBehaviour(value, behaviourName, active, childJoint, settingsManager, feedback, PitchType.pitchAngleValue, lastToDoAble);
             }
 
             if (lastBehaviour != null)
@@ -127,7 +133,7 @@
         {
             var attributes = GetAttributes(reader);
 
-            Joint joint = new Joint(attributes["name"], dbManager, settings, drawing, lastToDoAble);
+            Joint joint = new Joint(attributes["name"], settingsManager, feedback, PitchType.pitchDefault, lastToDoAble);
 
             if (lastToDoAble != null)
                 lastToDoAble.AddNext(joint);
@@ -138,14 +144,22 @@
         private Step CreateStep(XmlReader reader, BaseStep lastStep)
         {
             var attributes = GetAttributes(reader);
-            var name = attributes.ContainsKey("unityObjectName") ? attributes["unityObjectName"] : null;
+            var name = attributes.ContainsKey("name") ? attributes["name"] : "";
 
-            Step step = new Step(name, lastStep, dbManager);
+            Step step = new Step(name, lastStep);
 
             if (lastStep != null)
                 lastStep.AddNext(step);
 
             return step;
+        }
+
+        private void ReadExerciseAttributes(XmlReader reader)
+        {
+            var attributes = GetAttributes(reader);
+
+            if (attributes.ContainsKey("name"))
+                this.name = attributes["name"];
         }
 
         public BaseStep ParseRGML()
@@ -158,8 +172,8 @@
             BaseJointBehaviour lastBehaviour = null;
             BaseJointBehaviour firstBehaviour = null;
 
-            Drawable lastDrawable = null;
-            Drawable firstDrawable = null;
+            Informable lastInformable = null;
+            Informable firstInformable = null;
 
             using (XmlReader reader = XmlReader.Create(new StringReader(rel)))
             {
@@ -176,6 +190,7 @@
                             switch (nodeType)
                             {
                                 case RelNodeTypes.exercise:
+                                    ReadExerciseAttributes(reader);
                                     break;
 
                                 case RelNodeTypes.stepGroup:
@@ -191,25 +206,25 @@
                                     break;
 
                                 case RelNodeTypes.joint:
-                                    var newJoint = CreateJoint(reader, lastDrawable);
+                                    var newJoint = CreateJoint(reader, lastInformable);
 
-                                    if (firstDrawable == null)
-                                        firstDrawable = newJoint;
+                                    if (firstInformable == null)
+                                        firstInformable = newJoint;
 
-                                    lastDrawable = newJoint;
+                                    lastInformable = newJoint;
                                     break;
 
                                 case RelNodeTypes.action:
-                                    var newAction = CreateAction(reader, lastDrawable);
+                                    var newAction = CreateAction(reader, lastInformable);
 
-                                    if (firstDrawable == null)
-                                        firstDrawable = newAction;
+                                    if (firstInformable == null)
+                                        firstInformable = newAction;
 
-                                    lastDrawable = newAction;
+                                    lastInformable = newAction;
                                     break;
 
                                 case RelNodeTypes.behaviour:
-                                    var newBehaviour = CreateJointBehaviour(reader, lastDrawable, lastBehaviour);
+                                    var newBehaviour = CreateJointBehaviour(reader, lastInformable, lastBehaviour);
 
                                     if (firstBehaviour == null)
                                         firstBehaviour = newBehaviour;
@@ -240,15 +255,15 @@
                                     break;
 
                                 case RelNodeTypes.step:
-                                    lastStep.SetFirstDrawable(firstDrawable as Drawable);
-                                    firstDrawable = lastDrawable = null;
+                                    lastStep.SetFirstInformable(firstInformable as Informable);
+                                    firstInformable = lastInformable = null;
                                     break;
 
                                 case RelNodeTypes.stepGroup:
                                     break;
 
                                 case RelNodeTypes.joint:
-                                    ((Joint)lastDrawable).SetFirstBehaviour(firstBehaviour);
+                                    lastInformable.Convert<Joint>().SetFirstBehaviour(firstBehaviour);
                                     firstBehaviour = lastBehaviour = null;
                                     break;
                             }
@@ -263,6 +278,14 @@
             }
 
             return firstStep;
+        }
+
+        public string Name
+        {
+            get
+            {
+                return this.name;
+            }
         }
     }
 }

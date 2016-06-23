@@ -19,7 +19,7 @@
             canvas2.gameObject.SetActive(false);
         }
 
-        public void SwapVidibility()
+        public void SwapVisibility()
         {
             if(canvas1.isActiveAndEnabled)
             {

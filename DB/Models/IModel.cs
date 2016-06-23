@@ -4,12 +4,14 @@
 
     public interface IModel
     {
-        SQLiteErrorCode Save();
+        TransactionResult Save();
 
-        SQLiteErrorCode AddManyToManyRelations();
+        TransactionResult AddManyToManyRelations();
 
-        SQLiteErrorCode Delete();
+        TransactionResult Delete();
 
         void SetData();
+
+        void SetRelations();
     }
 }

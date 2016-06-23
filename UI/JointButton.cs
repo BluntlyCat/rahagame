@@ -40,7 +40,7 @@
                 this.button = GetComponent<Button>();
                 this.buttonColors = this.button.colors;
 
-                this.joint = patientManager.ActivePatient.Joints[this.name];
+                this.joint = patientManager.ActivePatient.GetJointByName(this.name);
                 States state = joint.Active ? States.active : States.inactive;
                 this.buttonColors.normalColor = colors[state];
                 this.buttonColors.pressedColor = state == States.active ? colors[States.specialActive] : colors[States.specialInactive];
@@ -56,7 +56,7 @@
             {
                 bool active = !joint.Active;
 
-                joint.SetActive(active);
+                joint.Active = active;
                 SetActive(this.transform, active);
             }
         }

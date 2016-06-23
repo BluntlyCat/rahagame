@@ -2,6 +2,9 @@
 {
     using DB.Models;
     using UnityEngine;
+    using System.Linq;
+    using System.Collections.Generic;
+    using System;
 
     [RequireComponent(typeof(SettingsManager))]
     [RequireComponent(typeof(SceneManager))]
@@ -13,12 +16,15 @@
         private static bool exerciseIsActive;
         private static bool hasKinectUser;
 
-        private static double executionTime;
+        private static Dictionary<string, TimeSpan> executionTimes;
 
         public static Exercise ActiveExercise
         {
             get
             {
+                if (activeExercise == null)
+                    activeExercise = Model.GetModel<Exercise>("test");
+
                 return activeExercise;
             }
 
@@ -54,16 +60,16 @@
             }
         }
 
-        public static double ExecutionTime
+        public static Dictionary<string, TimeSpan> ExecutionTimes
         {
             get
             {
-                return executionTime;
+                return executionTimes;
             }
 
             set
             {
-                executionTime = value;
+                executionTimes = value;
             }
         }
     }

@@ -7,7 +7,6 @@
 
     public class SetExercises : MonoBehaviour
     {
-        public GameObject dbManagerPrefab;
         public Transform exerciseButton;
 
         // Use this for initialization
@@ -16,13 +15,12 @@
             var exercises = Model.All<Exercise>();
             bool isFirst = true;
 
-            foreach (var name in exercises)
+            foreach (var exercise in exercises.Values)
             {
                 var button = Instantiate(exerciseButton) as Transform;
                 var textComponent = button.GetComponentInChildren<Text>();
                 var image = button.GetComponent<RawImage>();
 
-                var exercise = Model.GetModel<Exercise>(name);
                 // ToDo GameManager.AddExercise(exercise);
 
                 button.SetParent(this.transform, false);

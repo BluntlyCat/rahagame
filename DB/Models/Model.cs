@@ -1,26 +1,27 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
+    using Manager;
+    using Mono.Data.Sqlite;
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
-    using Mono.Data.Sqlite;
 
     public abstract class Model : IModel
     {
         protected IList<PropertyInfo> tableColumns;
         protected IList<PropertyInfo> foreignKeyRelations;
         protected IList<PropertyInfo> manyToManyRelations;
+        protected Type type;
+        protected IDatabase database;
 
         private PropertyInfo primaryKey;
-        private IDatabase database;
-        private Type type;
         private bool isInstance;
 
         public Model()
         {
             this.database = Database.Instance();
-            this.primaryKey = GetFieldOfType(typeof(PrimaryKey));
+            this.primaryKey = GetFieldByAttribute<PrimaryKey>();
             this.type = this.GetType();
             this.tableColumns = GetTableColumns(type);
             this.foreignKeyRelations = GetForeignKeyRelations(type);
@@ -55,11 +56,10 @@
 
             foreach (PropertyInfo property in this.GetType().GetProperties(flags))
             {
-                var attr = property.GetCustomAttributes(typeof(TableColumn), true);
-
-                if (attr.Length == 1)
+                try
                 {
-                    var attributeType = attr[0].GetType();
+                    var attribute = GetAttribute<TableColumn>(property);
+                    var attributeType = attribute.GetType();
 
                     if (attributeType == typeof(PrimaryKey))
                         continue;
@@ -69,6 +69,10 @@
                         continue;
 
                     columns.Add(property);
+                }
+                catch
+                {
+                    continue;
                 }
             }
 
@@ -82,11 +86,14 @@
 
             foreach (PropertyInfo property in this.GetType().GetProperties(flags))
             {
-                var attr = property.GetCustomAttributes(typeof(ForeignKey), true);
-
-                if (attr.Length == 1)
+                try
                 {
+                    GetAttribute<ForeignKey>(property);
                     columns.Add(property);
+                }
+                catch
+                {
+                    continue;
                 }
             }
 
@@ -99,45 +106,53 @@
 
             foreach (PropertyInfo property in this.GetType().GetProperties(flags))
             {
-                var attr = property.GetCustomAttributes(typeof(ManyToManyRelation), true);
-
-                if (attr.Length == 1)
+                try
                 {
+                    GetAttribute<ManyToManyRelation>(property);
                     columns.Add(property);
+                }
+                catch
+                {
+                    continue;
                 }
             }
 
             return columns;
         }
 
-        private PropertyInfo GetFieldOfType(Type type)
+        private PropertyInfo GetFieldByAttribute<T>() where T : TableColumn
         {
+            PropertyInfo field = null;
+
             foreach (PropertyInfo property in this.GetType().GetProperties())
             {
-                var attr = property.GetCustomAttributes(type, true);
-
-                if (attr.Length == 1)
+                try
                 {
-                    return property;
+                    GetAttribute<T>(property);
+                    field = property;
+                    break;
+                }
+                catch
+                {
+                    continue;
                 }
             }
 
-            if (type.Equals(typeof(PrimaryKey)))
-                throw new Exception(string.Format("No Field of type ({0}) found", type.Name));
+            if (field == null)
+                throw new Exception(string.Format("No Field of type ({0}) found", typeof(T).Name));
 
-            return null;
+            return field;
         }
 
-        private List<object> GetValues()
+        private List<object> GetValues(bool includingPrimaryKey = true)
         {
             List<object> values = new List<object>();
 
-            values.Add(PrimaryKeyValue);
+            if (includingPrimaryKey)
+                values.Add(PrimaryKeyValue);
 
             foreach (var column in tableColumns)
             {
-                var attributes = column.GetCustomAttributes(typeof(TableColumn), true)[0];
-
                 if (column == primaryKey)
                     continue;
 
@@ -158,11 +173,12 @@
             return values;
         }
 
-        private List<PropertyInfo> GetFields()
+        private List<PropertyInfo> GetFields(bool includingPrimaryKey = true)
         {
             List<PropertyInfo> fields = new List<PropertyInfo>();
 
-            fields.Add(primaryKey);
+            if(includingPrimaryKey)
+                fields.Add(primaryKey);
 
             foreach (var column in tableColumns)
             {
@@ -187,21 +203,14 @@
             return fields;
         }
 
-        private string GetFieldColumnName(PropertyInfo field)
+        private static T GetAttribute<T>(PropertyInfo field) where T : TableColumn
         {
-            var attr = field.GetCustomAttributes(typeof(TableColumn), true);
+            var attr = field.GetCustomAttributes(typeof(T), true);
 
             if (attr.Length == 1)
-            {
-                var attribute = (TableColumn)attr[0];
+                return attr[0] as T;
 
-                if (attribute.NameInTable == null)
-                    return field.Name.ToLower();
-
-                return attribute.NameInTable;
-            }
-
-            throw new Exception(string.Format("Field ({0}) is not a table column", field.Name));
+            throw new Exception(string.Format("Field {0} is not a table column of type {1}", field.Name, typeof(T).Name));
         }
 
         private object GetFieldValue(PropertyInfo field)
@@ -210,22 +219,22 @@
             return get.Invoke(this, null);
         }
 
-        private SQLiteErrorCode SaveForeignKeyRelations()
+        private TransactionResult SaveForeignKeyRelations()
         {
-            SQLiteErrorCode errorCode = SQLiteErrorCode.Ok;
+            TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
 
             foreach (var column in this.foreignKeyRelations)
             {
                 var model = column.GetGetMethod().Invoke(this, null) as Model;
-                errorCode = model.Save();
+                result = model.Save();
             }
 
-            return errorCode;
+            return result;
         }
 
-        private SQLiteErrorCode SaveManyToManyRelations()
+        private TransactionResult SaveManyToManyRelations()
         {
-            SQLiteErrorCode errorCode = SQLiteErrorCode.Ok;
+            TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
 
             foreach (var column in this.manyToManyRelations)
             {
@@ -235,132 +244,141 @@
 
                 foreach (var model in concreteDict.Values)
                 {
-                    errorCode = ((Model)model).Save();
+                    result = ((Model)model).Save();
                 }
             }
 
-            return errorCode;
+            return result;
         }
 
-        public SQLiteErrorCode Save()
+        public virtual TransactionResult Save()
         {
             if (primaryKey == null)
                 throw new Exception(string.Format("Primary key '{0}' not set", primaryKey.Name));
 
-            SQLiteErrorCode errorCode = SQLiteErrorCode.Ok;
+            TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
 
             if (isInstance)
             {
                 foreach (var column in this.tableColumns)
                 {
-                    var attr = column.GetCustomAttributes(typeof(TableColumn), true);
-
-                    if (attr.Length == 1)
+                    try
                     {
-                        try
-                        {
-                            var get = column.GetGetMethod(true);
-                            var value = get.Invoke(this, null);
-                            var attribute = ((TableColumn)attr[0]);
+                        var get = column.GetGetMethod(true);
+                        var value = get.Invoke(this, null);
+                        var attribute = GetAttribute<TableColumn>(column);
 
 
-                            if (attribute.NotNull && value == null)
-                                throw new Exception(string.Format("Column '{0}' can not be null", column.Name));
+                        if (attribute.NotNull && value == null)
+                            throw new Exception(string.Format("Column '{0}' can not be null", column.Name));
 
-                            errorCode = database.UpdateTable(attribute, type, column, value, primaryKey.Name, GetFieldValue(primaryKey));
+                        result = database.UpdateTable(attribute, type, column, value, primaryKey.Name, GetFieldValue(primaryKey));
 
-                            if (foreignKeyRelations.Count > 0 && errorCode == SQLiteErrorCode.Ok)
-                                errorCode = SaveForeignKeyRelations();
+                        if (foreignKeyRelations.Count > 0 && result.ErrorCode == SQLiteErrorCode.Ok)
+                            result = SaveForeignKeyRelations();
 
-                            if (manyToManyRelations.Count > 0 && errorCode == SQLiteErrorCode.Ok)
-                                errorCode = SaveManyToManyRelations();
-                        }
+                        if (manyToManyRelations.Count > 0 && result.ErrorCode == SQLiteErrorCode.Ok)
+                            result = SaveManyToManyRelations();
+                    }
 
-                        catch (Exception e)
-                        {
-                            throw e;
-                        }
+                    catch (Exception e)
+                    {
+                        throw e;
                     }
                 }
             }
 
             else
             {
-                errorCode = database.Save(type, GetFields(), GetValues());
+                bool includingPrimaryKey = primaryKey.Name.ToLower() != "id";
+                result = database.Save(this.primaryKey.Name, type, GetFields(includingPrimaryKey), GetValues(includingPrimaryKey));
 
-                if (errorCode == SQLiteErrorCode.Ok)
+                if (result.ErrorCode == SQLiteErrorCode.Ok)
                     this.isInstance = true;
             }
 
-            return errorCode;
+            return result;
         }
 
-        public SQLiteErrorCode AddManyToManyRelations()
+        public TransactionResult AddManyToManyRelations()
         {
-            SQLiteErrorCode errorCode = SQLiteErrorCode.Ok;
+            TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
 
             foreach (var column in this.manyToManyRelations)
             {
                 var attribute = column.GetCustomAttributes(typeof(ManyToManyRelation), true)[0] as ManyToManyRelation;
 
-                var genericArgs = column.PropertyType.GetGenericArguments();
                 var genericDict = column.GetGetMethod().Invoke(this, null) as IDictionary;
 
-                errorCode = database.AddManyToManyRelation(attribute, this.PrimaryKeyValue, genericDict);
+                result = database.AddManyToManyRelation(attribute, this.PrimaryKeyValue, genericDict);
             }
 
-            return errorCode;
+            return result;
         }
 
-        public SQLiteErrorCode Delete()
+        public TransactionResult Delete()
         {
             return database.Delete(this.type, this.primaryKey.Name, this.PrimaryKeyValue);
         }
 
-        private object ManyToManyQuery(TableColumn attribute, PropertyInfo column)
+        private object ManyToManyQuery(ManyToManyRelation attribute, PropertyInfo column)
         {
-            var manyToMany = ((ManyToManyRelation)attribute);
             var genericDict = typeof(Dictionary<,>);
             var genericArgs = column.PropertyType.GetGenericArguments();
 
-            var keyType = genericArgs[0];
             var valType = genericArgs[1];
 
-            var values = database.Join(manyToMany, PrimaryKeyValue);
+            var values = database.Join(attribute, PrimaryKeyValue);
             var dict = genericDict.MakeGenericType(genericArgs);
             var dictInstance = Activator.CreateInstance(dict) as IDictionary;
 
             for (int i = 0; i < values.Length; i++)
             {
                 var value = values[i];
+                Model model;
 
                 if (value.ToString() != "" && value != null)
                 {
-                    var model = Activator.CreateInstance(valType, value) as Model;
+                    model = database.GetCachedModel(valType, value) as Model;
 
-                    if (model != null)
+                    if (model == null)
                     {
-                        model.SetData();
-                        dictInstance.Add(model.PrimaryKeyValue, model);
+                        model = Activator.CreateInstance(valType, value) as Model;
+
+                        if (model != null)
+                        {
+                            model.SetData();
+                            model.SetRelations();
+                            dictInstance.Add(model.PrimaryKeyValue, model);
+                        }
                     }
+                    else
+                        dictInstance.Add(model.PrimaryKeyValue, model);
                 }
             }
 
             return dictInstance;
         }
 
-        private object ForeignKeyQuery(TableColumn attribute, PropertyInfo column)
+        private object ForeignKeyQuery(ForeignKey attribute, PropertyInfo column)
         {
-            var value = database.Get(attribute, column, type, primaryKey.Name, GetFieldValue(primaryKey))[0];
+            object value = null;
+            var foreignKey = database.Get(attribute, column, type, GetAttribute<PrimaryKey>(primaryKey), primaryKey, PrimaryKeyValue)[0];
 
-            if (value.ToString() != "" && value != null)
+            if (foreignKey.ToString() != "" && foreignKey != null)
             {
-                var model = Activator.CreateInstance(column.PropertyType, value) as IModel;
+                value = database.GetCachedModel(this.type, foreignKey) as IModel;
 
-                if (model != null)
+                if (value == null)
                 {
-                    model.SetData();
-                    value = model;
+                    var model = Activator.CreateInstance(column.PropertyType, foreignKey) as IModel;
+
+                    if (model != null)
+                    {
+                        model.SetData();
+                        model.SetRelations();
+                        value = model;
+                    }
                 }
             }
             else
@@ -375,44 +393,39 @@
 
             foreach (var column in this.tableColumns)
             {
-                var attr = column.GetCustomAttributes(typeof(TableColumn), true);
-                var attribute = ((TableColumn)attr[0]);
+                var attribute = GetAttribute<TableColumn>(column);
 
-                if (attr.Length == 1)
-                {
-                    object value;
+                object value;
 
-                    if (attribute.GetType() == typeof(TranslationColumn))
-                        ((TranslationColumn)attribute).SetColumn(column.Name, "de_de"); //ToDo: Sprache aus Settings dynamisch setzen
+                if (attribute.GetType() == typeof(TranslationColumn))
+                    ((TranslationColumn)attribute).SetColumn(column.Name, LanguageSettingManager.GetActiveLanguage());
 
-                    value = database.Get(attribute, column, type, primaryKey.Name, PrimaryKeyValue)[0];
+                value = database.Get(attribute, column, type, GetAttribute<PrimaryKey>(primaryKey), primaryKey, PrimaryKeyValue)[0];
 
-                    data.Add(column, value);
-                }
+                data.Add(column, value);
             }
+
+            return data;
+        }
+
+        protected IDictionary<PropertyInfo, object> GetRelations()
+        {
+            IDictionary<PropertyInfo, object> data = new Dictionary<PropertyInfo, object>();
 
             foreach (var foreignKeyRelation in foreignKeyRelations)
             {
-                var attr = foreignKeyRelation.GetCustomAttributes(typeof(TableColumn), true);
-                var attribute = ((TableColumn)attr[0]);
+                var attribute = GetAttribute<ForeignKey>(foreignKeyRelation);
+                var value = ForeignKeyQuery(attribute, foreignKeyRelation);
 
-                if (attr.Length == 1)
-                {
-                    var value = ForeignKeyQuery(attribute, foreignKeyRelation);
-                    data.Add(foreignKeyRelation, value);
-                }
+                data.Add(foreignKeyRelation, value);
             }
 
             foreach (var manyToManyRelation in manyToManyRelations)
             {
-                var attr = manyToManyRelation.GetCustomAttributes(typeof(TableColumn), true);
-                var attribute = ((TableColumn)attr[0]);
+                var attribute = GetAttribute<ManyToManyRelation>(manyToManyRelation);
+                var value = ManyToManyQuery(attribute, manyToManyRelation);
 
-                if (attr.Length == 1)
-                {
-                    var value = ManyToManyQuery(attribute, manyToManyRelation);
-                    data.Add(manyToManyRelation, value);
-                }
+                data.Add(manyToManyRelation, value);
             }
 
             return data;
@@ -430,7 +443,28 @@
                 foreach (var d in data)
                     d.Key.GetSetMethod(true).Invoke(this, new object[] { d.Value });
 
+                database.SetCachedModel(this.type, this.PrimaryKeyValue, this);
+
                 this.isInstance = true;
+            }
+
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+        public virtual void SetRelations()
+        {
+            try
+            {
+                if (primaryKey == null)
+                    throw new Exception("Primary key not set");
+
+                var data = GetRelations();
+
+                foreach (var d in data)
+                    d.Key.GetSetMethod(true).Invoke(this, new object[] { d.Value });
             }
 
             catch (Exception e)
@@ -447,23 +481,30 @@
         private static object[] GetPrimaryKeys(Type type)
         {
             var columns = type.GetProperties();
+            object[] names = null;
 
             foreach (var column in columns)
             {
-                var attr = column.GetCustomAttributes(typeof(PrimaryKey), true);
-
-                if (attr.Length == 1)
+                try
                 {
-                    return Database.Instance().All(column.Name, type.Name);
+                    GetAttribute<PrimaryKey>(column);
+                    names = Database.Instance().All(column.Name, type.Name);
+                    break;
+                }
+                catch
+                {
+                    continue;
                 }
             }
 
-            throw new Exception(string.Format("No primary key found in model of type {0}", type.Name));
+            if (names == null)
+                throw new Exception(string.Format("No primary key found in model of type {0}", type.Name));
+
+            return names;
         }
 
         public static IDictionary<object, T> All<T>() where T : Model
         {
-            Type type = typeof(T);
             IDictionary<object, T> models = new Dictionary<object, T>();
 
             var primaryKeys = GetPrimaryKeys(typeof(T));
@@ -472,7 +513,6 @@
             {
                 var model = GetModel<T>(primaryKey);
 
-                model.SetData();
                 models.Add(model.PrimaryKeyValue, model);
             }
 
@@ -484,7 +524,10 @@
             IModel model = Activator.CreateInstance(typeof(T), primaryKey) as IModel;
 
             if (model != null)
+            {
                 model.SetData();
+                model.SetRelations();
+            }
 
             return model as T;
         }

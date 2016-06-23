@@ -1,10 +1,11 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using DB;
     using DB.Models;
     using FulFillables;
+    using Manager;
+    using Manager.Audio;
     using Math;
-    using UI.VisualExercise;
+    using UI.Feedback;
     using Windows.Kinect;
 
     public class AngleValueBehaviour : BaseJointValueBehaviour
@@ -15,17 +16,24 @@
         private double minAngle;
         private double maxAngle;
 
-        public AngleValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
+        public AngleValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint childJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(value, unityObjectName, activeJoint, childJoint, settingsManager, feedback, pitchType, previous)
         {
-            this.tolerance = settings.GetValue<int>("angleTolerance");
+            this.tolerance = settingsManager.GetValue<int>("ingame", "angleTolerance");
             this.angle = 0;
             this.minAngle = initialValue - tolerance;
             this.maxAngle = initialValue + tolerance;
         }
 
+        public override double GetAngle(Body body)
+        {
+            return Calculations.GetAngle(
+                body.Joints[activeJoint.KinectJoint.Type], body.Joints[activeJoint.KinectJoint.Parent.Type], body.Joints[passiveJoint.KinectJoint.Type]
+            );
+        }
+
         public override bool IsFulfilled(Body body)
         {
-            angle = Calculations.GetAngle(null); // ToDo Winkelberechnung
+            this.angle = base.GetAngle(body);
 
             isFulfilled = minAngle <= angle && angle <= maxAngle;
 
@@ -39,17 +47,29 @@
             if (angleString[0] == '0')
                 angleString = angleString.Substring(1);
 
-            drawing.ShowInformation(string.Format(information, activeJoint.Translation, angleString));
+            feedback.ShowInformation(string.Format(information, activeJoint.KinectJoint.Translation, angleString));
         }
 
         public override void Draw(Body body)
         {
-            drawing.DrawCircle(body, activeJoint, initialValue - tolerance, angle);
+            double correctedAngle = angle;
+
+            if (angle > value)
+                correctedAngle = angle - tolerance;
+            else if (correctedAngle < value)
+                correctedAngle = angle + tolerance;
+
+            feedback.DrawCircle(initialValue, correctedAngle, activeJoint.KinectJoint);
+        }
+
+        public override void PlayValue()
+        {
+            feedback.PitchValue(base.pitchType, this.initialValue, this.angle);
         }
 
         public override void Clear()
         {
-            drawing.ClearDrawings();
+            feedback.ClearDrawings();
         }
     }
 }

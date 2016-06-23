@@ -8,7 +8,7 @@
 
     public class ExerciseInformation : UnityModel
     {
-        private string type;
+        private string exerciseType;
         private string order;
         private AudioClip auditiveOrder;
         
@@ -19,12 +19,12 @@
         {
             get
             {
-                return type;
+                return exerciseType;
             }
 
             set
             {
-                this.type = value;
+                this.exerciseType = value;
             }
         }
 

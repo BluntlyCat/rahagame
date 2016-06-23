@@ -6,13 +6,15 @@
 
     public class SetActivePatient : MonoBehaviour
     {
-        public GameObject gameManager;
+        private GameObject gameManager;
 
         private SceneManager sceneManager;
         private PatientManager patientManager;
 
         void Start()
         {
+            gameManager = GameObject.Find("GameManager");
+            patientManager = gameManager.GetComponent<PatientManager>();
             sceneManager = gameManager.GetComponent<SceneManager>();
         }
 

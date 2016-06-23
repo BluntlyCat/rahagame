@@ -1,47 +1,50 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
     using Actions;
-    using DB;
-    using Models = DB.Models;
     using Windows.Kinect;
 
     public abstract class BaseStep : FulFillable
     {
-        protected Database dbManager;
-        protected Drawable firstDrawable;
-        protected Drawable currentDrawable;
+        protected Informable firstInformable;
+        protected Informable currentInformable;
 
         protected bool prevIsAction;
         protected bool prevIsNotNull;
 
         protected string unityObjectName;
 
-        public BaseStep(string unityObjectName, Database dbManager, FulFillable previous) : base (previous)
+        public BaseStep(string unityObjectName, FulFillable previous) : base (unityObjectName, previous)
         {
             this.unityObjectName = unityObjectName;
-            this.dbManager = dbManager;
         }
 
         private bool CheckCurrent(Body body)
         {
-            isFulfilled = currentDrawable.IsFulfilled(body);
+            isFulfilled = currentInformable.IsFulfilled(body);
 
             if (isFulfilled)
             {
-                if (currentDrawable.Next == null)
+                currentInformable.PlayFullfilledSound();
+
+                if (currentInformable.Next == null)
                 {
                     isFulfilled = true;
                 }
                 else
                 {
-                    currentDrawable = currentDrawable.Next as Drawable;
+                    currentInformable = currentInformable.Next.Convert<Informable>();
+
+                    if(currentInformable.Type == Types.joint)
+                        currentInformable.Convert<Joint>().SetPreviousAsInactive();
+
                     isFulfilled = false;
                 }
             }
             else
             {
-                currentDrawable.Write(body);
-                currentDrawable.Draw(body);
+                currentInformable.Write(body);
+                currentInformable.Draw(body);
+                currentInformable.PlayValue();
             }
 
             return isFulfilled;
@@ -49,13 +52,11 @@
 
         private bool CheckPrevious(Body body)
         {
-            prevIsAction = currentDrawable.Previous.GetType().IsSubclassOf(typeof(BaseAction));
-
-            if (prevIsAction)
-                isFulfilled = CheckCurrent(body);
-            else
+            //if (currentInformable.Type == Types.action)
+              //  isFulfilled = CheckCurrent(body);
+            //else
             {
-                isFulfilled = currentDrawable.Previous.IsFulfilled(body);
+                isFulfilled = currentInformable.Previous.IsFulfilled(body);
 
                 if (isFulfilled)
                 {
@@ -63,11 +64,15 @@
                 }
                 else
                 {
-                    if (currentDrawable.GetType().IsSubclassOf(typeof(BaseAction)))
-                        ((BaseAction)currentDrawable).Reset();
+                    if (currentInformable.Type == Types.action)
+                        currentInformable.Convert<BaseAction>().Reset();
 
-                    ((Drawable)currentDrawable.Previous).Write(body);
-                    ((Drawable)currentDrawable.Previous).Draw(body);
+                    else if (currentInformable.Type == Types.joint)
+                        currentInformable.Convert<Joint>().SetPreviousAsActive();
+
+                    currentInformable = currentInformable.Previous.Convert<Informable>();
+                    currentInformable.Write(body);
+                    currentInformable.Draw(body);
                 }
             }
 
@@ -76,7 +81,7 @@
 
         public override bool IsFulfilled(Body body)
         {
-            prevIsNotNull = currentDrawable.Previous != null;
+            prevIsNotNull = currentInformable.Previous != null;
 
             if(prevIsNotNull)
             {

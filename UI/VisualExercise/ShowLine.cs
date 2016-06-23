@@ -35,7 +35,6 @@
                 float lw = (float)args[2];
 
                 var distance = rMath.Calculations.GetDistance(activeJoint, passiveJoint);
-                var textScale = text.transform.localScale;
 
                 var activePosition = rMath.Calculations.GetVector3FromJoint(activeJoint);
                 var passivePosition = rMath.Calculations.GetVector3FromJoint(passiveJoint);

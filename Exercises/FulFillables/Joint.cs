@@ -1,38 +1,37 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
+    using Behaviours;
+    using Manager;
+    using Manager.Audio;
     using System;
     using System.Collections.Generic;
-    using Behaviours;
-    using DB;
-    using UI.VisualExercise;
+    using UI.Feedback;
     using Windows.Kinect;
     using Models = DB.Models;
 
-    public class Joint : Drawable
+    public class Joint : Informable
     {
-        private BaseJointBehaviour firstJointBehaviour;
         private BaseJointBehaviour currentJointBehaviour;
 
-        private string name;
-
-        public Joint(string name, Database dbManager, Models.Settings settings, Drawing drawing, FulFillable previous) : base (dbManager, settings, drawing, previous)
+        public Joint(string name, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base (settingsManager, feedback, pitchType, name, previous)
         {
-            this.name = name;
+            this.type = Types.joint;
         }
 
         public void SetFirstBehaviour(BaseJointBehaviour behaviour)
         {
-            this.firstJointBehaviour = this.currentJointBehaviour = behaviour;
+            this.currentJointBehaviour = behaviour;
         }
 
         public override bool IsFulfilled(Body body)
         {
-            // ToDo Was ist wenn man die Position vom vorherigen Schritt verlässt?
             isFulfilled = currentJointBehaviour.IsFulfilled(body);
+            currentJointBehaviour.ActiveJoint.KinectJoint.ActiveInExercise = true;
 
             if (isFulfilled)
             {
                 currentJointBehaviour.Clear();
+                currentJointBehaviour.ActiveJoint.KinectJoint.ActiveInExercise = false;
 
                 if (currentJointBehaviour.Next == null)
                 {
@@ -44,49 +43,63 @@
                     isFulfilled = false;
                 }
             }
-            else
-            {
-                currentJointBehaviour.Write(body);
-                currentJointBehaviour.Draw(body);
-            }
 
             return isFulfilled;
         }
 
-        public string Name
+        public void SetPreviousAsActive()
         {
-            get
+            if (currentJointBehaviour.Previous != null && currentJointBehaviour.Previous.Type == Types.behaviour)
+                currentJointBehaviour.Previous.Convert<BaseJointBehaviour>().ActiveJoint.KinectJoint.ActiveInExercise = true;
+
+            currentJointBehaviour.ActiveJoint.KinectJoint.ActiveInExercise = false;
+        }
+
+        public void SetPreviousAsInactive()
+        {
+            if (currentJointBehaviour.Previous != null && currentJointBehaviour.Previous.Type == Types.behaviour)
             {
-                return name;
+                var previous = currentJointBehaviour.Previous.Convert<BaseJointBehaviour>();
+                previous.ActiveJoint.KinectJoint.ActiveInExercise = false;
             }
         }
 
         public override string ToString()
         {
-            return string.Format("{0}: {1}", name, isFulfilled);
+            return string.Format("{0}: {1}", this.Name, isFulfilled);
         }
 
         public override void Write(Body body)
         {
-            
+            currentJointBehaviour.Write(body);
+        }
+
+        public override void PlayValue()
+        {
+            currentJointBehaviour.PlayValue();
+        }
+
+        public override void PlayFullfilledSound()
+        {
+            feedback.PitchFullfilledSound();
         }
 
         public override void Draw(Body body)
         {
-            
+            currentJointBehaviour.Draw(body);
         }
 
         public override void Clear()
         {
-            drawing.ClearDrawings();
+            feedback.ClearDrawings();
         }
 
-        public override void Debug(Body body, IDictionary<string, Models.Joint> stressedJoints)
+        public override void Debug(Body body, IDictionary<string, Models.KinectJoint> stressedJoints)
         {
             throw new NotImplementedException();
         }
 
-        public override void Debug(Body body, Models.Joint joint)
+        public override void Debug(Body body, Models.KinectJoint joint)
         {
             throw new NotImplementedException();
         }

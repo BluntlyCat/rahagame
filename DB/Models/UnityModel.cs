@@ -7,7 +7,6 @@
     {
         private string unityObjectName;
         private string unityTagName;
-        private IDictionary<string, UnityEngine.Object> resources = new Dictionary<string, UnityEngine.Object>();
 
         public UnityModel(string unityObjectName)
         {
@@ -24,7 +23,6 @@
 
                 if (attr.Length == 1)
                 {
-                    var attribute = attr[0];
                     var set = d.Key.GetSetMethod(true);
 
                     if (d.Key.GetCustomAttributes(typeof(Resource), true).Length == 1)
@@ -50,6 +48,8 @@
                     }
                 }
             }
+
+            database.SetCachedModel(this.type, this.PrimaryKeyValue, this);
         }
 
         [PrimaryKey]

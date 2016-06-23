@@ -1,185 +1,71 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
-    using Kinect = Windows.Kinect;
+    using System.Collections.Generic;
+    using Mono.Data.Sqlite;
 
-    public class PatientJoint : Model
+    public class PatientJoint : BaseJoint
     {
-        private string name;
+        private long id;
         private bool active = true;
 
-        private long xyMinValue;
-        private long xyMaxValue;
+        private KinectJoint kinectJoint;
 
-        private long yzMinValue;
-        private long yzMaxValue;
-
-        private long zxMinValue;
-        private long zxMaxValue;
-
-        private Joint joint;
-
-        public PatientJoint(string name)
+        public PatientJoint(long id)
         {
-            this.name = name;
+            this.id = id;
         }
 
-        public PatientJoint(Joint joint)
+        public PatientJoint(KinectJoint joint)
         {
-            this.name = joint.Name;
-            this.joint = joint;
+            this.kinectJoint = joint;
         }
 
         [PrimaryKey]
-        public string Name
+        public long ID
         {
             get
             {
-                return this.name;
+                return this.id;
             }
 
-            private set
+            set
             {
-                this.name = value;
+                this.id = value;
             }
         }
 
-        [TableColumn]
+        [TableColumn("active")]
         public bool Active
         {
             get
             {
-                return active;
-            }
-            set
-            {
-                active = value;
-            }
-        }
-
-        [TableColumn]
-        public long XYMinValue
-        {
-            get
-            {
-                return this.xyMinValue;
+                return this.active;
             }
 
             set
             {
-                this.xyMinValue = value;
+                this.active = value;
             }
         }
 
-        [TableColumn]
-        public long XYMaxValue
+        [ForeignKey("kinectjoint", "kinectJoint_id", true)]
+        public KinectJoint KinectJoint
         {
             get
             {
-                return this.xyMaxValue;
-            }
-
-            set
-            {
-                this.xyMaxValue = value;
-            }
-        }
-
-        [TableColumn]
-        public long YZMinValue
-        {
-            get
-            {
-                return this.yzMinValue;
-            }
-
-            set
-            {
-                this.yzMinValue = value;
-            }
-        }
-
-        [TableColumn]
-        public long YZMaxValue
-        {
-            get
-            {
-                return this.yzMaxValue;
-            }
-
-            set
-            {
-                this.yzMaxValue = value;
-            }
-        }
-
-        [TableColumn]
-        public long ZXMinValue
-        {
-            get
-            {
-                return this.zxMinValue;
-            }
-
-            set
-            {
-                this.zxMinValue = value;
-            }
-        }
-
-        [TableColumn]
-        public long ZXMaxValue
-        {
-            get
-            {
-                return this.zxMaxValue;
-            }
-
-            set
-            {
-                this.zxMaxValue = value;
-            }
-        }
-
-        [ForeignKey("joint", "joint_id", true)]
-        public Joint KinectJoint
-        {
-            get
-            {
-                if (joint == null)
+                if (kinectJoint == null)
                     return null;
 
-                else if (!joint.IsInstance)
-                    joint.SetData();
+                else if (!kinectJoint.IsInstance)
+                    kinectJoint.SetData();
 
-                return this.joint;
+                return this.kinectJoint;
             }
 
             set
             {
-                this.joint = value;
+                this.kinectJoint = value;
             }
-        }
-
-        public Kinect.JointType Type
-        {
-            get
-            {
-                return this.joint.Type;
-            }
-        }
-
-        public string Translation
-        {
-            get
-            {
-                return this.joint.Translation;
-            }
-        }
-
-        public void SetActive(bool active)
-        {
-            // ToDo Von Joint erben
-            this.Active = active;
         }
     }
 }

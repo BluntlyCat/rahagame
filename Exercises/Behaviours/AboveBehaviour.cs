@@ -1,35 +1,52 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using DB;
     using DB.Models;
     using FulFillables;
     using Logging;
-    using UI.VisualExercise;
+    using Manager;
+    using Manager.Audio;
+    using UI.Feedback;
     using Windows.Kinect;
-
     public class AboveBehaviour : BaseJointBehaviour
     {
         private static Logger<AboveBehaviour> logger = new Logger<AboveBehaviour>();
 
-        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, Database dbManager, Settings settings, Drawing drawing, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, dbManager, settings, drawing, previous)
+        private double headY;
+        private double footY;
+
+        private double activeJointY;
+        private double passiveJointY;
+
+        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous)
         {
             logger.AddLogAppender<ConsoleAppender>();
         }
 
         public override bool IsFulfilled(Body body)
         {
-            isFulfilled = body.Joints[activeJoint.Type].Position.Y > body.Joints[passiveJoint.Type].Position.Y;
+            headY = body.Joints[JointType.Head].Position.Y;
+            footY = body.Joints[JointType.FootLeft].Position.Y;
+
+            activeJointY = body.Joints[activeJoint.KinectJoint.Type].Position.Y;
+            passiveJointY = body.Joints[passiveJoint.KinectJoint.Type].Position.Y;
+
+            isFulfilled = activeJointY > passiveJointY;
             return isFulfilled;
         }
 
         public override void Draw(Body body)
         {
-            
+            base.Draw(body);
+        }
+
+        public override void PlayValue()
+        {
+            feedback.PitchValue(base.pitchType, headY - footY, activeJointY, passiveJointY);
         }
 
         public override void Clear()
         {
-            drawing.ClearDrawings();
+            feedback.ClearDrawings();
         }
     }
 }

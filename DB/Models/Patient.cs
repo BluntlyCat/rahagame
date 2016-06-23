@@ -1,6 +1,7 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
     using System.Collections.Generic;
+    using Mono.Data.Sqlite;
 
     public class Patient : Model
     {
@@ -8,7 +9,7 @@
         private long age;
         private long sex;
 
-        private Dictionary<string, PatientJoint> joints;
+        private Dictionary<long, PatientJoint> joints;
         private Dictionary<string, Exercise> exercisesToDo;
 
         public Patient(string name)
@@ -85,9 +86,9 @@
             "patient_joints",
             "patientjoint_id",
             "patientjoint",
-            "name"
+            "id"
         )]
-        public Dictionary<string, PatientJoint> Joints
+        public Dictionary<long, PatientJoint> Joints
         {
             get
             {
@@ -120,6 +121,95 @@
             {
                 this.exercisesToDo = value;
             }
+        }
+
+        public override TransactionResult Save()
+        {
+            var result = base.Save();
+
+            switch (result.ErrorCode)
+            {
+                case SQLiteErrorCode.Ok:
+                    result = this.CreatePatientJoints();
+
+                    switch (result.ErrorCode)
+                    {
+                        case SQLiteErrorCode.Ok:
+                            // ToDo Ebenso ExercisesToDo erstellen, aus QRCode
+                            // Patient aus QRCode erstellen
+                            result = this.AddManyToManyRelations();
+
+                            switch (result.ErrorCode)
+                            {
+                                case SQLiteErrorCode.Ok:
+                                    break;
+
+                                default:
+                                    foreach (var joint in this.joints.Values)
+                                        joint.Delete();
+
+                                    this.Delete();
+                                    break;
+                            }
+
+                            break;
+
+                        default:
+                            this.Delete();
+                            break;
+                    }
+
+                    break;
+
+                case SQLiteErrorCode.Constraint:
+                    // Todo Fehler anzeigen, dass Benutzer existiert
+                    break;
+            }
+
+            return result;
+        }
+
+        private TransactionResult CreatePatientJoints()
+        {
+            TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
+            Dictionary<long, PatientJoint> patientJoints = new Dictionary<long, PatientJoint>();
+
+            var joints = All<KinectJoint>();
+
+            foreach (var joint in joints.Values)
+            {
+                var patientJoint = new PatientJoint(joint);
+                result = patientJoint.Save();
+
+                switch (result.ErrorCode)
+                {
+                    case SQLiteErrorCode.Ok:
+                        patientJoints.Add((long)result.PrimaryKeyValue, patientJoint);
+                        break;
+
+                    default:
+                        foreach (var addedPatientJoint in patientJoints.Values)
+                            addedPatientJoint.Delete();
+
+                        return new TransactionResult(SQLiteErrorCode.Error, null);
+                }
+            }
+
+            if (result.ErrorCode == SQLiteErrorCode.Ok)
+                this.Joints = patientJoints;
+
+            return result;
+        }
+
+        public PatientJoint GetJointByName(string name)
+        {
+            foreach(var joint in this.Joints.Values)
+            {
+                if (joint.KinectJoint.Name == name)
+                    return joint;
+            }
+
+            return null;
         }
     }
 }

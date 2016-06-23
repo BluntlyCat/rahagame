@@ -1,13 +1,13 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
-    using DB;
-    using DB.Models;
     using FulFillables;
-    using UI.VisualExercise;
+    using Manager;
+    using Manager.Audio;
+    using UI.Feedback;
 
     public class WaitAction : HoldAction
     {
-        public WaitAction(string unityObjectName, double value, FulFillable previous, Database dbManager, Settings settings, Drawing drawing) : base(unityObjectName, value, previous, dbManager, settings, drawing)
+        public WaitAction(string unityObjectName, double value, FulFillable previous, SettingsManager settingsManager, Feedback feedback, PitchType pitchType) : base(unityObjectName, value, previous, settingsManager, feedback, pitchType)
         {
 
         }

@@ -1,19 +1,22 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
-    using System.Collections.Generic;
-    using DB;
     using FulFillables;
+    using Manager;
+    using Manager.Audio;
+    using Math;
+    using System.Collections.Generic;
+    using System.Linq;
+    using UI.Feedback;
     using Windows.Kinect;
     using Models = DB.Models;
-    using UI = UI.VisualExercise;
-
-    public abstract class BaseJointBehaviour : Drawable
+    public abstract class BaseJointBehaviour : Informable
     {   
         protected Models.PatientJoint activeJoint;
         protected Models.PatientJoint passiveJoint;
 
-        public BaseJointBehaviour(string unityObjectName, Models.PatientJoint activeJoint, Models.PatientJoint passiveJoint, Database dbManager, Models.Settings settings, UI.Drawing drawing, FulFillable previous) : base(dbManager, settings, drawing, previous)
+        public BaseJointBehaviour(string unityObjectName, Models.PatientJoint activeJoint, Models.PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(settingsManager, feedback, pitchType, unityObjectName, previous)
         {
+            this.type = Types.behaviour;
             this.activeJoint = activeJoint;
             this.passiveJoint = passiveJoint;
 
@@ -22,24 +25,38 @@
 
         public abstract override bool IsFulfilled(Body body);
 
+        public override void PlayFullfilledSound()
+        {
+            feedback.PitchFullfilledSound();
+        }
+
+        public virtual double GetAngle(Body body)
+        {
+            return Calculations.GetAngle(
+                body.Joints[activeJoint.KinectJoint.Type], body.Joints[activeJoint.KinectJoint.Parent.Type], body.Joints[activeJoint.KinectJoint.Children.First().Value.Type]
+            );
+        }
+
         public override void Draw(Body body)
         {
-            
+            feedback.DrawCircle(360d, this.GetAngle(body), this.activeJoint.KinectJoint);
         }
+
+        public abstract override void PlayValue();
 
         public override void Write(Body body)
         {
-            drawing.ShowInformation(string.Format(information, activeJoint.Translation, passiveJoint.Translation));
+            feedback.ShowInformation(string.Format(information, activeJoint.KinectJoint.Translation, passiveJoint.KinectJoint.Translation));
         }
 
-        public override void Debug(Body body, IDictionary<string, Models.Joint> stressedJoints)
+        public override void Debug(Body body, IDictionary<string, Models.KinectJoint> stressedJoints)
         {
-            drawing.DrawDebug(body, stressedJoints);
+            feedback.DrawDebug(body, stressedJoints);
         }
 
-        public override void Debug(Body body, Models.Joint joint)
+        public override void Debug(Body body, Models.KinectJoint joint)
         {
-            drawing.DrawDebug(body, joint);
+            feedback.DrawDebug(body, joint);
         }
 
         public Models.PatientJoint ActiveJoint

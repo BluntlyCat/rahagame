@@ -1,22 +1,44 @@
 ﻿namespace HSA.RehaGame.Manager
 {
+    using DB.Models;
     using System;
     using System.Collections.Generic;
-    using DB.Models;
+    using UnityEngine;
 
-    public class SettingsManager : BaseModelManager<Settings>
+    public class SettingsManager : MonoBehaviour
     {
-        private IDictionary<string, SettingsKeyValue> keyValues;
+        private IDictionary<object, Settings> models;
 
-        public SettingsManager(object group)
+        void Awake()
         {
-            keyValues = models[group].KeyValue;
+            models = Model.All<Settings>();
         }
 
-        public T Value<T>(string key)
+
+        public T GetValue<T>(string group, string key)
         {
-            if (keyValues.ContainsKey(key))
-                return (T)keyValues[key].Value;
+            return this.models[group].GetValue<T>(key);
+        }
+
+        public void SetValue<T>(string group, string key, T value)
+        {
+            this.models[group].SetValue(key, value);
+        }
+        
+        public void SwitchBooleanType(GameObject button)
+        {
+
+        }
+
+        public SettingsKeyValue GetKeyValue(string group, string key)
+        {
+            if (models.ContainsKey(group))
+            {
+                var setting = this.models[group];
+
+                if(setting.KeyValue.ContainsKey(key))
+                    return setting.KeyValue[key];
+            }
 
             throw new Exception(string.Format("No setting with key '{0}' found", key));
         }

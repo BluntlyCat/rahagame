@@ -49,10 +49,26 @@
             }
         }
 
+        public object GetValue(string key)
+        {
+            if (keyValue.ContainsKey(key))
+                return keyValue[key].GetValue();
+
+            throw new Exception(string.Format("Setting with key '{0}' not found", key));
+        }
+
         public T GetValue<T>(string key)
         {
             if (keyValue.ContainsKey(key))
-                return (T)keyValue[key].Value;
+                return keyValue[key].GetValue<T>();
+
+            throw new Exception(string.Format("Setting with key '{0}' not found", key));
+        }
+
+        public void SetValue<T>(string key, T value)
+        {
+            if (keyValue.ContainsKey(key))
+                keyValue[key].SetValue(value);
 
             throw new Exception(string.Format("Setting with key '{0}' not found", key));
         }

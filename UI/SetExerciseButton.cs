@@ -2,27 +2,33 @@
 {
     using DB.Models;
     using Manager;
+    using Manager.Audio;
     using UnityEngine;
-
-    [RequireComponent(typeof(AudioSource))]
 
     public class SetExerciseButton : MonoBehaviour
     {
-        public GameObject sceneManager;
-        public GameObject dbManager;
-        private AudioSource audioSource;
+        private GameObject gameManager;
+        private SoundManager soundManager;
+        private SceneManager sceneManager;
+        private Exercise exercise;
 
         void Start()
         {
-            var exercise = Model.GetModel<Exercise>(this.name);
+            gameManager = GameObject.Find("GameManager");
+            soundManager = gameManager.GetComponentInChildren<SoundManager>();
+            sceneManager = gameManager.GetComponent<SceneManager>();
 
-            audioSource = this.GetComponent<AudioSource>();
-            audioSource.clip = exercise.AuditiveName;
+            exercise = Model.GetModel<Exercise>(this.name);
+        }
+
+        public void ReadExercise()
+        {
+            this.soundManager.Enqueue(this.exercise.AuditiveName);
         }
 
         public void LoadExrcise()
         {
-            // ToDO GameManager.SetActiveExercise(this.name);
+            GameManager.ActiveExercise = exercise;
             sceneManager.GetComponent<SceneManager>().LoadExercise();
         }
     }
