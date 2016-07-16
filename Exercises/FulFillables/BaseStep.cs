@@ -1,6 +1,8 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
     using Actions;
+    using DB.Models;
+    using Manager;
     using Windows.Kinect;
 
     public abstract class BaseStep : FulFillable
@@ -8,12 +10,10 @@
         protected Informable firstInformable;
         protected Informable currentInformable;
 
-        protected bool prevIsAction;
-        protected bool prevIsNotNull;
-
+        protected bool prevIsNull;
         protected string unityObjectName;
 
-        public BaseStep(string unityObjectName, FulFillable previous) : base (unityObjectName, previous)
+        public BaseStep(string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base(unityObjectName, statisticType, affectedJoint, previous, repetitions, statisticManager)
         {
             this.unityObjectName = unityObjectName;
         }
@@ -25,6 +25,7 @@
             if (isFulfilled)
             {
                 currentInformable.PlayFullfilledSound();
+                currentInformable.Fulfilled();
 
                 if (currentInformable.Next == null)
                 {
@@ -33,8 +34,9 @@
                 else
                 {
                     currentInformable = currentInformable.Next.Convert<Informable>();
+                    currentInformable.Unfulfilled();
 
-                    if(currentInformable.Type == Types.joint)
+                    if (currentInformable.Type == Types.joint)
                         currentInformable.Convert<Joint>().SetPreviousAsInactive();
 
                     isFulfilled = false;
@@ -52,28 +54,26 @@
 
         private bool CheckPrevious(Body body)
         {
-            //if (currentInformable.Type == Types.action)
-              //  isFulfilled = CheckCurrent(body);
-            //else
+
+            isFulfilled = currentInformable.Previous.IsFulfilled(body);
+
+            if (isFulfilled)
             {
-                isFulfilled = currentInformable.Previous.IsFulfilled(body);
+                isFulfilled = CheckCurrent(body);
+            }
+            else
+            {
+                if (currentInformable.Type == Types.action)
+                    currentInformable.Convert<BaseAction>().Reset();
 
-                if (isFulfilled)
-                {
-                    isFulfilled = CheckCurrent(body);
-                }
-                else
-                {
-                    if (currentInformable.Type == Types.action)
-                        currentInformable.Convert<BaseAction>().Reset();
+                else if (currentInformable.Type == Types.joint)
+                    currentInformable.Convert<Joint>().SetPreviousAsActive();
 
-                    else if (currentInformable.Type == Types.joint)
-                        currentInformable.Convert<Joint>().SetPreviousAsActive();
-
-                    currentInformable = currentInformable.Previous.Convert<Informable>();
-                    currentInformable.Write(body);
-                    currentInformable.Draw(body);
-                }
+                currentInformable.Previous.Canceled();
+                currentInformable.Canceled();
+                currentInformable = currentInformable.Previous.Convert<Informable>();
+                currentInformable.Write(body);
+                currentInformable.Draw(body);
             }
 
             return isFulfilled;
@@ -81,24 +81,19 @@
 
         public override bool IsFulfilled(Body body)
         {
-            prevIsNotNull = currentInformable.Previous != null;
+            prevIsNull = currentInformable.Previous == null;
 
-            if(prevIsNotNull)
-            {
-                isFulfilled = CheckPrevious(body);
-            }
-            
-            else
+            if (prevIsNull)
             {
                 isFulfilled = CheckCurrent(body);
             }
 
-            return isFulfilled;
-        }
+            else
+            {
+                isFulfilled = CheckPrevious(body);
+            }
 
-        public override string ToString()
-        {
-            return string.Format("{0}: {1}: {2}", this.GetType().Name, unityObjectName, isFulfilled);
+            return isFulfilled;
         }
     }
 }

@@ -14,7 +14,7 @@
 
         public abstract override bool IsFulfilled(Body body);
 
-        public BaseJointValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous)
+        public BaseJointValueBehaviour(double value, string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base(unityObjectName, statisticType, affectedJoint, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous, repetitions, statisticManager)
         {
             this.initialValue = this.value = value;
         }

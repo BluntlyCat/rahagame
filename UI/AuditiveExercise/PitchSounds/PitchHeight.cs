@@ -10,7 +10,7 @@
             double activeJointY = (double)args[1];
             double passiveJointY = (double)args[2];
 
-            double jointDistance = activeJointY - passiveJointY;
+            double jointDistance = passiveJointY - activeJointY;
 
             double pitchVal = (3 / maxDistance) * jointDistance;
 

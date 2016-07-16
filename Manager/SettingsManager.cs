@@ -7,22 +7,28 @@
 
     public class SettingsManager : MonoBehaviour
     {
-        private IDictionary<object, Settings> models;
+        private static IDictionary<object, Settings> settings;
 
-        void Awake()
+        private static IDictionary<object, Settings> Settings
         {
-            models = Model.All<Settings>();
+            get
+            {
+                if (settings == null)
+                    settings = Model.All<Settings>();
+
+                return settings;
+            }
         }
 
 
         public T GetValue<T>(string group, string key)
         {
-            return this.models[group].GetValue<T>(key);
+            return Settings[group].GetValue<T>(key);
         }
 
         public void SetValue<T>(string group, string key, T value)
         {
-            this.models[group].SetValue(key, value);
+            Settings[group].SetValue(key, value);
         }
         
         public void SwitchBooleanType(GameObject button)
@@ -32,9 +38,9 @@
 
         public SettingsKeyValue GetKeyValue(string group, string key)
         {
-            if (models.ContainsKey(group))
+            if (Settings.ContainsKey(group))
             {
-                var setting = this.models[group];
+                var setting = Settings[group];
 
                 if(setting.KeyValue.ContainsKey(key))
                     return setting.KeyValue[key];

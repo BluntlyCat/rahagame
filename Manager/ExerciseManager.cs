@@ -1,17 +1,16 @@
 ﻿namespace HSA.RehaGame.Manager
 {
     using Audio;
-    using DB.Models;
+    using DB = DB.Models;
     using Exercises.FulFillables;
     using Input.Kinect;
     using System.Collections.Generic;
     using UI;
-    using UI.AuditiveExercise.PitchSounds;
     using UI.Feedback;
     using UnityEngine;
     using UnityEngine.UI;
     using Windows.Kinect;
-
+    using UI.Statistic.Views;
     public class ExerciseManager : MonoBehaviour
     {
         public GameObject gameManager;
@@ -20,11 +19,12 @@
         public GameObject menuTitle;
         public GameObject menuContainer;
 
-        private IDictionary<object, Exercise> models;
+        private IDictionary<object, DB.Exercise> models;
 
         private MovieTexture movieTexture;
 
         private SettingsManager settingsManager;
+        private WriteStatisticManager statisticManager;
         private SoundManager soundManager;
         private SceneManager sceneManager;
         private BodyManager bodyManager;
@@ -34,12 +34,10 @@
         private SwapCanvas swapCanvas;
 
         private Body body;
-        private Exercise exercise;
         private PatientManager patientManager;
         private REMLManager relManager;
-        private ExerciseExecutionManager executionManager;
 
-        private FulFillable firstFulFillable;
+        private Exercise exercise;
 
         private bool hasUser;
         private bool exerciseRuns;
@@ -57,24 +55,25 @@
             patientManager = gameManager.GetComponent<PatientManager>();
             sceneManager = gameManager.GetComponent<SceneManager>();
             soundManager = gameManager.GetComponentInChildren<SoundManager>();
+
             bodyManager = this.GetComponentInChildren<BodyManager>();
+            statisticManager = this.GetComponentInChildren<WriteStatisticManager>();
 
             bodyManager.BodyDetected += BodyManager_BodyDetected;
             bodyManager.BodyLost += BodyManager_BodyLost;
 
-            waitPanel.GetComponentInChildren<Text>().text = Model.GetModel<ValueTranslation>("noUser").Translation;
+            waitPanel.GetComponentInChildren<Text>().text = DB.Model.GetModel<DB.ValueTranslation>("noUser").Translation;
 
-            exercise = GameManager.ActiveExercise;
-            patientManager.SetStressedJoints(exercise);
+            patientManager.SetStressedJoints(GameManager.ActiveExercise);
 
-            movieTexture = exercise.Video;
+            movieTexture = GameManager.ActiveExercise.Video;
             movieTexture.loop = true;
 
-            menuTitle.GetComponentInChildren<Text>().text = exercise.Name;
+            menuTitle.GetComponentInChildren<Text>().text = GameManager.ActiveExercise.Name;
 
             GameObject.Find("Video").GetComponent<RawImage>().texture = movieTexture;
-            GameObject.Find("Description").GetComponentInChildren<Text>().text = exercise.Description;
-            GameObject.Find("Information").GetComponent<Text>().text = exercise.Information;
+            GameObject.Find("Description").GetComponentInChildren<Text>().text = GameManager.ActiveExercise.Description;
+            GameObject.Find("Information").GetComponent<Text>().text = GameManager.ActiveExercise.Information;
 
         }
 
@@ -85,7 +84,10 @@
                 this.body = null;
 
                 if (exerciseRuns)
-                    sceneManager.LoadExercise();
+                {
+                    exercise.Canceled();
+                    LoadStatistic();
+                }
 
                 waitPanel.SetActive(true);
                 GameManager.HasKinectUser = hasUser = false;
@@ -106,32 +108,31 @@
 
         void Update()
         {
-            if (body != null && GameObject.Find(patientManager.ActivePatient.Name) != null)
+            if (body != null && GameObject.Find(GameManager.ActivePatient.Name) != null)
             {
                 if (exerciseRuns)
                 {
-                    isFullfilled = executionManager.IsFulfilled(body);
-
-                    executionManager.Clear();
-                    executionManager.Draw(body);
-                    executionManager.Write(body);
-                    executionManager.PlayValue();
-
-#if UNITY_EDITOR
-                    executionManager.Debug(body, exercise.StressedJoints);
-#endif
+                    isFullfilled = exercise.IsFulfilled(body);
 
                     if (isFullfilled)
                     {
-                        exerciseRuns = false;
-                        firstFulFillable.SetEndTime();
-
-                        GameManager.ExecutionTimes = executionManager.GetExecutionTimes();
-                        BodySourceManager.ShutdownKinect();
-                        sceneManager.LoadStatistics();
+                        exercise.Fulfilled();
+                        LoadStatistic();
                     }
                 }
             }
+        }
+
+        private void LoadStatistic()
+        {
+            exerciseRuns = false;
+
+            GameManager.StatisticViewData.StatisticViewType = StatisticViewTypes.byCurrentExercise;
+            GameManager.StatisticViewData.Data = GameManager.ActivePatient.CurrentStatistic;
+            BodySourceManager.ShutdownKinect();
+
+            statisticManager.SaveStatistic();
+            sceneManager.LoadStatisticMenu();
         }
 
         public void StartExercise()
@@ -143,19 +144,19 @@
 
                 if (relManager == null)
                 {
-                    this.relManager = new REMLManager(patientManager.ActivePatient, settingsManager, feedback, exercise.Reml);
-                    this.firstFulFillable = this.relManager.ParseRGML();
-                    this.executionManager = new ExerciseExecutionManager(this.firstFulFillable as BaseStep, settingsManager, feedback, PitchType.pitchDefault, relManager.Name, null);
+                    this.relManager = new REMLManager(GameManager.ActivePatient, settingsManager, statisticManager, feedback, GameManager.ActiveExercise.Reml);
+                    this.exercise = this.relManager.ParseRGML();
                 }
 
                 GameManager.ExerciseIsActive = exerciseRuns = true;
-                firstFulFillable.SetStartTime();
+                exercise.Unfulfilled();
             }
         }
 
         public void StopExercise()
         {
             GameManager.ExerciseIsActive = exerciseRuns = false;
+            exercise.Fulfilled();
         }
 
         public void PlayVideo()
@@ -182,9 +183,9 @@
                 justStopped = true;
             }
 
-            if (settingsManager.GetValue<bool>("ingame", "reading") && (!justStopped || exercise.AuditiveDescription))
+            if (settingsManager.GetValue<bool>("ingame", "reading") && (!justStopped || GameManager.ActiveExercise.AuditiveDescription))
             {
-                soundManager.Enqueue(exercise.AuditiveDescription);
+                soundManager.Enqueue(GameManager.ActiveExercise.AuditiveDescription);
             }
         }
 
@@ -198,9 +199,9 @@
                 justStopped = true;
             }
 
-            if (settingsManager.GetValue<bool>("ingame", "reading") && (!justStopped || exercise.AuditiveInformation))
+            if (settingsManager.GetValue<bool>("ingame", "reading") && (!justStopped || GameManager.ActiveExercise.AuditiveInformation))
             {
-                soundManager.Enqueue(exercise.AuditiveInformation);
+                soundManager.Enqueue(GameManager.ActiveExercise.AuditiveInformation);
             }
         }
     }

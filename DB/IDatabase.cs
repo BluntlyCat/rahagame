@@ -1,11 +1,10 @@
 ﻿namespace HSA.RehaGame.DB
 {
+    using Models;
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
-    using Models;
-    using Mono.Data.Sqlite;
 
     public interface IDatabase
     {
@@ -15,7 +14,9 @@
 
         TransactionResult Save(string primaryKeyName, Type model, List<PropertyInfo> fields, List<object> values);
 
-        TransactionResult AddManyToManyRelation(ManyToManyRelation attribute, object sourceId, IDictionary models);
+        TransactionResult AddManyToManyRelations(ManyToManyRelation attribute, object sourceId, IDictionary models);
+
+        TransactionResult AddManyToManyRelation(ManyToManyRelation attribute, object sourceId, Model model);
 
         TransactionResult Delete(Type model, string primaryKeyName, object primaryKeyValue);
 

@@ -1,5 +1,6 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
+    using DB.Models;
     using FulFillables;
     using Manager;
     using Manager.Audio;
@@ -10,7 +11,7 @@
     {
         protected double start = -1;
 
-        public HoldAction(string unityObjectName, double value, FulFillable previous, SettingsManager settingsManager, Feedback feedback, PitchType pitchType) : base(unityObjectName, value, previous, settingsManager, feedback, pitchType)
+        public HoldAction(string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, double value, FulFillable previous, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, int repetitions, WriteStatisticManager statisticManager) : base(unityObjectName, statisticType, affectedJoint, value, previous, settingsManager, feedback, pitchType, repetitions, statisticManager)
         {
 
         }
@@ -42,7 +43,8 @@
         {
             start = -1;
             value = initialValue;
-            isFulfilled = false;
+
+            base.Reset();
         }
     }
 }

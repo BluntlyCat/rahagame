@@ -1,11 +1,23 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
+    using DB.Models;
+    using Logging;
+    using Manager;
     using System;
     using Windows.Kinect;
 
     public abstract class FulFillable : IFulFillable
     {
+        private WriteStatisticManager statisticManager;
+        private StatisticType dataType;
+        private PatientJoint affectedJoint;
+
+        protected StatisticData statisticData;
+
+        protected Logger<FulFillable> logger = new Logger<FulFillable>();
+
         protected Attributes attributes = new Attributes();
+
         protected string name;
 
         protected bool isFulfilled = false;
@@ -13,15 +25,59 @@
         protected FulFillable previous;
         protected FulFillable next;
 
-        protected TimeSpan startTime;
-        protected TimeSpan endTime;
-
         protected Types type = Types.fullfillable;
 
-        public FulFillable(string name, FulFillable previous)
+        protected int initialRepetitions;
+
+        protected int repetitions;
+
+        public FulFillable(string name, StatisticType dataType, PatientJoint affectedJoint, FulFillable previous, int repetitions, WriteStatisticManager statisticManager)
         {
+            this.logger.AddLogAppender<ConsoleAppender>();
+
             this.name = name;
             this.previous = previous;
+            this.repetitions = this.initialRepetitions = repetitions;
+            this.statisticManager = statisticManager;
+            this.dataType = dataType;
+            this.affectedJoint = affectedJoint;
+
+            this.statisticData = AddStatisticData(dataType, affectedJoint);
+        }
+
+        private StatisticData AddStatisticData(StatisticType dataType, PatientJoint affectedJoint)
+        {
+            return statisticManager.AddStatistic(name, dataType, StatisticStates.unfulfilled, "", affectedJoint);
+        }
+
+        public void Unfulfilled()
+        {
+            statisticData.State = StatisticStates.unfulfilled;
+        }
+
+        public void Fulfilled()
+        {
+            statisticData.State = StatisticStates.finished;
+            statisticData.EndTime = DateTime.Now;
+        }
+
+        public void Canceled()
+        {
+            statisticData.State = StatisticStates.canceled;
+            statisticData.EndTime = DateTime.Now;
+
+            this.statisticData = this.AddStatisticData(this.dataType, this.affectedJoint);
+        }
+
+        public virtual bool IsFulfilled(Body body)
+        {
+            return this.repetitions == 0;
+        }
+
+        public virtual void Reset()
+        {
+            this.repetitions = this.initialRepetitions;
+            this.isFulfilled = false;
         }
 
         public void AddNext(FulFillable next)
@@ -114,33 +170,5 @@
         {
             return string.Format("{0}: {1} ({2})", this.GetType().Name, this.Name, isFulfilled);
         }
-
-        public TimeSpan StartTime
-        {
-            get
-            {
-                return this.startTime;
-            }
-        }
-
-        public TimeSpan EndTime
-        {
-            get
-            {
-                return this.endTime;
-            }
-        }
-
-        public void SetStartTime()
-        {
-            this.startTime = DateTime.Now.TimeOfDay;
-        }
-
-        public void SetEndTime()
-        {
-            this.endTime = DateTime.Now.TimeOfDay;
-        }
-
-        public abstract bool IsFulfilled(Body body);
     }
 }

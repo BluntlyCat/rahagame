@@ -12,21 +12,31 @@
 
         private static GameObject menuItems;
         private static List<string> previousScenes = new List<string>();
+        private static string sceneName;
 
         private int sceneCount;
         private USM.Scene[] scenes;
 
         // Use this for initialization
-        void Start()
+        void Awake()
         {
             logger.AddLogAppender<ConsoleAppender>();
 
             sceneCount = USM.SceneManager.sceneCount;
             scenes = new USM.Scene[sceneCount];
+            sceneName = USM.SceneManager.GetActiveScene().name;
 
-            for(int i = 0; i < sceneCount; i++)
+            for (int i = 0; i < sceneCount; i++)
             {
                 scenes[i] = USM.SceneManager.GetSceneAt(i);
+            }
+        }
+
+        public static string SceneName
+        {
+            get
+            {
+                return sceneName;
             }
         }
 
@@ -44,18 +54,21 @@
                 this.LoadNewScene(GameManager.ActiveExercise.UnityObjectName);
         }
 
-        public void ReloadSettings()
+        public void ReloadSettingsMenu()
         {
             this.LoadNewScene("Settings", false);
         }
 
-        public void LoadNewUser()
+        public void LoadNewPatientMenu(bool setActivePatientNull = false)
         {
-            this.LoadNewScene("NewUser");
+            if (setActivePatientNull)
+                GameManager.ActivePatient = null;
+
+            this.LoadNewScene("NewPatientMenu");
         }
-        public void LoadStatistics()
+        public void LoadStatisticMenu()
         {
-            this.LoadNewScene("Statistics");
+            this.LoadNewScene("Statistic");
         }
 
         public void ReturnToWindows()
@@ -71,19 +84,22 @@
             this.LoadNewScene(last, false);
         }
 
-        public void LoadTrainingMode()
+        public void LoadExerciseSelectionMenu()
         {
-            this.LoadNewScene("TrainingMode");
+            this.LoadNewScene("ExerciseSelectionMenu");
         }
 
-        public void LoadMainMenu()
+        public void LoadTitleMenu()
         {
-            this.LoadNewScene("TitleMenu");
+            if (GameManager.ActivePatient == null)
+                this.LoadPatientSlectionMenu();
+            else
+                this.LoadNewScene("TitleMenu");
         }
 
-        public void LoadUsersSlection()
+        public void LoadPatientSlectionMenu()
         {
-            this.LoadNewScene("UserSelection");
+            this.LoadNewScene("PatientSelectionMenu");
         }
 
         public void LoadScene(GameObject gameObject)

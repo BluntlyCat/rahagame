@@ -1,10 +1,10 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
     using DB;
+    using DB.Models;
     using Manager;
     using Manager.Audio;
     using System.Collections.Generic;
-    using UI.AuditiveExercise;
     using UI.Feedback;
     using Windows.Kinect;
     using Models = DB.Models;
@@ -17,7 +17,7 @@
         protected Feedback feedback;
         protected PitchType pitchType;
 
-        public Informable(SettingsManager settingsManager, Feedback feedback, PitchType pitchType, string name, FulFillable previous) : base (name, previous)
+        public Informable(SettingsManager settingsManager, Feedback feedback, PitchType pitchType, string name, StatisticType statisticType, PatientJoint affectedJoint, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base (name, statisticType, affectedJoint, previous, repetitions, statisticManager)
         {
             this.database = Database.Instance();
             this.feedback = feedback;

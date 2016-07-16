@@ -33,7 +33,6 @@
 
         private IDictionary<string, Text> debugTexts = new Dictionary<string, Text>();
 
-        private PatientManager patientManager;
         private PitchManager pitchManager;
         private GameObject patient;
         private IDictionary<object, KinectJoint> joints;
@@ -46,13 +45,12 @@
 
             logger.AddLogAppender<ConsoleAppender>();
 
-            patientManager = gameManager.GetComponent<PatientManager>();
             pitchManager = gameManager.GetComponentInChildren<PitchManager>();
         }
 
         public void VisualizePatient()
         {
-            patient = GameObject.Find(patientManager.ActivePatient.Name);
+            patient = GameObject.Find(GameManager.ActivePatient.Name);
 
             if (notVisualized)
             {

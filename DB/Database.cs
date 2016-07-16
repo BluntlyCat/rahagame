@@ -1,28 +1,28 @@
 ﻿namespace HSA.RehaGame.DB
 {
+    using Logging;
+    using Models;
+    using Mono.Data.Sqlite;
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Data;
     using System.Reflection;
     using System.Threading;
-    using Logging;
-    using Models;
-    using Mono.Data.Sqlite;
     using UnityEngine;
 
     public class Database : IDatabase
     {
-        private static Logger<Database> logger = new Logger<Database>();
+        protected static Logger<Database> logger = new Logger<Database>();
 
         private static IDatabase database;
-        private static Mutex mutex = new Mutex();
+        protected static Mutex mutex = new Mutex();
 
-        private string tablePrefix;
-        private IDbConnection dbConnection;
+        protected string tablePrefix;
+        protected IDbConnection dbConnection;
         private IDictionary<string, Dictionary<object, IModel>> cache = new Dictionary<string, Dictionary<object, IModel>>();
 
-        private Database(string tablePrefix)
+        protected Database(string tablePrefix)
         {
             logger.AddLogAppender<ConsoleAppender>();
 #if UNITY_EDITOR
@@ -154,7 +154,7 @@
             }
         }
 
-        private object[] ReadQuery(string query)
+        protected object[] ReadQuery(string query)
         {
             try
             {
@@ -355,7 +355,7 @@
             return this.WriteQuery(primaryKeyName.ToLower(), tableName, query, GetFieldValues(fields, values));
         }
 
-        public TransactionResult AddManyToManyRelation(ManyToManyRelation attribute, object sourceId, IDictionary models)
+        public TransactionResult AddManyToManyRelations(ManyToManyRelation attribute, object sourceId, IDictionary models)
         {
             TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
 
@@ -373,6 +373,26 @@
 
                     result = this.WriteQuery(query);
                 }
+            }
+
+            return result;
+        }
+
+        public TransactionResult AddManyToManyRelation(ManyToManyRelation attribute, object sourceId, Model model)
+        {
+            TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
+
+            if (model != null)
+            {
+                var query = string.Format("INSERT INTO {0} ({1}, {2}) VALUES('{3}', '{4}')",
+                        attribute.JoinTable,
+                        attribute.JoinSourceId,
+                        attribute.JoinTargetId,
+                        sourceId,
+                        model.PrimaryKeyValue
+                    );
+
+                result = this.WriteQuery(query);
             }
 
             return result;

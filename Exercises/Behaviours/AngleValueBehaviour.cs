@@ -16,7 +16,7 @@
         private double minAngle;
         private double maxAngle;
 
-        public AngleValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint childJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(value, unityObjectName, activeJoint, childJoint, settingsManager, feedback, pitchType, previous)
+        public AngleValueBehaviour(double value, string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, PatientJoint activeJoint, PatientJoint childJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base(value, unityObjectName, statisticType, affectedJoint, activeJoint, childJoint, settingsManager, feedback, pitchType, previous, repetitions, statisticManager)
         {
             this.tolerance = settingsManager.GetValue<int>("ingame", "angleTolerance");
             this.angle = 0;

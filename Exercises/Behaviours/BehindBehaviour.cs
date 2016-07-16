@@ -2,25 +2,20 @@
 {
     using DB.Models;
     using FulFillables;
-    using Logging;
     using Manager;
     using Manager.Audio;
-    using UI.AuditiveExercise;
     using UI.Feedback;
     using Windows.Kinect;
     public class BehindBehaviour : BaseJointBehaviour
     {
-        private static Logger<BehindBehaviour> logger = new Logger<BehindBehaviour>();
-
         private double handLeftZ;
         private double handRightZ;
 
         private double activeJointZ;
         private double passiveJointZ;
 
-        public BehindBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous)
+        public BehindBehaviour(string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base(unityObjectName, statisticType, affectedJoint, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous, repetitions, statisticManager)
         {
-            logger.AddLogAppender<ConsoleAppender>();
         }
 
         public override bool IsFulfilled(Body body)

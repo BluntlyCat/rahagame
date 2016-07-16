@@ -9,17 +9,14 @@
     using Windows.Kinect;
     public class AboveBehaviour : BaseJointBehaviour
     {
-        private static Logger<AboveBehaviour> logger = new Logger<AboveBehaviour>();
-
         private double headY;
         private double footY;
 
         private double activeJointY;
         private double passiveJointY;
 
-        public AboveBehaviour(string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(unityObjectName, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous)
+        public AboveBehaviour(string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base(unityObjectName, statisticType, affectedJoint, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous, repetitions, statisticManager)
         {
-            logger.AddLogAppender<ConsoleAppender>();
         }
 
         public override bool IsFulfilled(Body body)

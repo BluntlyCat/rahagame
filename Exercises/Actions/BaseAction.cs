@@ -1,18 +1,21 @@
 ﻿namespace HSA.RehaGame.Exercises.Actions
 {
+    using DB.Models;
     using FulFillables;
     using Manager;
     using Manager.Audio;
+    using System;
     using System.Collections.Generic;
     using UI.Feedback;
     using Windows.Kinect;
     using Models = DB.Models;
+
     public abstract class BaseAction : Informable
     {
         protected double value;
         protected double initialValue;
 
-        public BaseAction(string unityObjectName, double value, FulFillable previous, SettingsManager settingsManager, Feedback feedback, PitchType pitchType) : base (settingsManager, feedback, pitchType, unityObjectName, previous)
+        public BaseAction(string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, double value, FulFillable previous, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, int repetitions, WriteStatisticManager statisticManager) : base (settingsManager, feedback, pitchType, unityObjectName, statisticType, affectedJoint, previous, repetitions, statisticManager)
         {
             this.type = Types.action;
             this.initialValue = this.value = value;
@@ -53,7 +56,5 @@
         {
             return;
         }
-
-        public abstract void Reset();
     }
 }

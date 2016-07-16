@@ -1,12 +1,15 @@
 ﻿namespace HSA.RehaGame.Manager.Audio
 {
     using DB.Models;
+    using Logging;
     using System.Collections.Generic;
     using UnityEngine;
 
     [RequireComponent(typeof(AudioSource))]
     public class SoundManager : MonoBehaviour
     {
+        private static Logger<SoundManager> logger = new Logger<SoundManager>();
+
         private Queue<AudioClip> clips = new Queue<AudioClip>();
         private SettingsManager settingsManager;
         private SceneManager sceneManager;
@@ -16,6 +19,8 @@
 
         void Start()
         {
+            logger.AddLogAppender<ConsoleAppender>();
+
             this.settingsManager = this.GetComponentInParent<SettingsManager>();
             this.sceneManager = this.GetComponentInParent<SceneManager>();
 
@@ -40,7 +45,7 @@
         public void ReadingOnOff()
         {
             readingOn.SetValue<bool>(!readingOn.GetValue<bool>());
-            sceneManager.ReloadSettings();
+            sceneManager.ReloadSettingsMenu();
         }
 
         private void RemoveUnplayedClips()

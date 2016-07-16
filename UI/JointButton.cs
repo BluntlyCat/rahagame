@@ -10,8 +10,6 @@
     {
         public GameManager gameManager;
 
-        private PatientManager patientManager;
-
         private Button button;
         private PatientJoint joint;
         private ColorBlock buttonColors;
@@ -28,19 +26,18 @@
 
         void Start()
         {
-            patientManager = gameManager.GetComponent<PatientManager>();
             this.button = GetComponent<Button>();
             this.buttonColors = this.button.colors;
         }
 
         void OnEnable()
         {
-            if (patientManager.ActivePatient != null)
+            if (GameManager.ActivePatient != null)
             {
                 this.button = GetComponent<Button>();
                 this.buttonColors = this.button.colors;
 
-                this.joint = patientManager.ActivePatient.GetJointByName(this.name);
+                this.joint = GameManager.ActivePatient.GetJointByName(this.name);
                 States state = joint.Active ? States.active : States.inactive;
                 this.buttonColors.normalColor = colors[state];
                 this.buttonColors.pressedColor = state == States.active ? colors[States.specialActive] : colors[States.specialInactive];

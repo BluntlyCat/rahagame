@@ -101,6 +101,9 @@
         {
             try
             {
+                if(input == null)
+                    input = this.GetComponent<InputField>();
+
                 int tmp = int.Parse(input.text);
 
                 if (tmp > maxValue)

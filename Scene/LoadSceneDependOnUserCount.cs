@@ -22,9 +22,9 @@
         public void LoadSceneDependingOnUserCount()
         {
             if (userCount > 0)
-                sceneManager.LoadUsersSlection();
+                sceneManager.LoadPatientSlectionMenu();
             else
-                sceneManager.LoadNewUser();
+                sceneManager.LoadNewPatientMenu();
         }
     }
 }

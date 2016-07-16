@@ -1,5 +1,6 @@
 ﻿namespace HSA.RehaGame.Exercises.Behaviours
 {
+    using DB.Models;
     using FulFillables;
     using Manager;
     using Manager.Audio;
@@ -11,10 +12,10 @@
     using Models = DB.Models;
     public abstract class BaseJointBehaviour : Informable
     {   
-        protected Models.PatientJoint activeJoint;
-        protected Models.PatientJoint passiveJoint;
+        protected PatientJoint activeJoint;
+        protected PatientJoint passiveJoint;
 
-        public BaseJointBehaviour(string unityObjectName, Models.PatientJoint activeJoint, Models.PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(settingsManager, feedback, pitchType, unityObjectName, previous)
+        public BaseJointBehaviour(string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, PatientJoint activeJoint, Models.PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base(settingsManager, feedback, pitchType, unityObjectName, statisticType, affectedJoint, previous, repetitions, statisticManager)
         {
             this.type = Types.behaviour;
             this.activeJoint = activeJoint;

@@ -19,7 +19,7 @@
 
         private SettingsKeyValue musicOn;
 
-        void Start()
+        void Awake()
         {
             logger.AddLogAppender<ConsoleAppender>();
 
@@ -34,7 +34,6 @@
         {
             if (current != null)
             {
-                // ToDo Musik nur abspielen wenn Musik an
                 if (musicOn.GetValue<bool>() && audioSource.isPlaying == false)
                 {
                     if (current.Next != null)
@@ -50,7 +49,7 @@
         public void MusicOnOff()
         {
             this.musicOn.SetValue<bool>(!musicOn.GetValue<bool>());
-            this.sceneManager.ReloadSettings();
+            this.sceneManager.ReloadSettingsMenu();
         }
 
         public void AddMusic(Music music)
@@ -77,8 +76,11 @@
             if (this.playlist.First == null)
                 return;
 
-            this.audioSource.clip = current.Value.Title;
-            this.audioSource.Play();
+            if (musicOn.GetValue<bool>())
+            {
+                this.audioSource.clip = current.Value.Title;
+                this.audioSource.Play();
+            }
         }
 
         public void Pause()

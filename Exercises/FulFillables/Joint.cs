@@ -1,6 +1,7 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
     using Behaviours;
+    using DB.Models;
     using Manager;
     using Manager.Audio;
     using System;
@@ -13,7 +14,7 @@
     {
         private BaseJointBehaviour currentJointBehaviour;
 
-        public Joint(string name, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base (settingsManager, feedback, pitchType, name, previous)
+        public Joint(string name, StatisticType statisticType, PatientJoint affectedJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base(settingsManager, feedback, pitchType, name, statisticType, affectedJoint, previous, repetitions, statisticManager)
         {
             this.type = Types.joint;
         }
@@ -31,6 +32,9 @@
             if (isFulfilled)
             {
                 currentJointBehaviour.Clear();
+
+                currentJointBehaviour.Fulfilled();
+
                 currentJointBehaviour.ActiveJoint.KinectJoint.ActiveInExercise = false;
 
                 if (currentJointBehaviour.Next == null)
@@ -40,6 +44,7 @@
                 else
                 {
                     currentJointBehaviour = currentJointBehaviour.Next as BaseJointBehaviour;
+                    currentJointBehaviour.Unfulfilled();
                     isFulfilled = false;
                 }
             }
@@ -62,11 +67,6 @@
                 var previous = currentJointBehaviour.Previous.Convert<BaseJointBehaviour>();
                 previous.ActiveJoint.KinectJoint.ActiveInExercise = false;
             }
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}: {1}", this.Name, isFulfilled);
         }
 
         public override void Write(Body body)
@@ -102,6 +102,14 @@
         public override void Debug(Body body, Models.KinectJoint joint)
         {
             throw new NotImplementedException();
+        }
+
+        public BaseJointBehaviour CurrentJointBehaviour
+        {
+            get
+            {
+                return currentJointBehaviour;
+            }
         }
     }
 }

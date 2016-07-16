@@ -11,10 +11,14 @@
 
         private Dictionary<long, PatientJoint> joints;
         private Dictionary<string, Exercise> exercisesToDo;
+        private Dictionary<long, StatisticData> statistic;
+        private List<StatisticData> currentStatistic;
 
         public Patient(string name)
         {
             this.name = name;
+            this.statistic = new Dictionary<long, StatisticData>();
+            this.currentStatistic = new List<StatisticData>();
         }
 
         public Patient(string name, long age, Sex sex)
@@ -22,6 +26,9 @@
             this.name = name;
             this.age = age;
             this.sex = (long)sex;
+
+            this.statistic = new Dictionary<long, StatisticData>();
+            this.currentStatistic = new List<StatisticData>();
         }
 
         [PrimaryKey]
@@ -121,6 +128,47 @@
             {
                 this.exercisesToDo = value;
             }
+        }
+
+        [ManyToManyRelation(
+            "name",
+            "patient",
+            "patient_id",
+            "patient_statistic_data",
+            "statisticdata_id",
+            "statisticdata",
+            "id"
+        )]
+        public Dictionary<long, StatisticData> StatisticData
+        {
+            get
+            {
+                return statistic;
+            }
+
+            set
+            {
+                this.statistic = value;
+            }
+        }
+
+        public List<StatisticData> CurrentStatistic
+        {
+            get
+            {
+                return currentStatistic;
+            }
+        }
+
+        public override TransactionResult Delete()
+        {
+            foreach (var data in StatisticData)
+                data.Value.Delete();
+
+            foreach (var joint in Joints)
+                joint.Value.Delete();
+
+            return base.Delete();
         }
 
         public override TransactionResult Save()

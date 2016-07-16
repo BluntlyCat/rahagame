@@ -20,23 +20,20 @@
         public Material disabledJointMaterial;
         public Material activeInExerciseMaterial;
 
-        private PatientManager patientManager;
-
         void Start()
         {
             logger.AddLogAppender<ConsoleAppender>();
-            patientManager = gameManager.GetComponent<PatientManager>();
         }
 
         public GameObject CreateBodyObject(ulong id)
         {
-            GameObject body = new GameObject(patientManager.ActivePatient.Name);
+            GameObject body = new GameObject(GameManager.ActivePatient.Name);
             Material boneMaterial = defaultBoneMaterial;
 
             for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
             {
                 GameObject jointObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                PatientJoint patientJoint = patientManager.ActivePatient.GetJointByName(jt.ToString());
+                PatientJoint patientJoint = GameManager.ActivePatient.GetJointByName(jt.ToString());
                 LineRenderer lr = jointObj.AddComponent<LineRenderer>();
                 Renderer jointRenderer = jointObj.GetComponent<Renderer>();
 
@@ -65,7 +62,7 @@
             {
                 for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
                 {
-                    var joint = patientManager.ActivePatient.GetJointByName(jt.ToString());
+                    var joint = GameManager.ActivePatient.GetJointByName(jt.ToString());
 
                     Kinect.Joint sourceJoint = body.Joints[jt];
                     Kinect.Joint? targetJoint = null;

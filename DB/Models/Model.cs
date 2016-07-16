@@ -1,5 +1,6 @@
 ﻿namespace HSA.RehaGame.DB.Models
 {
+    using Logging;
     using Manager;
     using Mono.Data.Sqlite;
     using System;
@@ -9,6 +10,8 @@
 
     public abstract class Model : IModel
     {
+        protected Logger<Model> logger = new Logger<Model>();
+
         protected IList<PropertyInfo> tableColumns;
         protected IList<PropertyInfo> foreignKeyRelations;
         protected IList<PropertyInfo> manyToManyRelations;
@@ -20,6 +23,8 @@
 
         public Model()
         {
+            this.logger.AddLogAppender<ConsoleAppender>();
+
             this.database = Database.Instance();
             this.primaryKey = GetFieldByAttribute<PrimaryKey>();
             this.type = this.GetType();
@@ -167,7 +172,11 @@
 
                 var get = column.GetGetMethod(true);
                 var model = get.Invoke(this, null) as Model;
-                values.Add(model.PrimaryKeyValue);
+
+                if (model != null)
+                    values.Add(model.PrimaryKeyValue);
+                else
+                    values.Add(null);
             }
 
             return values;
@@ -294,7 +303,11 @@
                 result = database.Save(this.primaryKey.Name, type, GetFields(includingPrimaryKey), GetValues(includingPrimaryKey));
 
                 if (result.ErrorCode == SQLiteErrorCode.Ok)
+                {
+                    var primaryKeyMethod = this.primaryKey.GetSetMethod();
+                    primaryKeyMethod.Invoke(this, new object[] { result.PrimaryKeyValue });
                     this.isInstance = true;
+                }
             }
 
             return result;
@@ -310,13 +323,22 @@
 
                 var genericDict = column.GetGetMethod().Invoke(this, null) as IDictionary;
 
-                result = database.AddManyToManyRelation(attribute, this.PrimaryKeyValue, genericDict);
+                result = database.AddManyToManyRelations(attribute, this.PrimaryKeyValue, genericDict);
             }
 
             return result;
         }
 
-        public TransactionResult Delete()
+        public TransactionResult AddManyToManyRelation(PropertyInfo field, Model model)
+        {
+            TransactionResult result = new TransactionResult(SQLiteErrorCode.Ok, null);
+
+            result = database.AddManyToManyRelation(GetAttribute<ManyToManyRelation>(field), this.PrimaryKeyValue, model);
+
+            return result;
+        }
+
+        public virtual TransactionResult Delete()
         {
             return database.Delete(this.type, this.primaryKey.Name, this.PrimaryKeyValue);
         }
@@ -367,7 +389,7 @@
 
             if (foreignKey.ToString() != "" && foreignKey != null)
             {
-                value = database.GetCachedModel(this.type, foreignKey) as IModel;
+                value = database.GetCachedModel(column.PropertyType, foreignKey) as IModel;
 
                 if (value == null)
                 {
@@ -400,9 +422,15 @@
                 if (attribute.GetType() == typeof(TranslationColumn))
                     ((TranslationColumn)attribute).SetColumn(column.Name, LanguageSettingManager.GetActiveLanguage());
 
-                value = database.Get(attribute, column, type, GetAttribute<PrimaryKey>(primaryKey), primaryKey, PrimaryKeyValue)[0];
-
-                data.Add(column, value);
+                try
+                {
+                    value = database.Get(attribute, column, type, GetAttribute<PrimaryKey>(primaryKey), primaryKey, PrimaryKeyValue)[0];
+                    data.Add(column, value);
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
             }
 
             return data;
@@ -441,7 +469,10 @@
                 var data = GetData();
 
                 foreach (var d in data)
-                    d.Key.GetSetMethod(true).Invoke(this, new object[] { d.Value });
+                {
+                    var m = d.Key.GetSetMethod(true);
+                    m.Invoke(this, new object[] { d.Value });
+                }
 
                 database.SetCachedModel(this.type, this.PrimaryKeyValue, this);
 
@@ -456,15 +487,19 @@
 
         public virtual void SetRelations()
         {
+            IDictionary<PropertyInfo, object> data;
+
             try
             {
                 if (primaryKey == null)
                     throw new Exception("Primary key not set");
 
-                var data = GetRelations();
+                data = GetRelations();
 
                 foreach (var d in data)
+                {
                     d.Key.GetSetMethod(true).Invoke(this, new object[] { d.Value });
+                }
             }
 
             catch (Exception e)
@@ -501,6 +536,19 @@
                 throw new Exception(string.Format("No primary key found in model of type {0}", type.Name));
 
             return names;
+        }
+
+        public PropertyInfo GetPropertyInfo(string propertyName)
+        {
+            BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            return this.GetType().GetProperty(propertyName, flags);
+        }
+
+        public static object GetLastId<T>() where T : Model
+        {
+            var primaryKeys = GetPrimaryKeys(typeof(T));
+
+            return primaryKeys[primaryKeys.Length];
         }
 
         public static IDictionary<object, T> All<T>() where T : Model

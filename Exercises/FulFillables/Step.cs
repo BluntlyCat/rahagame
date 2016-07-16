@@ -1,16 +1,11 @@
 ﻿namespace HSA.RehaGame.Exercises.FulFillables
 {
-    using Logging;
-
+    using DB.Models;
+    using Manager;
     public class Step : BaseStep
     {
-        private static Logger<Step> logger = new Logger<Step>();
-
-        
-
-        public Step(string name, BaseStep prevStep) : base(name, prevStep)
+        public Step(string name, StatisticType statisticType, PatientJoint affectedJoint, BaseStep prevStep, int repetitions, WriteStatisticManager statisticManager) : base(name, statisticType, affectedJoint, prevStep, repetitions, statisticManager)
         {
-            logger.AddLogAppender<ConsoleAppender>();
             this.type = Types.step;
         }
 

@@ -1,17 +1,15 @@
 ﻿namespace HSA.RehaGame.Manager
 {
-    using System;
-    using Mono.Data.Sqlite;
-    using UnityEngine;
-    using Models = DB.Models;
-    using System.Collections.Generic;
     using DB.Models;
+    using Mono.Data.Sqlite;
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using UnityEngine;
 
     public class PatientManager : MonoBehaviour
     {
         private IDictionary<object, Patient> models;
-        private Patient activePatient;
 
         // Use this for initialization
         void Start()
@@ -22,7 +20,7 @@
         public void SetActivePatient(string name)
         {
             if (models.ContainsKey(name))
-                activePatient = models[name];
+                GameManager.ActivePatient = models[name];
 
             throw new Exception(string.Format("There is no patient with name {0}", name));
         }
@@ -36,7 +34,7 @@
             if(result.ErrorCode == SQLiteErrorCode.Ok)
             {
                 models.Add(patient.Name, patient);
-                activePatient = patient;
+                GameManager.ActivePatient = patient;
             }
             
         }
@@ -44,12 +42,13 @@
         public void SetStressedJoints(Exercise exercise)
         {
             foreach (var joint in exercise.StressedJoints.Values)
-                this.ActivePatient.GetJointByName(joint.Name).KinectJoint.Stressed = true;
+                GameManager.ActivePatient.GetJointByName(joint.Name).KinectJoint.Stressed = true;
         }
 
         public void DeletePatient()
         {
-
+            if (GameManager.ActivePatient != null)
+                GameManager.ActivePatient.Delete();
         }
 
         public void ActivateJoints()
@@ -59,22 +58,6 @@
             foreach (Transform joint in jointPanel.transform)
             {
                 joint.gameObject.SetActive(true);
-            }
-        }
-
-        public Models.Patient ActivePatient
-        {
-            get
-            {
-                if (activePatient == null)
-                    activePatient = Models.Model.All<Patient>().Values.Last();
-
-                return activePatient;
-            }
-
-            set
-            {
-                activePatient = value;
             }
         }
     }

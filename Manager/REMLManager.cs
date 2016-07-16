@@ -1,7 +1,7 @@
 ﻿namespace HSA.RehaGame.Manager
 {
     using Audio;
-    using DB.Models;
+    using DB = DB.Models;
     using Exercises;
     using Exercises.Actions;
     using Exercises.Behaviours;
@@ -12,23 +12,25 @@
     using System.IO;
     using System.Linq;
     using System.Xml;
-    using UI.AuditiveExercise.PitchSounds;
     using UI.Feedback;
     public class REMLManager
     {
         private static Logger<REMLManager> logger = new Logger<REMLManager>();
         private SettingsManager settingsManager;
+        private WriteStatisticManager statisticManager;
         private Feedback feedback;
-        private Patient patient;
+        private DB.Patient patient;
         private string rel;
-        private string name;
 
-        public REMLManager(Patient patient, SettingsManager settingsManager, Feedback feedback, string rel)
+        private Exercise exercise;
+
+        public REMLManager(DB.Patient patient, SettingsManager settingsManager, WriteStatisticManager statisticManager, Feedback feedback, string rel)
         {
             logger.AddLogAppender<ConsoleAppender>();
 
             this.patient = patient;
             this.settingsManager = settingsManager;
+            this.statisticManager = statisticManager;
             this.feedback = feedback;
             this.rel = rel;
         }
@@ -46,26 +48,41 @@
             return attributes;
         }
 
+        private Exercise CreateExercise(XmlReader reader)
+        {
+            var attributes = GetAttributes(reader);
+
+            string exerciseName = "";
+            int exerciseRepititions = 1;
+
+            if (attributes.ContainsKey("name"))
+                exerciseName = attributes["name"];
+
+            if (attributes.ContainsKey("repititions"))
+                exerciseRepititions = int.Parse(attributes["repititions"]);
+
+            return new Exercise(exerciseName, DB.StatisticType.exercise, null, null, exerciseRepititions, statisticManager);
+        }
+
         private BaseAction CreateAction(XmlReader reader, FulFillable lastToDoAble)
         {
             BaseAction action = null;
 
             var attributes = GetAttributes(reader);
             var actionName = attributes["name"];
+            int repititions = 1;
+
+            if (attributes.ContainsKey("repititions"))
+                repititions = int.Parse(attributes["repititions"]);
 
             if (actionName == "hold")
             {
-                action = new HoldAction(actionName, double.Parse(attributes["value"]), lastToDoAble, settingsManager, feedback, PitchType.pitchDefault);
-            }
-
-            else if (actionName == "repeat")
-            {
-                action = new RepeatAction(actionName, double.Parse(attributes["value"]), lastToDoAble, settingsManager, feedback, PitchType.pitchDefault);
+                action = new HoldAction(actionName, DB.StatisticType.action, null, double.Parse(attributes["value"]), lastToDoAble, settingsManager, feedback, PitchType.pitchDefault, repititions, statisticManager);
             }
 
             else if (actionName == "wait")
             {
-                action = new WaitAction(actionName, double.Parse(attributes["value"]), lastToDoAble, settingsManager, feedback, PitchType.pitchDefault);
+                action = new WaitAction(actionName, DB.StatisticType.action, null, double.Parse(attributes["value"]), lastToDoAble, settingsManager, feedback, PitchType.pitchDefault, repititions, statisticManager);
             }
 
             if (lastToDoAble != null)
@@ -83,6 +100,11 @@
 
             var active = patient.GetJointByName(((Joint)lastToDoAble).Name);
 
+            int repititions = 1;
+
+            if (attributes.ContainsKey("repititions"))
+                repititions = int.Parse(attributes["repititions"]);
+
             if (attributes.ContainsKey("joint"))
             {
                 var passive = patient.GetJointByName(attributes["joint"]);
@@ -92,26 +114,26 @@
                     var value = double.Parse(attributes["value"]);
 
                     if (behaviourName == "distance")
-                        behaviour = new DistanceValueBehaviour(value, behaviourName, active, passive, settingsManager, feedback, PitchType.pitchDistance, lastToDoAble);
+                        behaviour = new DistanceValueBehaviour(value, behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchDistance, lastBehaviour, repititions, statisticManager);
 
                     else if (behaviourName == "on")
-                        behaviour = new OnJointValueBehaviour(value, behaviourName, active, passive, settingsManager, feedback, PitchType.pitchOnJoint, lastToDoAble);
+                        behaviour = new OnJointValueBehaviour(value, behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchOnJoint, lastBehaviour, repititions, statisticManager);
                 }
                 else
                 {
                     if (behaviourName == "above")
-                        behaviour = new AboveBehaviour(behaviourName, active, passive, settingsManager, feedback, PitchType.pitchHeight, lastToDoAble);
+                        behaviour = new AboveBehaviour(behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchHeight, lastBehaviour, repititions, statisticManager);
                     else if (behaviourName == "below")
-                        behaviour = new BelowBehaviour(behaviourName, active, passive, settingsManager, feedback, PitchType.pitchHeight, lastToDoAble);
+                        behaviour = new BelowBehaviour(behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchHeight, lastBehaviour, repititions, statisticManager);
                     else if (behaviourName == "behind")
-                        behaviour = new BehindBehaviour(behaviourName, active, passive, settingsManager, feedback, PitchType.pitchDepth, lastToDoAble);
+                        behaviour = new BehindBehaviour(behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchDepth, lastBehaviour, repititions, statisticManager);
                     else if (behaviourName == "before")
-                        behaviour = new BeforeBehaviour(behaviourName, active, passive, settingsManager, feedback, PitchType.pitchDepth, lastToDoAble);
+                        behaviour = new BeforeBehaviour(behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchDepth, lastBehaviour, repititions, statisticManager);
                 }
             }
             else if (attributes.ContainsKey("value"))
             {
-                PatientJoint childJoint = null;
+                DB.PatientJoint childJoint = null;
                 var value = double.Parse(attributes["value"]);
 
                 if (attributes.ContainsKey("toChild"))
@@ -120,7 +142,7 @@
                     childJoint = patient.GetJointByName(active.KinectJoint.Children.First().Value.Name);
 
                 if (behaviourName == "angle")
-                    behaviour = new AngleValueBehaviour(value, behaviourName, active, childJoint, settingsManager, feedback, PitchType.pitchAngleValue, lastToDoAble);
+                    behaviour = new AngleValueBehaviour(value, behaviourName, DB.StatisticType.behaviour, active, active, childJoint, settingsManager, feedback, PitchType.pitchAngleValue, lastBehaviour, repititions, statisticManager);
             }
 
             if (lastBehaviour != null)
@@ -133,7 +155,12 @@
         {
             var attributes = GetAttributes(reader);
 
-            Joint joint = new Joint(attributes["name"], settingsManager, feedback, PitchType.pitchDefault, lastToDoAble);
+            int repititions = 1;
+
+            if (attributes.ContainsKey("repititions"))
+                repititions = int.Parse(attributes["repititions"]);
+
+            Joint joint = new Joint(attributes["name"], DB.StatisticType.joint, null, settingsManager, feedback, PitchType.pitchDefault, lastToDoAble, repititions, statisticManager);
 
             if (lastToDoAble != null)
                 lastToDoAble.AddNext(joint);
@@ -146,7 +173,12 @@
             var attributes = GetAttributes(reader);
             var name = attributes.ContainsKey("name") ? attributes["name"] : "";
 
-            Step step = new Step(name, lastStep);
+            int repititions = 1;
+
+            if (attributes.ContainsKey("repititions"))
+                repititions = int.Parse(attributes["repititions"]);
+
+            Step step = new Step(name, DB.StatisticType.step, null, lastStep, repititions, statisticManager);
 
             if (lastStep != null)
                 lastStep.AddNext(step);
@@ -156,13 +188,10 @@
 
         private void ReadExerciseAttributes(XmlReader reader)
         {
-            var attributes = GetAttributes(reader);
-
-            if (attributes.ContainsKey("name"))
-                this.name = attributes["name"];
+            
         }
 
-        public BaseStep ParseRGML()
+        public Exercise ParseRGML()
         {
             IList<RelNodeTypes> nodeTypes = new List<RelNodeTypes>();
 
@@ -190,7 +219,7 @@
                             switch (nodeType)
                             {
                                 case RelNodeTypes.exercise:
-                                    ReadExerciseAttributes(reader);
+                                    exercise = CreateExercise(reader);
                                     break;
 
                                 case RelNodeTypes.stepGroup:
@@ -277,15 +306,9 @@
                 }
             }
 
-            return firstStep;
-        }
+            exercise.SetFirstStep(firstStep);
 
-        public string Name
-        {
-            get
-            {
-                return this.name;
-            }
+            return exercise;
         }
     }
 }

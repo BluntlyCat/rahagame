@@ -11,12 +11,10 @@
     using Windows.Kinect;
     public class DistanceValueBehaviour : BaseJointValueBehaviour
     {
-        private static Logger<BelowBehaviour> logger = new Logger<BelowBehaviour>();
-
         private Vector3 maxDistance;
         private Vector3 distance;
 
-        public DistanceValueBehaviour(double value, string unityObjectName, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous) : base(value, unityObjectName, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous)
+        public DistanceValueBehaviour(double value, string unityObjectName, StatisticType statisticType, PatientJoint affectedJoint, PatientJoint activeJoint, PatientJoint passiveJoint, SettingsManager settingsManager, Feedback feedback, PitchType pitchType, FulFillable previous, int repetitions, WriteStatisticManager statisticManager) : base(value, unityObjectName, statisticType, affectedJoint, activeJoint, passiveJoint, settingsManager, feedback, pitchType, previous, repetitions, statisticManager)
         {
             logger.AddLogAppender<ConsoleAppender>();
         }

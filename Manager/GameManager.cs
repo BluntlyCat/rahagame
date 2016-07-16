@@ -1,30 +1,46 @@
 ﻿namespace HSA.RehaGame.Manager
 {
     using DB.Models;
-    using UnityEngine;
-    using System.Linq;
     using System.Collections.Generic;
-    using System;
+    using UI.Statistic;
+    using UnityEngine;
 
     [RequireComponent(typeof(SettingsManager))]
     [RequireComponent(typeof(SceneManager))]
     [RequireComponent(typeof(PatientManager))]
     public class GameManager : MonoBehaviour
     {
+        private static Patient activePatient;
         private static Exercise activeExercise;
 
         private static bool exerciseIsActive;
         private static bool hasKinectUser;
 
-        private static Dictionary<string, TimeSpan> executionTimes;
+        private static List<StatisticData> statistic;
+        private static StatisticViewData statisticViewData;
+
+        void Start()
+        {
+            statisticViewData = StatisticViewData.Instance;
+        }
+
+        public static Patient ActivePatient
+        {
+            get
+            {
+                return activePatient;
+            }
+
+            set
+            {
+                activePatient = value;
+            }
+        }
 
         public static Exercise ActiveExercise
         {
             get
             {
-                if (activeExercise == null)
-                    activeExercise = Model.GetModel<Exercise>("test");
-
                 return activeExercise;
             }
 
@@ -60,16 +76,12 @@
             }
         }
 
-        public static Dictionary<string, TimeSpan> ExecutionTimes
+        public static StatisticViewData StatisticViewData
         {
             get
             {
-                return executionTimes;
-            }
 
-            set
-            {
-                executionTimes = value;
+                return statisticViewData;
             }
         }
     }

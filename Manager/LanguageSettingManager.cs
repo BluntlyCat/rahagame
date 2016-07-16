@@ -35,7 +35,7 @@
             var newLanguage = languages[index % languages.Count].ToString();
             activeLanguange.SetValue<string>(newLanguage);
 
-            sceneManager.ReloadSettings();
+            sceneManager.ReloadSettingsMenu();
         }
 
         public static string GetActiveLanguage()
