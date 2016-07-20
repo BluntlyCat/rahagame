@@ -129,6 +129,8 @@
                         behaviour = new BehindBehaviour(behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchDepth, lastBehaviour, repititions, statisticManager);
                     else if (behaviourName == "before")
                         behaviour = new BeforeBehaviour(behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchDepth, lastBehaviour, repititions, statisticManager);
+                    else if (behaviourName == "equalHeight")
+                        behaviour = new EqualHeightBehaviour(behaviourName, DB.StatisticType.behaviour, active, active, passive, settingsManager, feedback, PitchType.pitchHeight, lastBehaviour, repititions, statisticManager);
                 }
             }
             else if (attributes.ContainsKey("value"))

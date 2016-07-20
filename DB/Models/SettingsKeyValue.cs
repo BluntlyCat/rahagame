@@ -14,6 +14,8 @@
         {
             { "str", typeof(string) },
             { "int", typeof(int) },
+            { "float", typeof(float) },
+            { "double", typeof(double) },
             { "bool", typeof(bool) },
             { "list", typeof(List<object>) },
             { "NoneType", null },
@@ -30,6 +32,8 @@
             {
                 { typeof(string), this.GetType().GetMethod("GetString", flags) },
                 { typeof(int), this.GetType().GetMethod("GetInt", flags) },
+                { typeof(float), this.GetType().GetMethod("GetFloat", flags) },
+                { typeof(double), this.GetType().GetMethod("GetDouble", flags) },
                 { typeof(bool), this.GetType().GetMethod("GetBool", flags) },
                 { typeof(List<object>), this.GetType().GetMethod("GetList", flags) },
             };
@@ -141,6 +145,16 @@
         private int GetInt(object value)
         {
             return int.Parse(value.ToString());
+        }
+
+        private float GetFloat(object value)
+        {
+            return float.Parse(value.ToString());
+        }
+
+        private double GetDouble(object value)
+        {
+            return double.Parse(value.ToString());
         }
 
         private string GetString(object value)
